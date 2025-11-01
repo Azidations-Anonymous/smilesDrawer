@@ -1,10 +1,9 @@
-// @ts-nocheck
-// Adapted from https://codepen.io/shshaw/pen/XbxvNj by 
+// Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
-function convertImage(img) {
+function convertImage(img: any): any {
     "use strict";
 
-    function each(obj, fn) {
+    function each(obj: any, fn: any): void {
         var length = obj.length,
             likeArray = (length === 0 || (length > 0 && (length - 1) in obj)),
             i = 0;
@@ -16,12 +15,12 @@ function convertImage(img) {
         }
     }
 
-    function componentToHex(c) {
+    function componentToHex(c: any): string {
         var hex = parseInt(c).toString(16);
         return hex.length == 1 ? "0" + hex : hex;
     }
 
-    function getColor(r, g, b, a) {
+    function getColor(r: any, g: any, b: any, a: any): string | false {
         a = parseInt(a);
         if (a === undefined || a === 255) { return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b); }
         if (a === 0) { return false; }
@@ -29,26 +28,26 @@ function convertImage(img) {
     }
 
     // Optimized for horizontal lines
-    function makePathData(x, y, w) { return ('M' + x + ' ' + y + 'h' + w + ''); }
-    function makePath(color, data) { return '<path stroke="' + color + '" d="' + data + '" />\n'; }
+    function makePathData(x: number, y: number, w: number): string { return ('M' + x + ' ' + y + 'h' + w + ''); }
+    function makePath(color: string, data: string): string { return '<path stroke="' + color + '" d="' + data + '" />\n'; }
 
-    function colorsToPaths(colors) {
+    function colorsToPaths(colors: any): string {
 
         var output = "";
 
         // Loop through each color to build paths
-        each(colors, function (color, values) {
+        each(colors, function (color: any, values: any) {
             var orig = color;
             color = getColor.apply(null, color.split(','));
 
             if (color === false) { return; }
 
             var paths = [];
-            var curPath;
+            var curPath: any;
             var w = 1;
 
             // Loops through each color's pixels to optimize paths
-            each(values, function () {
+            each(values, function (this: any) {
 
                 if (curPath && this[1] === curPath[1] && this[0] === (curPath[0] + w)) {
                     w++;
@@ -69,8 +68,8 @@ function convertImage(img) {
         return output;
     }
 
-    var getColors = function (img) {
-        var colors = {},
+    var getColors = function (img: any): any {
+        var colors: any = {},
             data = img.data,
             len = data.length,
             w = img.width,
