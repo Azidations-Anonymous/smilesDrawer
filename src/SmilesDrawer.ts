@@ -1,25 +1,28 @@
-// @ts-nocheck
-const Drawer = require('./Drawer')
-const Parser = require('./Parser')
-const ReactionParser = require('./ReactionParser')
-const SvgDrawer = require('./SvgDrawer')
-const ReactionDrawer = require('./ReactionDrawer')
-const SvgWrapper = require('./SvgWrapper')
-const Options = require('./Options');
+import Drawer = require('./Drawer');
+import Parser = require('./Parser');
+import ReactionParser = require('./ReactionParser');
+import SvgDrawer = require('./SvgDrawer');
+import ReactionDrawer = require('./ReactionDrawer');
+import SvgWrapper = require('./SvgWrapper');
+import Options = require('./Options');
+
 class SmilesDrawer {
-    constructor(moleculeOptions = {}, reactionOptions = {}) {
+    drawer: any;
+    reactionDrawer: any;
+
+    constructor(moleculeOptions: any = {}, reactionOptions: any = {}) {
         this.drawer = new SvgDrawer(moleculeOptions);
 
         // moleculeOptions gets edited in reactionOptions, so clone
         this.reactionDrawer = new ReactionDrawer(reactionOptions, JSON.parse(JSON.stringify(this.drawer.opts)));
     }
 
-    static apply(moleculeOptions = {}, reactionOptions = {}, attribute = 'data-smiles', theme = 'light', successCallback = null, errorCallback = null) {
+    static apply(moleculeOptions: any = {}, reactionOptions: any = {}, attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: any) => void) | null = null, errorCallback: ((error: any) => void) | null = null): void {
         const drawer = new SmilesDrawer(moleculeOptions, reactionOptions);
         drawer.apply(attribute, theme, successCallback, errorCallback);
     }
 
-    apply(attribute = 'data-smiles', theme = 'light', successCallback = null, errorCallback = null) {
+    apply(attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: any) => void) | null = null, errorCallback: ((error: any) => void) | null = null): void {
         let elements = document.querySelectorAll(`[${attribute}]`);
         elements.forEach(element => {
             let smiles = element.getAttribute(attribute);
@@ -90,7 +93,7 @@ class SmilesDrawer {
      * @param {?CallableFunction} errorCallback The function called on error.
      * @param {?Number[]|Object} weights The weights for the gaussians.
      */
-    draw(smiles, target, theme = 'light', successCallback = null, errorCallback = null, weights = null) {
+    draw(smiles: string, target: any, theme: string = 'light', successCallback: ((result: any) => void) | null = null, errorCallback: ((error: any) => void) | null = null, weights: any = null): void {
         // get the settings
         let rest = [];
         [smiles, ...rest] = smiles.split(' ');
@@ -137,7 +140,7 @@ class SmilesDrawer {
         }
     }
 
-    drawMolecule(smiles, target, theme, weights, callback) {
+    drawMolecule(smiles: string, target: any, theme: string, weights: any, callback: ((result: any) => void) | null): void {
         let parseTree = Parser.parse(smiles);
 
         if (target === null || target === 'svg') {
@@ -195,7 +198,7 @@ class SmilesDrawer {
         }
     }
 
-    drawReaction(smiles, target, theme, settings, weights, callback) {
+    drawReaction(smiles: string, target: any, theme: string, settings: any, weights: any, callback: ((result: any) => void) | null): void {
         let reaction = ReactionParser.parse(smiles);
 
         if (target === null || target === 'svg') {
@@ -259,7 +262,7 @@ class SmilesDrawer {
         }
     }
 
-    svgToCanvas(svg, canvas = null) {
+    svgToCanvas(svg: SVGElement, canvas: HTMLCanvasElement | null = null): HTMLCanvasElement {
         if (canvas === null) {
             canvas = document.createElement('canvas');
         }
@@ -270,7 +273,7 @@ class SmilesDrawer {
         return canvas;
     }
 
-    svgToImg(svg, img = null) {
+    svgToImg(svg: SVGElement, img: HTMLImageElement | null = null): HTMLImageElement {
         if (img === null) {
             img = document.createElement('img');
         }
@@ -287,7 +290,7 @@ class SmilesDrawer {
      * @param {SVGElement} svg 
      * @returns {{w: Number, h: Number}} The width and height.
      */
-    getDimensions(element, svg = null) {
+    getDimensions(element: any, svg: SVGElement | null = null): {w: number, h: number} {
         let w = this.drawer.opts.width;
         let h = this.drawer.opts.height;
 

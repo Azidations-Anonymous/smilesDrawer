@@ -1,18 +1,23 @@
-// @ts-nocheck
-const SvgDrawer = require('./SvgDrawer');
-const SvgWrapper = require('./SvgWrapper');
-const Options = require('./Options');
-const ThemeManager = require('./ThemeManager');
-const formulaToCommonName = require('./FormulaToCommonName');
+import SvgDrawer = require('./SvgDrawer');
+import SvgWrapper = require('./SvgWrapper');
+import Options = require('./Options');
+import ThemeManager = require('./ThemeManager');
+import formulaToCommonName = require('./FormulaToCommonName');
 
 class ReactionDrawer {
+    defaultOptions: any;
+    opts: any;
+    drawer: any;
+    molOpts: any;
+    themeManager: any;
+
     /**
      * The constructor for the class ReactionDrawer.
      *
      * @param {Object} options An object containing reaction drawing specitic options.
      * @param {Object} moleculeOptions An object containing molecule drawing specific options.
      */
-    constructor(options, moleculeOptions) {
+    constructor(options: any, moleculeOptions: any) {
         this.defaultOptions = {
             scale: moleculeOptions.scale > 0.0 ? moleculeOptions.scale : 1.0,
             fontSize: moleculeOptions.fontSizeLarge * 0.8,
@@ -53,7 +58,7 @@ class ReactionDrawer {
    * 
    * @returns {SVGElement} The svg element
    */
-    draw(reaction, target, themeName = 'light', weights = null, textAbove = '{reagents}', textBelow = '', infoOnly = false) {
+    draw(reaction: any, target: string | SVGElement | null, themeName: string = 'light', weights: any = null, textAbove: string = '{reagents}', textBelow: string = '', infoOnly: boolean = false): SVGElement {
         this.themeManager = new ThemeManager(this.molOpts.themes, themeName);
 
         // Normalize the weights over the reaction molecules
@@ -302,7 +307,7 @@ class ReactionDrawer {
         return svg;
     }
 
-    getPlus() {
+    getPlus(): SVGElement {
         let s = this.opts.plus.size;
         let w = this.opts.plus.thickness;
         let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -330,7 +335,7 @@ class ReactionDrawer {
         return svg;
     }
 
-    getArrowhead() {
+    getArrowhead(): SVGElement {
         let s = this.opts.arrow.headSize;
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
         let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
@@ -352,7 +357,7 @@ class ReactionDrawer {
         return marker;
     }
 
-    getCDArrowhead() {
+    getCDArrowhead(): SVGElement {
         let s = this.opts.arrow.headSize;
         let sw = s * (7 / 4.5);
         let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
@@ -376,7 +381,7 @@ class ReactionDrawer {
         return marker;
     }
 
-    getArrow() {
+    getArrow(): SVGElement {
         let s = this.opts.arrow.headSize;
         let l = this.opts.arrow.length;
 
