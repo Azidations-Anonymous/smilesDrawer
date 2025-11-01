@@ -1,11 +1,9 @@
-// @ts-nocheck
-//@ts-check
-const MathHelper = require('./MathHelper')
-const Vector2 = require('./Vector2')
-const Vertex = require('./Vertex')
-const Edge = require('./Edge')
-const Ring = require('./Ring')
-const Atom = require('./Atom')
+import MathHelper = require('./MathHelper');
+import Vector2 = require('./Vector2');
+import Vertex = require('./Vertex');
+import Edge = require('./Edge');
+import Ring = require('./Ring');
+import Atom = require('./Atom');
 
 /** 
  * A class representing the molecular graph. 
@@ -17,13 +15,21 @@ const Atom = require('./Atom')
  * @property {Boolean} isometric A boolean indicating whether or not the SMILES associated with this graph is isometric.
  */
 class Graph {
+  vertices: Vertex[];
+  edges: Edge[];
+  atomIdxToVertexId: number[];
+  vertexIdsToEdgeId: Record<string, number>;
+  isomeric: boolean;
+  _atomIdx: number;
+  _time: number;
+
   /**
    * The constructor of the class Graph.
-   * 
+   *
    * @param {Object} parseTree A SMILES parse tree.
    * @param {Boolean} [isomeric=false] A boolean specifying whether or not the SMILES is isomeric.
    */
-  constructor(parseTree, isomeric = false) {
+  constructor(parseTree: any, isomeric: boolean = false) {
     this.vertices = Array();
     this.edges = Array();
     this.atomIdxToVertexId = Array();
@@ -45,7 +51,7 @@ class Graph {
    * @param {?Number} parentVertexId=null The id of the previous vertex.
    * @param {Boolean} isBranch=false Whether or not the bond leading to this vertex is a branch bond. Branches are represented by parentheses in smiles (e.g. CC(O)C).
    */
-  _init(node, order = 0, parentVertexId = null, isBranch = false) {
+  _init(node: any, order: number = 0, parentVertexId: number | null = null, isBranch: boolean = false): void {
     // Create a new vertex object
     const element = node.atom.element ? node.atom.element : node.atom;
     let atom = new Atom(element, node.bond);
@@ -134,7 +140,7 @@ class Graph {
   /**
    * Clears all the elements in this graph (edges and vertices).
    */
-  clear() {
+  clear(): void {
     this.vertices = Array();
     this.edges = Array();
     this.vertexIdsToEdgeId = {};
@@ -146,7 +152,7 @@ class Graph {
    * @param {Vertex} vertex A new vertex.
    * @returns {Number} The vertex id of the new vertex.
    */
-  addVertex(vertex) {
+  addVertex(vertex: Vertex): number {
     vertex.id = this.vertices.length;
     this.vertices.push(vertex);
 
@@ -159,7 +165,7 @@ class Graph {
    * @param {Edge} edge A new edge.
    * @returns {Number} The edge id of the new edge.
    */
-  addEdge(edge) {
+  addEdge(edge: Edge): number {
     let source = this.vertices[edge.sourceId];
     let target = this.vertices[edge.targetId];
 
@@ -186,7 +192,7 @@ class Graph {
    * @param {Number} vertexIdB A vertex id.
    * @returns {(Edge|null)} The edge or, if no edge can be found, null.
    */
-  getEdge(vertexIdA, vertexIdB) {
+  getEdge(vertexIdA: number, vertexIdB: number): Edge | null {
     let edgeId = this.vertexIdsToEdgeId[vertexIdA + '_' + vertexIdB];
 
     return edgeId === undefined ? null : this.edges[edgeId];
@@ -198,7 +204,7 @@ class Graph {
    * @param {Number} vertexId A vertex id.
    * @returns {Number[]} An array containing the ids of edges connected to the vertex.
    */
-  getEdges(vertexId) {
+  getEdges(vertexId: number): number[] {
     let edgeIds = Array();
     let vertex = this.vertices[vertexId];
 
@@ -217,16 +223,16 @@ class Graph {
    * @param {Number} vertexIdB A vertex id.
    * @returns {Boolean} A boolean indicating whether or not two vertices are connected by an edge.
    */
-  hasEdge(vertexIdA, vertexIdB) {
+  hasEdge(vertexIdA: number, vertexIdB: number): boolean {
     return this.vertexIdsToEdgeId[vertexIdA + '_' + vertexIdB] !== undefined
   }
 
   /**
    * Returns an array containing the vertex ids of this graph.
-   * 
+   *
    * @returns {Number[]} An array containing all vertex ids of this graph.
    */
-  getVertexList() {
+  getVertexList(): number[] {
     let arr = [this.vertices.length];
 
     for (var i = 0; i < this.vertices.length; i++) {
@@ -238,10 +244,10 @@ class Graph {
 
   /**
    * Returns an array containing source, target arrays of this graphs edges.
-   * 
+   *
    * @returns {Array[]} An array containing source, target arrays of this graphs edges. Example: [ [ 2, 5 ], [ 6, 9 ] ].
    */
-  getEdgeList() {
+  getEdgeList(): number[][] {
     let arr = Array(this.edges.length);
 
     for (var i = 0; i < this.edges.length; i++) {
@@ -253,10 +259,10 @@ class Graph {
 
   /**
    * Get the adjacency matrix of the graph.
-   * 
+   *
    * @returns {Array[]} The adjancency matrix of the molecular graph.
    */
-  getAdjacencyMatrix() {
+  getAdjacencyMatrix(): number[][] {
     let length = this.vertices.length;
     let adjacencyMatrix = Array(length);
 
@@ -277,10 +283,10 @@ class Graph {
 
   /**
    * Get the adjacency matrix of the graph with all bridges removed (thus the components). Thus the remaining vertices are all part of ring systems.
-   * 
+   *
    * @returns {Array[]} The adjancency matrix of the molecular graph with all bridges removed.
    */
-  getComponentsAdjacencyMatrix() {
+  getComponentsAdjacencyMatrix(): number[][] {
     let length = this.vertices.length;
     let adjacencyMatrix = Array(length);
     let bridges = this.getBridges();
@@ -307,11 +313,11 @@ class Graph {
 
   /**
    * Get the adjacency matrix of a subgraph.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
    * @returns {Array[]} The adjancency matrix of the subgraph.
    */
-  getSubgraphAdjacencyMatrix(vertexIds) {
+  getSubgraphAdjacencyMatrix(vertexIds: number[]): number[][] {
     let length = vertexIds.length;
     let adjacencyMatrix = Array(length);
 
@@ -335,10 +341,10 @@ class Graph {
 
   /**
    * Get the distance matrix of the graph.
-   * 
+   *
    * @returns {Array[]} The distance matrix of the graph.
    */
-  getDistanceMatrix() {
+  getDistanceMatrix(): number[][] {
     let length = this.vertices.length;
     let adja = this.getAdjacencyMatrix();
     let dist = Array(length);
@@ -371,11 +377,11 @@ class Graph {
 
   /**
    * Get the distance matrix of a subgraph.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
    * @returns {Array[]} The distance matrix of the subgraph.
    */
-  getSubgraphDistanceMatrix(vertexIds) {
+  getSubgraphDistanceMatrix(vertexIds: number[]): number[][] {
     let length = vertexIds.length;
     let adja = this.getSubgraphAdjacencyMatrix(vertexIds);
     let dist = Array(length);
@@ -408,10 +414,10 @@ class Graph {
 
   /**
    * Get the adjacency list of the graph.
-   * 
+   *
    * @returns {Array[]} The adjancency list of the graph.
    */
-  getAdjacencyList() {
+  getAdjacencyList(): number[][] {
     let length = this.vertices.length;
     let adjacencyList = Array(length);
 
@@ -434,11 +440,11 @@ class Graph {
 
   /**
    * Get the adjacency list of a subgraph.
-   * 
+   *
    * @param {Number[]} vertexIds An array containing the vertex ids contained within the subgraph.
    * @returns {Array[]} The adjancency list of the subgraph.
    */
-  getSubgraphAdjacencyList(vertexIds) {
+  getSubgraphAdjacencyList(vertexIds: number[]): number[][] {
     let length = vertexIds.length;
     let adjacencyList = Array(length);
 
@@ -461,10 +467,10 @@ class Graph {
 
   /**
    * Returns an array containing the edge ids of bridges. A bridge splits the graph into multiple components when removed.
-   * 
+   *
    * @returns {Number[]} An array containing the edge ids of the bridges.
    */
-  getBridges() {
+  getBridges(): number[][] {
     let length = this.vertices.length;
     let visited = new Array(length);
     let disc = new Array(length);
@@ -488,11 +494,11 @@ class Graph {
 
   /**
    * Traverses the graph in breadth-first order.
-   * 
+   *
    * @param {Number} startVertexId The id of the starting vertex.
    * @param {Function} callback The callback function to be called on every vertex.
    */
-  traverseBF(startVertexId, callback) {
+  traverseBF(startVertexId: number, callback: (vertex: Vertex) => void): void {
     let length = this.vertices.length;
     let visited = new Array(length);
 
@@ -524,7 +530,7 @@ class Graph {
    * @param {Number} parentVertexId The id of a neighbouring vertex.
    * @returns {Number} The depth of the sub-tree.
    */
-  getTreeDepth(vertexId, parentVertexId) {
+  getTreeDepth(vertexId: number | null, parentVertexId: number | null): number {
     if (vertexId === null || parentVertexId === null) {
       return 0;
     }
@@ -555,7 +561,7 @@ class Graph {
    * @param {Number} [depth=1] The current depth in the tree.
    * @param {Uint8Array} [visited=null] An array holding a flag on whether or not a node has been visited.
    */
-  traverseTree(vertexId, parentVertexId, callback, maxDepth = 999999, ignoreFirst = false, depth = 1, visited = null) {
+  traverseTree(vertexId: number, parentVertexId: number, callback: (vertex: Vertex) => void, maxDepth: number = 999999, ignoreFirst: boolean = false, depth: number = 1, visited: Uint8Array | null = null): void {
     if (visited === null) {
       visited = new Uint8Array(this.vertices.length);
     }
@@ -587,9 +593,9 @@ class Graph {
    * @param {Number} startVertexId A vertex id. Should be the starting vertex - e.g. the first to be positioned and connected to a previously place vertex.
    * @param {Ring} ring The bridged ring associated with this force-based layout.
    */
-  kkLayout(vertexIds, center, startVertexId, ring, bondLength,
-    threshold = 0.1, innerThreshold = 0.1, maxIteration = 2000,
-    maxInnerIteration = 50, maxEnergy = 1e9) {
+  kkLayout(vertexIds: number[], center: Vector2, startVertexId: number, ring: Ring, bondLength: number,
+    threshold: number = 0.1, innerThreshold: number = 0.1, maxIteration: number = 2000,
+    maxInnerIteration: number = 50, maxEnergy: number = 1e9): void {
 
     let edgeStrength = bondLength;
 
@@ -825,7 +831,7 @@ class Graph {
   /**
    * PRIVATE FUNCTION used by getBridges().
    */
-  _bridgeDfs(u, visited, disc, low, parent, adj, outBridges) {
+  _bridgeDfs(u: number, visited: boolean[], disc: number[], low: number[], parent: number[], adj: number[][], outBridges: number[][]): void {
     visited[u] = true;
     disc[u] = low[u] = ++this._time;
 
