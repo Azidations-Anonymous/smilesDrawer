@@ -339,7 +339,6 @@ class SvgDrawer {
       rings = preprocessor.rings,
       svgWrapper = this.svgWrapper;
 
-    var i = graph.vertices.length;
     for (var i = 0; i < graph.vertices.length; i++) {
       let vertex = graph.vertices[i];
       let atom = vertex.value;
@@ -408,9 +407,9 @@ class SvgDrawer {
 
     // Draw the ring centers for debug purposes
     if (opts.debug) {
-      for (var i = 0; i < rings.length; i++) {
-        let center = rings[i].center;
-        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[i].id);
+      for (var j = 0; j < rings.length; j++) {
+        let center = rings[j].center;
+        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
       }
     }
   }

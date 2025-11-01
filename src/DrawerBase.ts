@@ -1686,7 +1686,6 @@ class DrawerBase {
    * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
    */
   drawVertices(debug: boolean): void {
-    var i = this.graph.vertices.length;
     for (var i = 0; i < this.graph.vertices.length; i++) {
       let vertex = this.graph.vertices[i];
       let atom = vertex.value;
@@ -1746,9 +1745,9 @@ class DrawerBase {
 
     // Draw the ring centers for debug purposes
     if (this.opts.debug) {
-      for (var i = 0; i < this.rings.length; i++) {
-        let center = this.rings[i].center;
-        this.canvasWrapper.drawDebugPoint(center.x, center.y, 'r: ' + this.rings[i].id);
+      for (var j = 0; j < this.rings.length; j++) {
+        let center = this.rings[j].center;
+        this.canvasWrapper.drawDebugPoint(center.x, center.y, 'r: ' + this.rings[j].id);
       }
     }
   }

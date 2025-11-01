@@ -161,7 +161,7 @@ class SSSR {
                     const newPathLength = d[i][k] + d[k][j];
 
                     if (previousPathLength > newPathLength) {
-                        var l, m, n;
+                        var l: number, m: number, n: number;
                         if (previousPathLength === newPathLength + 1) {
                             pe_prime[i][j] = [pe[i][j].length];
                             l = pe[i][j].length
@@ -195,7 +195,7 @@ class SSSR {
                         }
                     } else if (previousPathLength === newPathLength) {
                         if (pe[i][k].length && pe[k][j].length) {
-                            var l;
+                            var l: number;
                             if (pe[i][j].length) {
                                 let tmp = Array();
 
@@ -226,7 +226,7 @@ class SSSR {
                             }
                         }
                     } else if (previousPathLength === newPathLength - 1) {
-                        var l;
+                        var l: number;
                         if (pe_prime[i][j].length) {
                             let tmp = Array();
 
