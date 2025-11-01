@@ -7,11 +7,15 @@
   "author": "Daniel Probst, Reymond Group, University of Berne",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "test:regression": "./scripts/regression-test.sh"
+  },
   "devDependencies": {
     "babel-core": ">=6.26.3",
     "babel-preset-env": ">=1.7.0",
     "babelify": "^10.0.0",
     "browserify": ">=16.2.3",
+    "canvas": "^3.2.0",
     "docdash": "^1.0.3",
     "gulp": "^4.0.2",
     "gulp-babel-minify": "^0.5.0",
@@ -21,6 +25,7 @@
     "gulp-rename": ">=1.4.0",
     "gulp-sourcemaps": "^2.6.5",
     "jsdoc": "^4.0.0",
+    "jsdom": "^27.0.1",
     "vinyl-buffer": ">=1.0.1",
     "vinyl-source-stream": ">=2.0.0",
     "watchify": "^3.11.1",

@@ -1,0 +1,107 @@
+#!/usr/bin/env node
+
+const { JSDOM } = require('jsdom');
+
+const smilesInput = process.argv[2];
+
+if (!smilesInput) {
+    console.error('ERROR: No SMILES string provided');
+    console.error('Usage: node generate-svg.js "<SMILES>"');
+    process.exit(2);
+}
+
+console.log(`PROCESSING: ${smilesInput}`);
+
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
+global.window = dom.window;
+global.document = dom.window.document;
+global.navigator = dom.window.navigator;
+
+const SmilesDrawer = require('../app.js');
+
+const options = {
+    width: 500,
+    height: 500,
+    bondThickness: 1.0,
+    bondLength: 30,
+    shortBondLength: 0.85,
+    bondSpacing: 0.18 * 30,
+    atomVisualization: 'default',
+    isomeric: true,
+    debug: false,
+    terminalCarbons: false,
+    explicitHydrogens: false,
+    overlapSensitivity: 0.42,
+    overlapResolutionIterations: 1,
+    compactDrawing: true,
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    fontSizeLarge: 6,
+    fontSizeSmall: 4,
+    padding: 20.0,
+    experimental: false,
+    themes: {
+        dark: {
+            C: '#fff',
+            O: '#e74c3c',
+            N: '#3498db',
+            F: '#27ae60',
+            CL: '#16a085',
+            BR: '#d35400',
+            I: '#8e44ad',
+            P: '#d35400',
+            S: '#f39c12',
+            B: '#e67e22',
+            SI: '#e67e22',
+            H: '#aaa',
+            BACKGROUND: '#141414'
+        },
+        light: {
+            C: '#222',
+            O: '#e74c3c',
+            N: '#3498db',
+            F: '#27ae60',
+            CL: '#16a085',
+            BR: '#d35400',
+            I: '#8e44ad',
+            P: '#d35400',
+            S: '#f39c12',
+            B: '#e67e22',
+            SI: '#e67e22',
+            H: '#999',
+            BACKGROUND: '#fff'
+        }
+    }
+};
+
+try {
+    console.log('PARSING: Starting parse');
+    const svgDrawer = new SmilesDrawer.SvgDrawer(options);
+
+    SmilesDrawer.parse(smilesInput, function(tree) {
+        console.log('PARSE_SUCCESS: Tree generated');
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('width', String(options.width));
+        svg.setAttribute('height', String(options.height));
+
+        console.log('DRAWING: Starting SVG generation');
+        svgDrawer.draw(tree, svg, 'light', false);
+
+        const svgOutput = svg.outerHTML;
+        console.log('DRAW_SUCCESS: SVG generated');
+        console.log('SVG_LENGTH: ' + svgOutput.length);
+        console.log('SVG_START_MARKER');
+        console.log(svgOutput);
+        console.log('SVG_END_MARKER');
+
+        process.exit(0);
+    }, function(err) {
+        console.error('PARSE_ERROR: ' + err);
+        process.exit(1);
+    });
+} catch (err) {
+    console.error('FATAL_ERROR: ' + err.message);
+    console.error(err.stack);
+    process.exit(1);
+}
