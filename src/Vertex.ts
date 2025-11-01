@@ -1,9 +1,7 @@
-// @ts-nocheck
-//@ts-check
-const MathHelper = require('./MathHelper')
-const ArrayHelper = require('./ArrayHelper')
-const Vector2 = require('./Vector2')
-const Atom = require('./Atom')
+import MathHelper = require('./MathHelper');
+import ArrayHelper = require('./ArrayHelper');
+import Vector2 = require('./Vector2');
+import Atom = require('./Atom');
 
 /** 
  * A class representing a vertex.
@@ -26,6 +24,22 @@ const Atom = require('./Atom')
  */
 
 class Vertex {
+  id: number | null;
+  value: Atom;
+  position: Vector2;
+  previousPosition: Vector2;
+  parentVertexId: number | null;
+  children: number[];
+  spanningTreeChildren: number[];
+  edges: number[];
+  positioned: boolean;
+  angle: number | null;
+  dir: number;
+  neighbourCount: number;
+  neighbours: number[];
+  neighbouringElements: string[];
+  forcePositioned: boolean;
+
   /**
    * The constructor for the class Vertex.
    *
@@ -33,7 +47,7 @@ class Vertex {
    * @param {Number} [x=0] The initial x coordinate of the positional vector of this vertex.
    * @param {Number} [y=0] The initial y coordinate of the positional vector of this vertex.
    */
-  constructor(value, x = 0, y = 0) {
+  constructor(value: Atom, x: number = 0, y: number = 0) {
     this.id = null;
     this.value = value;
     this.position = new Vector2(x ? x : 0, y ? y : 0);
@@ -53,23 +67,23 @@ class Vertex {
 
   /**
    * Set the 2D coordinates of the vertex.
-   * 
+   *
    * @param {Number} x The x component of the coordinates.
    * @param {Number} y The y component of the coordinates.
-   * 
+   *
    */
-  setPosition(x, y) {
+  setPosition(x: number, y: number): void {
     this.position.x = x;
     this.position.y = y;
   }
 
   /**
    * Set the 2D coordinates of the vertex from a Vector2.
-   * 
+   *
    * @param {Vector2} v A 2D vector.
-   * 
+   *
    */
-  setPositionFromVector(v) {
+  setPositionFromVector(v: Vector2): void {
     this.position.x = v.x;
     this.position.y = v.y;
   }
@@ -78,7 +92,7 @@ class Vertex {
    * Add a child vertex id to this vertex.
    * @param {Number} vertexId The id of a vertex to be added as a child to this vertex.
    */
-  addChild(vertexId) {
+  addChild(vertexId: number): void {
     this.children.push(vertexId);
     this.neighbours.push(vertexId);
 
@@ -93,7 +107,7 @@ class Vertex {
    * @param {Number} vertexId The id of a vertex to be added as a child to this vertex.
    * @param {Number} ringbondIndex The index of the ringbond.
    */
-  addRingbondChild(vertexId, ringbondIndex) {
+  addRingbondChild(vertexId: number, ringbondIndex: number): void {
     this.children.push(vertexId);
 
     if (this.value.bracket) {
@@ -137,10 +151,10 @@ class Vertex {
 
   /**
    * Set the vertex id of the parent.
-   * 
+   *
    * @param {Number} parentVertexId The parents vertex id.
    */
-  setParentVertexId(parentVertexId) {
+  setParentVertexId(parentVertexId: number): void {
     this.neighbourCount++;
     this.parentVertexId = parentVertexId;
     this.neighbours.push(parentVertexId);
@@ -151,7 +165,7 @@ class Vertex {
    *
    * @returns {Boolean} A boolean indicating whether or not this vertex is terminal.
    */
-  isTerminal() {
+  isTerminal(): boolean {
     if (this.value.hasAttachedPseudoElements) {
       return true;
     }
@@ -164,7 +178,7 @@ class Vertex {
    *
    * @returns {Vertex} A clone of this vertex.
    */
-  clone() {
+  clone(): Vertex {
     let clone = new Vertex(this.value, this.position.x, this.position.y);
     clone.id = this.id;
     clone.previousPosition = new Vector2(this.previousPosition.x, this.previousPosition.y);
@@ -184,7 +198,7 @@ class Vertex {
    * @param {Vertex} vertex The vertex to check.
    * @returns {Boolean} A boolean indicating whether or not the two vertices have the same id.
    */
-  equals(vertex) {
+  equals(vertex: Vertex): boolean {
     return this.id === vertex.id;
   }
 
@@ -195,7 +209,7 @@ class Vertex {
    * @param {Boolean} [returnAsDegrees=false] - If true, returns angle in degrees, else in radians.
    * @returns {Number} The angle of this vertex.
    */
-  getAngle(referenceVector = null, returnAsDegrees = false) {
+  getAngle(referenceVector: Vector2 | null = null, returnAsDegrees: boolean = false): number {
     let u = null;
 
     if (!referenceVector) {
@@ -218,7 +232,7 @@ class Vertex {
    * @param {Boolean} onlyHorizontal In case the text direction should be limited to either left or right.
    * @returns {String} The suggested direction of the text.
    */
-  getTextDirection(vertices, onlyHorizontal = false) {
+  getTextDirection(vertices: Vertex[], onlyHorizontal: boolean = false): string {
     let neighbours = this.getDrawnNeighbours(vertices);
     let angles = Array();
 
@@ -269,7 +283,7 @@ class Vertex {
    * @param {Number} [vertexId=null] If a value is supplied, the vertex with this id is excluded from the returned indices.
    * @returns {Number[]} An array containing the ids of neighbouring vertices.
    */
-  getNeighbours(vertexId = null) {
+  getNeighbours(vertexId: number | null = null): number[] {
     if (vertexId === null) {
       return this.neighbours.slice();
     }
@@ -287,11 +301,11 @@ class Vertex {
 
   /**
    * Returns an array of ids of neighbouring vertices that will be drawn (vertex.value.isDrawn === true).
-   * 
+   *
    * @param {Vertex[]} vertices An array containing the vertices associated with the current molecule.
    * @returns {Number[]} An array containing the ids of neighbouring vertices that will be drawn.
    */
-  getDrawnNeighbours(vertices) {
+  getDrawnNeighbours(vertices: Vertex[]): number[] {
     let arr = Array();
 
     for (let i = 0; i < this.neighbours.length; i++) {
@@ -308,7 +322,7 @@ class Vertex {
    *
    * @returns {Number} The number of neighbours.
    */
-  getNeighbourCount() {
+  getNeighbourCount(): number {
     return this.neighbourCount;
   }
 
@@ -318,7 +332,7 @@ class Vertex {
    * @param {Number} [vertexId=null] If supplied, the vertex with this id is excluded from the array returned.
    * @returns {Number[]} An array containing the ids of the neighbouring vertices.
    */
-  getSpanningTreeNeighbours(vertexId = null) {
+  getSpanningTreeNeighbours(vertexId: number | null = null): number[] {
     let neighbours = Array();
 
     for (let i = 0; i < this.spanningTreeChildren.length; i++) {
@@ -344,7 +358,7 @@ class Vertex {
    * @param {Number} previousVertexId The id of the previous vertex. The next vertex will be opposite from the vertex with this id as seen from this vertex.
    * @returns {Number} The id of the next vertex in the ring.
    */
-  getNextInRing(vertices, ringId, previousVertexId) {
+  getNextInRing(vertices: Vertex[], ringId: number, previousVertexId: number): number | null {
     let neighbours = this.getNeighbours();
 
     for (let i = 0; i < neighbours.length; i++) {
