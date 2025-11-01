@@ -1,5 +1,26 @@
 #!/usr/bin/env node
 
+/**
+ * @file Generates JSON representation of molecular graph data from SMILES strings for regression testing.
+ * @module test/generate-json
+ * @description
+ * This script parses a SMILES string using SmilesDrawer and extracts the molecular graph structure
+ * (vertices and edges with all their properties) as JSON. The JSON output is deterministic and can
+ * be compared between different versions of the code to detect regressions.
+ *
+ * The graph data includes:
+ * - Vertices: atom positions, elements, angles, directions, and connectivity
+ * - Edges: bond types, aromatic ring membership, wedge stereochemistry
+ *
+ * @example
+ * // Generate JSON to stdout
+ * node test/generate-json.js "CCO"
+ *
+ * @example
+ * // Generate JSON to file
+ * node test/generate-json.js "CCO" /tmp/output.json
+ */
+
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
 

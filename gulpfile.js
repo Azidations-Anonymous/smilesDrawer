@@ -96,7 +96,7 @@ gulp.task("doc", function(cb) {
   return new Promise(function(resolve, reject) {
     var config = require("./jsdocConfig.json");
     gulp
-      .src(["README.md", "./src/*.js"], {
+      .src(["README.md", "./src/*.js", "./test/generate-json.js", "./test/regression-runner.js"], {
         read: false
       })
       .pipe(jsdoc(config, cb));

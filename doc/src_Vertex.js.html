@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>src/Vertex.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,400 +32,380 @@
 
 <div id="main">
     
+    <h1 class="page-title">src/Vertex.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//@ts-check
+const MathHelper = require('./MathHelper')
+const ArrayHelper = require('./ArrayHelper')
+const Vector2 = require('./Vector2')
+const Atom = require('./Atom')
 
+/** 
+ * A class representing a vertex.
+ * 
+ * @property {Number} id The id of this vertex.
+ * @property {Atom} value The atom associated with this vertex.
+ * @property {Vector2} position The position of this vertex.
+ * @property {Vector2} previousPosition The position of the previous vertex.
+ * @property {Number|null} parentVertexId The id of the previous vertex.
+ * @property {Number[]} children The ids of the children of this vertex.
+ * @property {Number[]} spanningTreeChildren The ids of the children of this vertex as defined in the spanning tree defined by the SMILES.
+ * @property {Number[]} edges The ids of edges associated with this vertex.
+ * @property {Boolean} positioned A boolean indicating whether or not this vertex has been positioned.
+ * @property {Number} angle The angle of this vertex.
+ * @property {Number} dir The direction of this vertex.
+ * @property {Number} neighbourCount The number of neighbouring vertices.
+ * @property {Number[]} neighbours The vertex ids of neighbouring vertices.
+ * @property {String[]} neighbouringElements The element symbols associated with neighbouring vertices.
+ * @property {Boolean} forcePositioned A boolean indicating whether or not this vertex was positioned using a force-based approach.
+ */
 
-    <section class="package">
-        <h3> </h3>		
-    </section>
+class Vertex {
+  /**
+   * The constructor for the class Vertex.
+   *
+   * @param {Atom} value The value associated with this vertex.
+   * @param {Number} [x=0] The initial x coordinate of the positional vector of this vertex.
+   * @param {Number} [y=0] The initial y coordinate of the positional vector of this vertex.
+   */
+  constructor(value, x = 0, y = 0) {
+    this.id = null;
+    this.value = value;
+    this.position = new Vector2(x ? x : 0, y ? y : 0);
+    this.previousPosition = new Vector2(0, 0);
+    this.parentVertexId = null;
+    this.children = Array();
+    this.spanningTreeChildren = Array();
+    this.edges = Array();
+    this.positioned = false;
+    this.angle = null;
+    this.dir = 1.0;
+    this.neighbourCount = 0;
+    this.neighbours = Array();
+    this.neighbouringElements = Array();
+    this.forcePositioned = false;
+  }
 
+  /**
+   * Set the 2D coordinates of the vertex.
+   * 
+   * @param {Number} x The x component of the coordinates.
+   * @param {Number} y The y component of the coordinates.
+   * 
+   */
+  setPosition(x, y) {
+    this.position.x = x;
+    this.position.y = y;
+  }
 
+  /**
+   * Set the 2D coordinates of the vertex from a Vector2.
+   * 
+   * @param {Vector2} v A 2D vector.
+   * 
+   */
+  setPositionFromVector(v) {
+    this.position.x = v.x;
+    this.position.y = v.y;
+  }
 
+  /**
+   * Add a child vertex id to this vertex.
+   * @param {Number} vertexId The id of a vertex to be added as a child to this vertex.
+   */
+  addChild(vertexId) {
+    this.children.push(vertexId);
+    this.neighbours.push(vertexId);
 
+    this.neighbourCount++;
+  }
 
+  /**
+   * Add a child vertex id to this vertex as the second child of the neighbours array,
+   * except this vertex is the first vertex of the SMILE string, then it is added as the first.
+   * This is used to get the correct ordering of neighbours for parity calculations.
+   * If a hydrogen is implicitly attached to the chiral center, insert as the third child.
+   * @param {Number} vertexId The id of a vertex to be added as a child to this vertex.
+   * @param {Number} ringbondIndex The index of the ringbond.
+   */
+  addRingbondChild(vertexId, ringbondIndex) {
+    this.children.push(vertexId);
 
+    if (this.value.bracket) {
+      let index = 1;
 
+      if (this.id === 0 &amp;&amp; this.value.bracket.hcount === 0) {
+        index = 0;
+      }
 
+      if (this.value.bracket.hcount === 1 &amp;&amp; ringbondIndex === 0) {
+        index = 2;
+      }
 
-    
-
-
-
-    <section class="readme usertext">
-        <article><p>Hey all, Daniel here. I'm looking for someone who has the time and motivation to maintain this repo.
-I wanted to get back to it but I won't be able to find the time this year. The best, of course, would be
-if it were someone who actually can do it as part of their work.
-You can let me know via E-Mail. You'll find the address here: https://people.epfl.ch/daniel.probst/?lang=en</p>
-<h1>SmilesDrawer 2.0</h1>
-<p>No server, no images, no templates, just a SMILES 😊</p>
-<p>Current Version: <strong>2.1.10</strong></p>
-<table style="width: 100%; table-layout: fixed">
-    <tbody>
-        <tr>
-            <td><a href="https://smilesdrawer.rocks">Molecules</a></td>
-            <td><a href="https://smilesdrawer.rocks">Reactions & Highlights</a></td>
-        </tr>
-        <tr>
-            <td><a href="https://smilesdrawer.rocks"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/main.png"></img></a></td>
-            <td><a href="https://smilesdrawer.rocks"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/rxn_highlight.png"></img></a></td>
-        </tr>
-        <tr>
-            <td><a href="https://smilesdrawer.surge.sh/use.html">Learn & Copy-Paste</a></td>
-            <td><a href="https://smilesdrawer.surge.sh/playground.html">Style & Customize</a></td>
-        </tr>
-        <tr>
-            <td><a href="https://smilesdrawer.surge.sh/use.html"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/learn.png"></img></a></td>
-            <td><a href="https://smilesdrawer.surge.sh/playground.html"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/style.png"></img></a></td>
-        </tr>
-    </tbody>
-</table>
-<h3>Examples in Specific Frameworks</h3>
-<details>
-    <summary>Svelte </summary>
-<pre class="prettyprint source lang-html"><code>&lt;!--file:Molecule.svlete-->
-&lt;!--Tested against v2.1.7 of smiles-drawer-->
-&lt;script>
-    import { afterUpdate } from &quot;svelte&quot;;
-    import SmilesDrawer from &quot;smiles-drawer&quot;;
-
-    export let smiles = &quot;&quot;;
-
-    const SETTINGS = {
-        width: 300,
-        height: 200,
-    };
-    let drawer = new SmilesDrawer.SvgDrawer(SETTINGS);
-    let svgElement;
-
-    afterUpdate(() => {
-        SmilesDrawer.parse(smiles, function (tree) {
-            drawer.draw(tree, svgElement, &quot;light&quot;);
-        });
-    });
-&lt;/script>
-
-&lt;div>
-    &lt;svg bind:this={svgElement} data-smiles={smiles} />
-&lt;/div>
-
-&lt;style>
-    svg {
-        width: 300px;
-        height: 200px;
-    }
-&lt;/style>
-
-&lt;!--usage-->
-&lt;Molecule smiles=&quot;CCCO&quot; />
-</code></pre>
-</details>
-<h3>Please cite</h3>
-<p>If you use this code or application, please cite the original paper published by the Journal of Chemical Information and Modeling: <a href="http://dx.doi.org/10.1021/acs.jcim.7b00425">10.1021/acs.jcim.7b00425</a></p>
-<h2>Legacy Documentation</h2>
-<p>As of now, there is full backwards compatibility.</p>
-<h3>Examples</h3>
-<p>An example using the light theme can be found <a href="http://doc.gdb.tools/smilesDrawer/sd/example/index_light.html">here</a>, while one using the dark theme can be found <a href="http://doc.gdb.tools/smilesDrawer/sd/example/index.html">here</a> . The colors of SmilesDrawer are completely configurable.</p>
-<p>Examples showing molecules from different databases:</p>
-<ul>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=drugbank">Drugbank</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=gdb17">GDB-17</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=fdb">FDB-17</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=schembl">SureChEMBL</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=chembl">ChEMBL</a></li>
-</ul>
-<p>A very simple JSFiddle example can be found <a href="https://jsfiddle.net/zjdtkL57/1/">here</a>. This example shows the <code>SmilesDrawer.apply()</code> functionality which draws the structure for every <code>canvas</code> element with a <code>data-smiles</code> attribute. E.g. <code>&lt;canvas data-smiles=&quot;C1CCCCC1&quot;&gt;&lt;/canvas&gt;</code></p>
-<h3>Experimental Features</h3>
-<p>If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental features (see options).</p>
-<h3>&quot;Installation&quot;</h3>
-<p>SmilesDrawer is available from the unpkg content delivery network:</p>
-<pre class="prettyprint source"><code>https://unpkg.com/smiles-drawer@1.2.0/dist/smiles-drawer.min.js
-</code></pre>
-<p>You can easily get smiles-drawer using yarn:</p>
-<pre class="prettyprint source"><code>yarn add smiles-drawer
-</code></pre>
-<p>or you can just download the files from here.</p>
-<h3>Building Smiles Drawer</h3>
-<p>If you decide not to use the ready-to-go scripts in <code>dist</code>, you can (edit and) build the project by running:</p>
-<pre class="prettyprint source lang-bash"><code>npm install
-gulp
-</code></pre>
-<h3>Getting Started</h3>
-<p>To get a simple input box which lets the user enter a SMILES and then display it in a canvas, the following minimal example is sufficient.
-In order to have nice consistent font rendering you have to include the droid sans font from google fonts.</p>
-<pre class="prettyprint source lang-html"><code>&lt;!DOCTYPE html>
-&lt;html>
-  &lt;head>
-    &lt;meta charset=&quot;utf-8&quot; />
-    &lt;meta http-equiv=&quot;x-ua-compatible&quot; content=&quot;ie=edge&quot; />
-    &lt;title>Smiles Drawer Example&lt;/title>
-    &lt;meta name=&quot;description&quot; content=&quot;A minimal smiles drawer example.&quot; />
-    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; />
-
-    &lt;link
-      href=&quot;https://fonts.googleapis.com/css?family=Droid+Sans:400,700&quot;
-      rel=&quot;stylesheet&quot;
-    />
-  &lt;/head>
-  &lt;body>
-    &lt;input id=&quot;example-input&quot; name=&quot;example-input&quot; />
-    &lt;canvas id=&quot;example-canvas&quot; width=&quot;500&quot; height=&quot;500&quot;>&lt;/canvas>
-
-    &lt;script src=&quot;https://unpkg.com/smiles-drawer@1.0.10/dist/smiles-drawer.min.js&quot;>&lt;/script>
-    &lt;script>
-      let input = document.getElementById(&quot;example-input&quot;);
-      let options = {};
-
-      // Initialize the drawer to draw to canvas
-      let smilesDrawer = new SmilesDrawer.Drawer(options);
-      // Alternatively, initialize the SVG drawer:
-      // let svgDrawer = new SmilesDrawer.SvgDrawer(options);
-
-      input.addEventListener(&quot;input&quot;, function() {
-        // Clean the input (remove unrecognized characters, such as spaces and tabs) and parse it
-        SmilesDrawer.parse(input.value, function(tree) {
-          // Draw to the canvas
-          smilesDrawer.draw(tree, &quot;example-canvas&quot;, &quot;light&quot;, false);
-          // Alternatively, draw to SVG:
-          // svgDrawer.draw(tree, 'output-svg', 'dark', false);
-        });
-      });
-    &lt;/script>
-  &lt;/body>
-&lt;/html>
-</code></pre>
-<p>See the example folder for a more complete example.</p>
-<h3>Options</h3>
-<p>The options are supplied to the constructor as shown in the example above.</p>
-<pre class="prettyprint source lang-javascript"><code>let options = { ... };
-let smilesDrawer = new SmilesDrawer(options);
-</code></pre>
-<p>The following options are available:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Identifier</th>
-<th>Data Type</th>
-<th>Default Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Drawing width</td>
-<td>width</td>
-<td>number</td>
-<td>500</td>
-</tr>
-<tr>
-<td>Drawing height</td>
-<td>height</td>
-<td>number</td>
-<td>500</td>
-</tr>
-<tr>
-<td>Bond thickness</td>
-<td>bondThickness</td>
-<td>number</td>
-<td>0.6</td>
-</tr>
-<tr>
-<td>Bond length</td>
-<td>bondLength</td>
-<td>number</td>
-<td>15</td>
-</tr>
-<tr>
-<td>Short bond length (e.g. double bonds) in percent of bond length</td>
-<td>shortBondLength</td>
-<td>number</td>
-<td>0.85</td>
-</tr>
-<tr>
-<td>Bond spacing (e.g. space between double bonds)</td>
-<td>bondSpacing</td>
-<td>number</td>
-<td>0.18 * 15</td>
-</tr>
-<tr>
-<td>Atom Visualization</td>
-<td>atomVisualization</td>
-<td>string ['default', 'balls', 'none']</td>
-<td>'default'</td>
-</tr>
-<tr>
-<td>Large Font Size (in pt for elements)</td>
-<td>fontSizeLarge</td>
-<td>number</td>
-<td>6</td>
-</tr>
-<tr>
-<td>Small Font Size (in pt for numbers)</td>
-<td>fontSizeSmall</td>
-<td>number</td>
-<td>4</td>
-</tr>
-<tr>
-<td>Padding</td>
-<td>padding</td>
-<td>number</td>
-<td>20.0</td>
-</tr>
-<tr>
-<td>Use experimental features</td>
-<td>experimental</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Show Terminal Carbons (CH3)</td>
-<td>terminalCarbons</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Show explicit hydrogens</td>
-<td>explicitHydrogens</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Overlap sensitivity</td>
-<td>overlapSensitivity</td>
-<td>number</td>
-<td>0.42</td>
-</tr>
-<tr>
-<td># of overlap resolution iterations</td>
-<td>overlapResolutionIterations</td>
-<td>number</td>
-<td>1</td>
-</tr>
-<tr>
-<td>Draw concatenated terminals and pseudo elements</td>
-<td>compactDrawing</td>
-<td>boolean</td>
-<td>true</td>
-</tr>
-<tr>
-<td>Draw isometric SMILES if available</td>
-<td>isometric</td>
-<td>boolean</td>
-<td>true</td>
-</tr>
-<tr>
-<td>Debug (draw debug information to canvas)</td>
-<td>debug</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Color themes</td>
-<td>themes</td>
-<td>object</td>
-<td>see below</td>
-</tr>
-</tbody>
-</table>
-<p>The default options are defined as follows:</p>
-<pre class="prettyprint source lang-javascript"><code>{
-    width: 500,
-    height: 500,
-    bondThickness: 0.6,
-    bondLength: 15,
-    shortBondLength: 0.85,
-    bondSpacing: 0.18 * 15,
-    atomVisualization: 'default',
-    isomeric: true,
-    debug: false,
-    terminalCarbons: false,
-    explicitHydrogens: false,
-    overlapSensitivity: 0.42,
-    overlapResolutionIterations: 1,
-    compactDrawing: true,
-    fontSizeLarge: 5,
-    fontSizeSmall: 3,
-    padding: 20.0,
-    experimental: false,
-    themes: {
-        dark: {
-            C: '#fff',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f1c40f',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#fff',
-            BACKGROUND: '#141414'
-        },
-        light: {
-            C: '#222',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f1c40f',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#222',
-            BACKGROUND: '#fff'
+      if (this.value.bracket.hcount === 1 &amp;&amp; ringbondIndex === 1) {
+        if (this.neighbours.length &lt; 3) {
+          index = 2;
+        } else {
+          index = 3;
         }
+      }
+
+      if (this.value.bracket.hcount === null &amp;&amp; ringbondIndex === 0) {
+        index = 1;
+      }
+
+      if (this.value.bracket.hcount === null &amp;&amp; ringbondIndex === 1) {
+        if (this.neighbours.length &lt; 3) {
+          index = 1;
+        } else {
+          index = 2;
+        }
+      }
+
+      this.neighbours.splice(index, 0, vertexId);
+    } else {
+      this.neighbours.push(vertexId);
     }
-};
-</code></pre>
-<h3>Usage</h3>
-<p>An instance of SmilesDrawer is able to draw to multiple targets. Initialize SmilesDrawer once for each set of options (you would initialize two different objects if you were to draw in two different sizes).</p>
-<pre class="prettyprint source lang-javascript"><code>let smilesDrawer = new SmilesDrawer.Drawer({ width: 250, height: 250 });
-</code></pre>
-<p>In order to depict a SMILES string it has to be parsed using SmilesDrawer's SMILES parser, which is encapsulated in the static function <code>SmilesDrawer.parse()</code> where the first argument is the SMILES string and the second argument a callback for a successful parsing. The third argument provides a way to handle errors using a callback.</p>
-<pre class="prettyprint source lang-javascript"><code>SmilesDrawer.parse('C1CCCCC1', function (tree) {
-    smilesDrawer.draw(tree, 'output-canvas', 'light', false);
-}, function (err) {
-    console.log(err);
+
+    this.neighbourCount++;
+  }
+
+  /**
+   * Set the vertex id of the parent.
+   * 
+   * @param {Number} parentVertexId The parents vertex id.
+   */
+  setParentVertexId(parentVertexId) {
+    this.neighbourCount++;
+    this.parentVertexId = parentVertexId;
+    this.neighbours.push(parentVertexId);
+  }
+
+  /**
+   * Returns true if this vertex is terminal (has no parent or child vertices), otherwise returns false. Always returns true if associated value has property hasAttachedPseudoElements set to true.
+   *
+   * @returns {Boolean} A boolean indicating whether or not this vertex is terminal.
+   */
+  isTerminal() {
+    if (this.value.hasAttachedPseudoElements) {
+      return true;
+    }
+
+    return (this.parentVertexId === null &amp;&amp; this.children.length &lt; 2) || this.children.length === 0;
+  }
+
+  /**
+   * Clones this vertex and returns the clone.
+   *
+   * @returns {Vertex} A clone of this vertex.
+   */
+  clone() {
+    let clone = new Vertex(this.value, this.position.x, this.position.y);
+    clone.id = this.id;
+    clone.previousPosition = new Vector2(this.previousPosition.x, this.previousPosition.y);
+    clone.parentVertexId = this.parentVertexId;
+    clone.children = ArrayHelper.clone(this.children);
+    clone.spanningTreeChildren = ArrayHelper.clone(this.spanningTreeChildren);
+    clone.edges = ArrayHelper.clone(this.edges);
+    clone.positioned = this.positioned;
+    clone.angle = this.angle;
+    clone.forcePositioned = this.forcePositioned;
+    return clone;
+  }
+
+  /**
+   * Returns true if this vertex and the supplied vertex both have the same id, else returns false.
+   *
+   * @param {Vertex} vertex The vertex to check.
+   * @returns {Boolean} A boolean indicating whether or not the two vertices have the same id.
+   */
+  equals(vertex) {
+    return this.id === vertex.id;
+  }
+
+  /**
+   * Returns the angle of this vertexes positional vector. If a reference vector is supplied in relations to this vector, else in relations to the coordinate system.
+   *
+   * @param {Vector2} [referenceVector=null] - The reference vector.
+   * @param {Boolean} [returnAsDegrees=false] - If true, returns angle in degrees, else in radians.
+   * @returns {Number} The angle of this vertex.
+   */
+  getAngle(referenceVector = null, returnAsDegrees = false) {
+    let u = null;
+
+    if (!referenceVector) {
+      u = Vector2.subtract(this.position, this.previousPosition);
+    } else {
+      u = Vector2.subtract(this.position, referenceVector);
+    }
+
+    if (returnAsDegrees) {
+      return MathHelper.toDeg(u.angle());
+    }
+
+    return u.angle();
+  }
+
+  /**
+   * Returns the suggested text direction when text is added at the position of this vertex.
+   *
+   * @param {Vertex[]} vertices The array of vertices for the current molecule.
+   * @param {Boolean} onlyHorizontal In case the text direction should be limited to either left or right.
+   * @returns {String} The suggested direction of the text.
+   */
+  getTextDirection(vertices, onlyHorizontal = false) {
+    let neighbours = this.getDrawnNeighbours(vertices);
+    let angles = Array();
+
+    // If there is only one vertex in the graph, always draw to the right
+    if (vertices.length === 1) {
+      return 'right';
+    }
+
+    for (let i = 0; i &lt; neighbours.length; i++) {
+      angles.push(this.getAngle(vertices[neighbours[i]].position));
+    }
+
+    let textAngle = MathHelper.meanAngle(angles);
+
+    if (this.isTerminal() || onlyHorizontal) {
+      // Round to 0 or 180 if terminal or only horizontal allowed
+      // With only this, text is written to the left if the angle is 90°/1.5708 rad (straight down).
+      // So if angle is ~1.5708, force it a bit anti-clock-wise
+      if (Math.round(textAngle * 100) / 100 === 1.57) {
+        textAngle = textAngle - 0.2;
+      }
+      textAngle = Math.round(Math.round(textAngle / Math.PI) * Math.PI);
+    } else {
+      // Round to 0, 90, 180 or 270 degree if not terminal
+      let halfPi = Math.PI / 2.0;
+      textAngle = Math.round(Math.round(textAngle / halfPi) * halfPi);
+    }
+
+
+
+
+    if (textAngle === 2) {
+      return 'down';
+    } else if (textAngle === -2) {
+      return 'up';
+    } else if (textAngle === 0 || textAngle === -0) {
+      return 'right'; // is checking for -0 necessary?
+    } else if (textAngle === 3 || textAngle === -3) {
+      return 'left';
+    } else {
+      return 'down'; // default to down
+    }
+  }
+
+  /**
+   * Returns an array of ids of neighbouring vertices.
+   *
+   * @param {Number} [vertexId=null] If a value is supplied, the vertex with this id is excluded from the returned indices.
+   * @returns {Number[]} An array containing the ids of neighbouring vertices.
+   */
+  getNeighbours(vertexId = null) {
+    if (vertexId === null) {
+      return this.neighbours.slice();
+    }
+
+    let arr = Array();
+
+    for (let i = 0; i &lt; this.neighbours.length; i++) {
+      if (this.neighbours[i] !== vertexId) {
+        arr.push(this.neighbours[i]);
+      }
+    }
+
+    return arr;
+  }
+
+  /**
+   * Returns an array of ids of neighbouring vertices that will be drawn (vertex.value.isDrawn === true).
+   * 
+   * @param {Vertex[]} vertices An array containing the vertices associated with the current molecule.
+   * @returns {Number[]} An array containing the ids of neighbouring vertices that will be drawn.
+   */
+  getDrawnNeighbours(vertices) {
+    let arr = Array();
+
+    for (let i = 0; i &lt; this.neighbours.length; i++) {
+      if (vertices[this.neighbours[i]].value.isDrawn) {
+        arr.push(this.neighbours[i]);
+      }
+    }
+
+    return arr;
+  }
+
+  /**
+   * Returns the number of neighbours of this vertex.
+   *
+   * @returns {Number} The number of neighbours.
+   */
+  getNeighbourCount() {
+    return this.neighbourCount;
+  }
+
+  /**
+   * Returns a list of ids of vertices neighbouring this one in the original spanning tree, excluding the ringbond connections.
+   *
+   * @param {Number} [vertexId=null] If supplied, the vertex with this id is excluded from the array returned.
+   * @returns {Number[]} An array containing the ids of the neighbouring vertices.
+   */
+  getSpanningTreeNeighbours(vertexId = null) {
+    let neighbours = Array();
+
+    for (let i = 0; i &lt; this.spanningTreeChildren.length; i++) {
+      if (vertexId === undefined || vertexId != this.spanningTreeChildren[i]) {
+        neighbours.push(this.spanningTreeChildren[i]);
+      }
+    }
+
+    if (this.parentVertexId != null) {
+      if (vertexId === undefined || vertexId != this.parentVertexId) {
+        neighbours.push(this.parentVertexId);
+      }
+    }
+
+    return neighbours;
+  }
+
+  /**
+   * Gets the next vertex in the ring in opposide direction to the supplied vertex id.
+   *
+   * @param {Vertex[]} vertices The array of vertices for the current molecule.
+   * @param {Number} ringId The id of the ring containing this vertex.
+   * @param {Number} previousVertexId The id of the previous vertex. The next vertex will be opposite from the vertex with this id as seen from this vertex.
+   * @returns {Number} The id of the next vertex in the ring.
+   */
+  getNextInRing(vertices, ringId, previousVertexId) {
+    let neighbours = this.getNeighbours();
+
+    for (let i = 0; i &lt; neighbours.length; i++) {
+      if (ArrayHelper.contains(vertices[neighbours[i]].value.rings, {
+        value: ringId
+      }) &amp;&amp;
+        neighbours[i] != previousVertexId) {
+        return neighbours[i];
+      }
+    }
+
+    return null;
+  }
 }
-</code></pre>
-<p>The function <code>smilesDrawer.draw()</code> requires two and accepts up to four arguments. The first argument is the parse tree returned by the parse function (through the callback), the second is the <code>id</code> of a HTML canvas element on which the structure will be drawn. The two optional arguments are whether to use the light or dark theme (defaults to <code>'light'</code>) and whether to only compute properties such as ring count, hac, etc. and not depict the structure (defaults to <code>false</code>).</p>
-<h3>API</h3>
-<p>The SmilesDrawer object exposes methods that can be used for purposes other than drawing chemical structures.</p>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Description</th>
-<th>Returns</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>getMolecularFormula()</code></td>
-<td>Returns the molecular formula, eg. C22H30N6O4S, of the currently loaded molecule.</td>
-<td><code>String</code></td>
-</tr>
-</tbody>
-</table>
-<h3>Bridged Rings</h3>
-<p>Bridged rings are positioned using the Kamada–Kawai algorithm. If there is a bridged ring in the molecule, explicitly defined aromatic rings are not drawn with a circle inside the ring, but with dashed gray lines where double bonds would be.</p>
-<h3>Contributors</h3>
-<p>Thank you for contributing:</p>
-<ul>
-<li>SRI International's CSE group (For the excellent SVG support)</li>
-<li><a href="https://github.com/ohardy">ohardy</a></li>
-</ul></article>
+
+module.exports = Vertex;</code></pre>
+        </article>
     </section>
-
-
 
 
 

@@ -1,5 +1,40 @@
 #!/usr/bin/env node
 
+/**
+ * @file Regression test orchestrator for SmilesDrawer
+ * @module test/regression-runner
+ * @description
+ * Compares molecular graph outputs between two versions of SmilesDrawer to detect regressions.
+ * Uses a fail-fast approach: tests SMILES strings one at a time and stops on the first mismatch.
+ *
+ * ## Test Modes
+ * - **Fast mode (default)**: Tests only the fastregression dataset (~114 SMILES)
+ * - **Full mode (--full)**: Tests all 6 datasets (thousands of SMILES)
+ *
+ * ## How it works
+ * 1. For each SMILES string:
+ *    - Sanitize input (remove control characters)
+ *    - Generate molecular graph JSON from old code version
+ *    - Generate molecular graph JSON from new code version
+ *    - Compare JSON outputs byte-for-byte
+ *    - Stop immediately if mismatch found
+ * 2. Skip invalid SMILES that fail to parse in either version
+ * 3. Report total tested, skipped, and any regressions found
+ *
+ * ## Exit codes
+ * - 0: All tests passed
+ * - 1: Regression detected (outputs diff)
+ * - 2: Infrastructure error
+ *
+ * @example
+ * // Test fast regression dataset
+ * node test/regression-runner.js /path/to/old/code /path/to/new/code
+ *
+ * @example
+ * // Test all datasets
+ * node test/regression-runner.js /path/to/old/code /path/to/new/code --full
+ */
+
 const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -185,6 +220,14 @@ console.log('='.repeat(80));
 
 process.exit(0);
 
+/**
+ * Sanitizes a SMILES string by removing non-printable ASCII characters.
+ * Some datasets contain control characters that cause parse errors. This function
+ * filters the input to only include visible ASCII characters (32-126).
+ *
+ * @param {string} smiles - The SMILES string to sanitize
+ * @returns {string} Sanitized SMILES string containing only printable ASCII characters
+ */
 function sanitizeSmiles(smiles) {
     let cleaned = '';
     for (let i = 0; i < smiles.length; i++) {
@@ -196,6 +239,15 @@ function sanitizeSmiles(smiles) {
     return cleaned;
 }
 
+/**
+ * Extracts JSON content between markers from script output.
+ * Used as a fallback when file-based output is not available.
+ *
+ * @param {string} output - The raw output containing JSON_START_MARKER and JSON_END_MARKER
+ * @returns {string} Extracted JSON string
+ * @throws {Error} If markers are not found in the output
+ * @private
+ */
 function extractJSON(output) {
     const startMarker = 'JSON_START_MARKER';
     const endMarker = 'JSON_END_MARKER';

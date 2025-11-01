@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Home - Documentation</title>
+    <title>src/SmilesDrawer.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,400 +32,337 @@
 
 <div id="main">
     
+    <h1 class="page-title">src/SmilesDrawer.js</h1>
+    
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>//@ts-check
+const Drawer = require('./Drawer')
+const Parser = require('./Parser')
+const ReactionParser = require('./ReactionParser')
+const SvgDrawer = require('./SvgDrawer')
+const ReactionDrawer = require('./ReactionDrawer')
+const SvgWrapper = require('./SvgWrapper')
+const Options = require('./Options');
+class SmilesDrawer {
+    constructor(moleculeOptions = {}, reactionOptions = {}) {
+        this.drawer = new SvgDrawer(moleculeOptions);
 
-
-    <section class="package">
-        <h3> </h3>		
-    </section>
-
-
-
-
-
-
-
-
-
-    
-
-
-
-    <section class="readme usertext">
-        <article><p>Hey all, Daniel here. I'm looking for someone who has the time and motivation to maintain this repo.
-I wanted to get back to it but I won't be able to find the time this year. The best, of course, would be
-if it were someone who actually can do it as part of their work.
-You can let me know via E-Mail. You'll find the address here: https://people.epfl.ch/daniel.probst/?lang=en</p>
-<h1>SmilesDrawer 2.0</h1>
-<p>No server, no images, no templates, just a SMILES 😊</p>
-<p>Current Version: <strong>2.1.10</strong></p>
-<table style="width: 100%; table-layout: fixed">
-    <tbody>
-        <tr>
-            <td><a href="https://smilesdrawer.rocks">Molecules</a></td>
-            <td><a href="https://smilesdrawer.rocks">Reactions & Highlights</a></td>
-        </tr>
-        <tr>
-            <td><a href="https://smilesdrawer.rocks"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/main.png"></img></a></td>
-            <td><a href="https://smilesdrawer.rocks"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/rxn_highlight.png"></img></a></td>
-        </tr>
-        <tr>
-            <td><a href="https://smilesdrawer.surge.sh/use.html">Learn & Copy-Paste</a></td>
-            <td><a href="https://smilesdrawer.surge.sh/playground.html">Style & Customize</a></td>
-        </tr>
-        <tr>
-            <td><a href="https://smilesdrawer.surge.sh/use.html"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/learn.png"></img></a></td>
-            <td><a href="https://smilesdrawer.surge.sh/playground.html"><img src="https://github.com/reymond-group/smilesDrawer/raw/master/readme/style.png"></img></a></td>
-        </tr>
-    </tbody>
-</table>
-<h3>Examples in Specific Frameworks</h3>
-<details>
-    <summary>Svelte </summary>
-<pre class="prettyprint source lang-html"><code>&lt;!--file:Molecule.svlete-->
-&lt;!--Tested against v2.1.7 of smiles-drawer-->
-&lt;script>
-    import { afterUpdate } from &quot;svelte&quot;;
-    import SmilesDrawer from &quot;smiles-drawer&quot;;
-
-    export let smiles = &quot;&quot;;
-
-    const SETTINGS = {
-        width: 300,
-        height: 200,
-    };
-    let drawer = new SmilesDrawer.SvgDrawer(SETTINGS);
-    let svgElement;
-
-    afterUpdate(() => {
-        SmilesDrawer.parse(smiles, function (tree) {
-            drawer.draw(tree, svgElement, &quot;light&quot;);
-        });
-    });
-&lt;/script>
-
-&lt;div>
-    &lt;svg bind:this={svgElement} data-smiles={smiles} />
-&lt;/div>
-
-&lt;style>
-    svg {
-        width: 300px;
-        height: 200px;
+        // moleculeOptions gets edited in reactionOptions, so clone
+        this.reactionDrawer = new ReactionDrawer(reactionOptions, JSON.parse(JSON.stringify(this.drawer.opts)));
     }
-&lt;/style>
 
-&lt;!--usage-->
-&lt;Molecule smiles=&quot;CCCO&quot; />
-</code></pre>
-</details>
-<h3>Please cite</h3>
-<p>If you use this code or application, please cite the original paper published by the Journal of Chemical Information and Modeling: <a href="http://dx.doi.org/10.1021/acs.jcim.7b00425">10.1021/acs.jcim.7b00425</a></p>
-<h2>Legacy Documentation</h2>
-<p>As of now, there is full backwards compatibility.</p>
-<h3>Examples</h3>
-<p>An example using the light theme can be found <a href="http://doc.gdb.tools/smilesDrawer/sd/example/index_light.html">here</a>, while one using the dark theme can be found <a href="http://doc.gdb.tools/smilesDrawer/sd/example/index.html">here</a> . The colors of SmilesDrawer are completely configurable.</p>
-<p>Examples showing molecules from different databases:</p>
-<ul>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=drugbank">Drugbank</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=gdb17">GDB-17</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=fdb">FDB-17</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=schembl">SureChEMBL</a></li>
-<li><a href="http://doc.gdb.tools/smilesDrawer/sd/test/browser.html?set=chembl">ChEMBL</a></li>
-</ul>
-<p>A very simple JSFiddle example can be found <a href="https://jsfiddle.net/zjdtkL57/1/">here</a>. This example shows the <code>SmilesDrawer.apply()</code> functionality which draws the structure for every <code>canvas</code> element with a <code>data-smiles</code> attribute. E.g. <code>&lt;canvas data-smiles=&quot;C1CCCCC1&quot;&gt;&lt;/canvas&gt;</code></p>
-<h3>Experimental Features</h3>
-<p>If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental features (see options).</p>
-<h3>&quot;Installation&quot;</h3>
-<p>SmilesDrawer is available from the unpkg content delivery network:</p>
-<pre class="prettyprint source"><code>https://unpkg.com/smiles-drawer@1.2.0/dist/smiles-drawer.min.js
-</code></pre>
-<p>You can easily get smiles-drawer using yarn:</p>
-<pre class="prettyprint source"><code>yarn add smiles-drawer
-</code></pre>
-<p>or you can just download the files from here.</p>
-<h3>Building Smiles Drawer</h3>
-<p>If you decide not to use the ready-to-go scripts in <code>dist</code>, you can (edit and) build the project by running:</p>
-<pre class="prettyprint source lang-bash"><code>npm install
-gulp
-</code></pre>
-<h3>Getting Started</h3>
-<p>To get a simple input box which lets the user enter a SMILES and then display it in a canvas, the following minimal example is sufficient.
-In order to have nice consistent font rendering you have to include the droid sans font from google fonts.</p>
-<pre class="prettyprint source lang-html"><code>&lt;!DOCTYPE html>
-&lt;html>
-  &lt;head>
-    &lt;meta charset=&quot;utf-8&quot; />
-    &lt;meta http-equiv=&quot;x-ua-compatible&quot; content=&quot;ie=edge&quot; />
-    &lt;title>Smiles Drawer Example&lt;/title>
-    &lt;meta name=&quot;description&quot; content=&quot;A minimal smiles drawer example.&quot; />
-    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; />
+    static apply(moleculeOptions = {}, reactionOptions = {}, attribute = 'data-smiles', theme = 'light', successCallback = null, errorCallback = null) {
+        const drawer = new SmilesDrawer(moleculeOptions, reactionOptions);
+        drawer.apply(attribute, theme, successCallback, errorCallback);
+    }
 
-    &lt;link
-      href=&quot;https://fonts.googleapis.com/css?family=Droid+Sans:400,700&quot;
-      rel=&quot;stylesheet&quot;
-    />
-  &lt;/head>
-  &lt;body>
-    &lt;input id=&quot;example-input&quot; name=&quot;example-input&quot; />
-    &lt;canvas id=&quot;example-canvas&quot; width=&quot;500&quot; height=&quot;500&quot;>&lt;/canvas>
+    apply(attribute = 'data-smiles', theme = 'light', successCallback = null, errorCallback = null) {
+        let elements = document.querySelectorAll(`[${attribute}]`);
+        elements.forEach(element => {
+            let smiles = element.getAttribute(attribute);
 
-    &lt;script src=&quot;https://unpkg.com/smiles-drawer@1.0.10/dist/smiles-drawer.min.js&quot;>&lt;/script>
-    &lt;script>
-      let input = document.getElementById(&quot;example-input&quot;);
-      let options = {};
+            if (smiles === null) {
+                throw Error('No SMILES provided.');
+            }
 
-      // Initialize the drawer to draw to canvas
-      let smilesDrawer = new SmilesDrawer.Drawer(options);
-      // Alternatively, initialize the SVG drawer:
-      // let svgDrawer = new SmilesDrawer.SvgDrawer(options);
+            let currentTheme = theme;
+            let weights = null;
 
-      input.addEventListener(&quot;input&quot;, function() {
-        // Clean the input (remove unrecognized characters, such as spaces and tabs) and parse it
-        SmilesDrawer.parse(input.value, function(tree) {
-          // Draw to the canvas
-          smilesDrawer.draw(tree, &quot;example-canvas&quot;, &quot;light&quot;, false);
-          // Alternatively, draw to SVG:
-          // svgDrawer.draw(tree, 'output-svg', 'dark', false);
+            if (element.hasAttribute('data-smiles-theme')) {
+                currentTheme = element.getAttribute('data-smiles-theme');
+            }
+
+            if (element.hasAttribute('data-smiles-weights')) {
+                weights = element.getAttribute('data-smiles-weights').split(",").map(parseFloat);
+            }
+
+            if (element.hasAttribute('data-smiles-reactant-weights') ||
+                element.hasAttribute('data-smiles-reagent-weights') ||
+                element.hasAttribute('data-smiles-product-weights')) {
+                weights = { reactants: [], reagents: [], products: [] };
+                if (element.hasAttribute('data-smiles-reactant-weights')) {
+                    weights.reactants = element.getAttribute('data-smiles-reactant-weights').split(';').map(v => {
+                        return v.split(',').map(parseFloat)
+                    });
+                }
+
+                if (element.hasAttribute('data-smiles-reagent-weights')) {
+                    weights.reagents = element.getAttribute('data-smiles-reagent-weights').split(';').map(v => {
+                        return v.split(',').map(parseFloat)
+                    });
+                }
+
+                if (element.hasAttribute('data-smiles-product-weights')) {
+                    weights.products = element.getAttribute('data-smiles-product-weights').split(';').map(v => {
+                        return v.split(',').map(parseFloat)
+                    });
+                }
+            }
+
+            if (element.hasAttribute('data-smiles-options') || element.hasAttribute('data-smiles-reaction-options')) {
+                let moleculeOptions = {};
+                if (element.hasAttribute('data-smiles-options')) {
+                    moleculeOptions = JSON.parse(element.getAttribute('data-smiles-options').replaceAll('\'', '"'));
+                }
+
+                let reactionOptions = {};
+                if (element.hasAttribute('data-smiles-reaction-options')) {
+                    reactionOptions = JSON.parse(element.getAttribute('data-smiles-reaction-options').replaceAll('\'', '"'));
+                }
+
+                let smilesDrawer = new SmilesDrawer(moleculeOptions, reactionOptions);
+                smilesDrawer.draw(smiles, element, currentTheme, successCallback, errorCallback, weights);
+            } else {
+                this.draw(smiles, element, currentTheme, successCallback, errorCallback, weights);
+            }
         });
-      });
-    &lt;/script>
-  &lt;/body>
-&lt;/html>
-</code></pre>
-<p>See the example folder for a more complete example.</p>
-<h3>Options</h3>
-<p>The options are supplied to the constructor as shown in the example above.</p>
-<pre class="prettyprint source lang-javascript"><code>let options = { ... };
-let smilesDrawer = new SmilesDrawer(options);
-</code></pre>
-<p>The following options are available:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Identifier</th>
-<th>Data Type</th>
-<th>Default Value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Drawing width</td>
-<td>width</td>
-<td>number</td>
-<td>500</td>
-</tr>
-<tr>
-<td>Drawing height</td>
-<td>height</td>
-<td>number</td>
-<td>500</td>
-</tr>
-<tr>
-<td>Bond thickness</td>
-<td>bondThickness</td>
-<td>number</td>
-<td>0.6</td>
-</tr>
-<tr>
-<td>Bond length</td>
-<td>bondLength</td>
-<td>number</td>
-<td>15</td>
-</tr>
-<tr>
-<td>Short bond length (e.g. double bonds) in percent of bond length</td>
-<td>shortBondLength</td>
-<td>number</td>
-<td>0.85</td>
-</tr>
-<tr>
-<td>Bond spacing (e.g. space between double bonds)</td>
-<td>bondSpacing</td>
-<td>number</td>
-<td>0.18 * 15</td>
-</tr>
-<tr>
-<td>Atom Visualization</td>
-<td>atomVisualization</td>
-<td>string ['default', 'balls', 'none']</td>
-<td>'default'</td>
-</tr>
-<tr>
-<td>Large Font Size (in pt for elements)</td>
-<td>fontSizeLarge</td>
-<td>number</td>
-<td>6</td>
-</tr>
-<tr>
-<td>Small Font Size (in pt for numbers)</td>
-<td>fontSizeSmall</td>
-<td>number</td>
-<td>4</td>
-</tr>
-<tr>
-<td>Padding</td>
-<td>padding</td>
-<td>number</td>
-<td>20.0</td>
-</tr>
-<tr>
-<td>Use experimental features</td>
-<td>experimental</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Show Terminal Carbons (CH3)</td>
-<td>terminalCarbons</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Show explicit hydrogens</td>
-<td>explicitHydrogens</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Overlap sensitivity</td>
-<td>overlapSensitivity</td>
-<td>number</td>
-<td>0.42</td>
-</tr>
-<tr>
-<td># of overlap resolution iterations</td>
-<td>overlapResolutionIterations</td>
-<td>number</td>
-<td>1</td>
-</tr>
-<tr>
-<td>Draw concatenated terminals and pseudo elements</td>
-<td>compactDrawing</td>
-<td>boolean</td>
-<td>true</td>
-</tr>
-<tr>
-<td>Draw isometric SMILES if available</td>
-<td>isometric</td>
-<td>boolean</td>
-<td>true</td>
-</tr>
-<tr>
-<td>Debug (draw debug information to canvas)</td>
-<td>debug</td>
-<td>boolean</td>
-<td>false</td>
-</tr>
-<tr>
-<td>Color themes</td>
-<td>themes</td>
-<td>object</td>
-<td>see below</td>
-</tr>
-</tbody>
-</table>
-<p>The default options are defined as follows:</p>
-<pre class="prettyprint source lang-javascript"><code>{
-    width: 500,
-    height: 500,
-    bondThickness: 0.6,
-    bondLength: 15,
-    shortBondLength: 0.85,
-    bondSpacing: 0.18 * 15,
-    atomVisualization: 'default',
-    isomeric: true,
-    debug: false,
-    terminalCarbons: false,
-    explicitHydrogens: false,
-    overlapSensitivity: 0.42,
-    overlapResolutionIterations: 1,
-    compactDrawing: true,
-    fontSizeLarge: 5,
-    fontSizeSmall: 3,
-    padding: 20.0,
-    experimental: false,
-    themes: {
-        dark: {
-            C: '#fff',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f1c40f',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#fff',
-            BACKGROUND: '#141414'
-        },
-        light: {
-            C: '#222',
-            O: '#e74c3c',
-            N: '#3498db',
-            F: '#27ae60',
-            CL: '#16a085',
-            BR: '#d35400',
-            I: '#8e44ad',
-            P: '#d35400',
-            S: '#f1c40f',
-            B: '#e67e22',
-            SI: '#e67e22',
-            H: '#222',
-            BACKGROUND: '#fff'
+    }
+
+    /**
+     * Draw the smiles to the target.
+     * @param {String} smiles The SMILES to be depicted.
+     * @param {*} target The target element.
+     * @param {String} theme The theme.
+     * @param {?CallableFunction} successCallback The function called on success.
+     * @param {?CallableFunction} errorCallback The function called on error.
+     * @param {?Number[]|Object} weights The weights for the gaussians.
+     */
+    draw(smiles, target, theme = 'light', successCallback = null, errorCallback = null, weights = null) {
+        // get the settings
+        let rest = [];
+        [smiles, ...rest] = smiles.split(' ');
+        let info = rest.join(' ');
+
+        let settings = {};
+
+        if (info.includes('__')) {
+            let settingsString = info.substring(
+                info.indexOf('__') + 2,
+                info.lastIndexOf('__')
+            );
+
+            settings = JSON.parse(settingsString.replaceAll('\'', '"'));
+        }
+
+        let defaultSettings = {
+            textAboveArrow: '{reagents}',
+            textBelowArrow: ''
+        }
+
+        settings = Options.extend(true, defaultSettings, settings);
+
+        if (smiles.includes('>')) {
+            try {
+                this.drawReaction(smiles, target, theme, settings, weights, successCallback);
+            } catch (err) {
+                if (errorCallback) {
+                    errorCallback(err);
+                } else {
+                    console.error(err);
+                }
+            }
+        } else {
+            try {
+                this.drawMolecule(smiles, target, theme, weights, successCallback);
+            } catch (err) {
+                if (errorCallback) {
+                    errorCallback(err);
+                } else {
+                    console.error(err);
+                }
+            }
         }
     }
-};
-</code></pre>
-<h3>Usage</h3>
-<p>An instance of SmilesDrawer is able to draw to multiple targets. Initialize SmilesDrawer once for each set of options (you would initialize two different objects if you were to draw in two different sizes).</p>
-<pre class="prettyprint source lang-javascript"><code>let smilesDrawer = new SmilesDrawer.Drawer({ width: 250, height: 250 });
-</code></pre>
-<p>In order to depict a SMILES string it has to be parsed using SmilesDrawer's SMILES parser, which is encapsulated in the static function <code>SmilesDrawer.parse()</code> where the first argument is the SMILES string and the second argument a callback for a successful parsing. The third argument provides a way to handle errors using a callback.</p>
-<pre class="prettyprint source lang-javascript"><code>SmilesDrawer.parse('C1CCCCC1', function (tree) {
-    smilesDrawer.draw(tree, 'output-canvas', 'light', false);
-}, function (err) {
-    console.log(err);
+
+    drawMolecule(smiles, target, theme, weights, callback) {
+        let parseTree = Parser.parse(smiles);
+
+        if (target === null || target === 'svg') {
+            let svg = this.drawer.draw(parseTree, null, theme, weights);
+            let dims = this.getDimensions(svg);
+            svg.setAttributeNS(null, 'width', '' + dims.w);
+            svg.setAttributeNS(null, 'height', '' + dims.h);
+            if (callback) {
+                callback(svg);
+            }
+        } else if (target === 'canvas') {
+            let canvas = this.svgToCanvas(this.drawer.draw(parseTree, null, theme, weights));
+            if (callback) {
+                callback(canvas);
+            }
+        } else if (target === 'img') {
+            let img = this.svgToImg(this.drawer.draw(parseTree, null, theme, weights));
+            if (callback) {
+                callback(img);
+            }
+        } else if (target instanceof HTMLImageElement) {
+            this.svgToImg(this.drawer.draw(parseTree, null, theme, weights), target);
+            if (callback) {
+                callback(target);
+            }
+        } else if (target instanceof SVGElement) {
+            this.drawer.draw(parseTree, target, theme, weights);
+            if (callback) {
+                callback(target);
+            }
+        } else {
+            let elements = document.querySelectorAll(target);
+            elements.forEach(element => {
+                let tag = element.nodeName.toLowerCase();
+                if (tag === 'svg') {
+                    this.drawer.draw(parseTree, element, theme, weights);
+                    // let dims = this.getDimensions(element);
+                    // element.setAttributeNS(null, 'width', '' + dims.w);
+                    // element.setAttributeNS(null, 'height', '' + dims.h);
+                    if (callback) {
+                        callback(element);
+                    }
+                } else if (tag === 'canvas') {
+                    this.svgToCanvas(this.drawer.draw(parseTree, null, theme, weights), element);
+                    if (callback) {
+                        callback(element);
+                    }
+                } else if (tag === 'img') {
+                    this.svgToImg(this.drawer.draw(parseTree, null, theme, weights), element);
+                    if (callback) {
+                        callback(element);
+                    }
+                }
+            });
+        }
+    }
+
+    drawReaction(smiles, target, theme, settings, weights, callback) {
+        let reaction = ReactionParser.parse(smiles);
+
+        if (target === null || target === 'svg') {
+            let svg = this.reactionDrawer.draw(reaction, null, theme);
+            let dims = this.getDimensions(svg);
+            svg.setAttributeNS(null, 'width', '' + dims.w);
+            svg.setAttributeNS(null, 'height', '' + dims.h);
+            if (callback) {
+                callback(svg);
+            }
+        } else if (target === 'canvas') {
+            let canvas = this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow));
+            if (callback) {
+                callback(canvas);
+            }
+        } else if (target === 'img') {
+            let img = this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow));
+            if (callback) {
+                callback(img);
+            }
+        } else if (target instanceof HTMLImageElement) {
+            this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), target);
+            if (callback) {
+                callback(target);
+            }
+        } else if (target instanceof SVGElement) {
+            this.reactionDrawer.draw(reaction, target, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
+            if (callback) {
+                callback(target);
+            }
+        } else {
+            let elements = document.querySelectorAll(target);
+            elements.forEach(element => {
+                let tag = element.nodeName.toLowerCase();
+                if (tag === 'svg') {
+                    this.reactionDrawer.draw(reaction, element, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
+                    // The svg has to have a css width and height set for the other
+                    // tags, however, here it would overwrite the chosen width and height
+                    if (this.reactionDrawer.opts.scale &lt;= 0) {
+                        element.style.width = null;
+                        element.style.height = null;
+                    }
+                    // let dims = this.getDimensions(element);
+                    // element.setAttributeNS(null, 'width', '' + dims.w);
+                    // element.setAttributeNS(null, 'height', '' + dims.h);
+                    if (callback) {
+                        callback(element);
+                    }
+                } else if (tag === 'canvas') {
+                    this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element);
+                    if (callback) {
+                        callback(element);
+                    }
+                } else if (tag === 'img') {
+                    this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element);
+                    if (callback) {
+                        callback(element);
+                    }
+                }
+            });
+        }
+    }
+
+    svgToCanvas(svg, canvas = null) {
+        if (canvas === null) {
+            canvas = document.createElement('canvas');
+        }
+
+        let dims = this.getDimensions(canvas, svg);
+
+        SvgWrapper.svgToCanvas(svg, canvas, dims.w, dims.h);
+        return canvas;
+    }
+
+    svgToImg(svg, img = null) {
+        if (img === null) {
+            img = document.createElement('img');
+        }
+
+        let dims = this.getDimensions(img, svg);
+
+        SvgWrapper.svgToImg(svg, img, dims.w, dims.h);
+        return img;
+    }
+
+    /**
+     * 
+     * @param {HTMLImageElement|HTMLCanvasElement|SVGElement} element 
+     * @param {SVGElement} svg 
+     * @returns {{w: Number, h: Number}} The width and height.
+     */
+    getDimensions(element, svg = null) {
+        let w = this.drawer.opts.width;
+        let h = this.drawer.opts.height;
+
+        if (this.drawer.opts.scale &lt;= 0) {
+            if (w === null) {
+                w = element.width;
+            }
+
+            if (h === null) {
+                h = element.height;
+            }
+
+            if (element.style.width !== "") {
+                w = parseInt(element.style.width);
+            }
+
+            if (element.style.height !== "") {
+                h = parseInt(element.style.height);
+            }
+        } else if (svg) {
+            w = parseFloat(svg.style.width);
+            h = parseFloat(svg.style.height);
+        }
+
+        return { w: w, h: h };
+    }
 }
-</code></pre>
-<p>The function <code>smilesDrawer.draw()</code> requires two and accepts up to four arguments. The first argument is the parse tree returned by the parse function (through the callback), the second is the <code>id</code> of a HTML canvas element on which the structure will be drawn. The two optional arguments are whether to use the light or dark theme (defaults to <code>'light'</code>) and whether to only compute properties such as ring count, hac, etc. and not depict the structure (defaults to <code>false</code>).</p>
-<h3>API</h3>
-<p>The SmilesDrawer object exposes methods that can be used for purposes other than drawing chemical structures.</p>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Description</th>
-<th>Returns</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>getMolecularFormula()</code></td>
-<td>Returns the molecular formula, eg. C22H30N6O4S, of the currently loaded molecule.</td>
-<td><code>String</code></td>
-</tr>
-</tbody>
-</table>
-<h3>Bridged Rings</h3>
-<p>Bridged rings are positioned using the Kamada–Kawai algorithm. If there is a bridged ring in the molecule, explicitly defined aromatic rings are not drawn with a circle inside the ring, but with dashed gray lines where double bonds would be.</p>
-<h3>Contributors</h3>
-<p>Thank you for contributing:</p>
-<ul>
-<li>SRI International's CSE group (For the excellent SVG support)</li>
-<li><a href="https://github.com/ohardy">ohardy</a></li>
-</ul></article>
+
+module.exports = SmilesDrawer;</code></pre>
+        </article>
     </section>
-
-
 
 
 
