@@ -1,9 +1,8 @@
-// @ts-nocheck
-const SvgDrawer = require('./SvgDrawer')
+import SvgDrawer = require('./SvgDrawer');
 
-/** 
- * The main class of the application representing the smiles drawer 
- * 
+/**
+ * The main class of the application representing the smiles drawer
+ *
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
@@ -14,12 +13,14 @@ const SvgDrawer = require('./SvgDrawer')
  * @property {Object} theme The current theme.
  */
 class Drawer {
+  svgDrawer: any;
+
   /**
    * The constructor for the class SmilesDrawer.
    *
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
-  constructor(options) {
+  constructor(options: any) {
     this.svgDrawer = new SvgDrawer(options);
   }
 
@@ -31,7 +32,7 @@ class Drawer {
    * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
    */
-  draw(data, target, themeName = 'light', infoOnly = false, highlight_atoms = []) {
+  draw(data: any, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false, highlight_atoms: any[] = []): void {
     let canvas = null;
     if (typeof target === 'string' || target instanceof String) {
       canvas = document.getElementById(target);
@@ -53,17 +54,17 @@ class Drawer {
    *
    * @returns {Number} The overlap score.
    */
-  getTotalOverlapScore() {
+  getTotalOverlapScore(): number {
     return this.svgDrawer.getTotalOverlapScore();
   }
 
   /**
    * Returns the molecular formula of the loaded molecule as a string.
-   * 
+   *
    * @returns {String} The molecular formula.
    */
-  getMolecularFormula() {
-    this.svgDrawer.getMolecularFormula();
+  getMolecularFormula(): string {
+    return this.svgDrawer.getMolecularFormula();
   }
 }
 
