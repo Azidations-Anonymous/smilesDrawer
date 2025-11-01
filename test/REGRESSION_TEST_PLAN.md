@@ -5,8 +5,24 @@ Regression testing system for SmilesDrawer SVG output to detect visual/structura
 
 ## Test Strategy
 
+### Test Modes
+
+**Fast Mode (default):**
+- Tests only the `fastregression` dataset
+- Quick validation for common development workflows
+- Recommended for pre-commit checks
+
+**Full Mode (--full flag):**
+- Tests all datasets exhaustively
+- More comprehensive but slower
+- Recommended before merging significant changes
+
 ### Datasets
-Test against ALL existing SMILES datasets:
+
+**Fast regression dataset:**
+- `test/fastregression.js` - Curated subset for quick validation
+
+**Full test datasets:**
 - `test/chembl.js` - ChEMBL database molecules
 - `test/drugbank.js` - DrugBank database molecules
 - `test/fdb.js` - FDB database molecules
@@ -64,17 +80,23 @@ Node.js script that:
 ## Usage
 
 ```bash
-# Run regression test against HEAD (default)
+# Run fast regression test (fastregression dataset only) against HEAD
 npm run test:regression
 
-# Compare against a specific commit
+# Run full regression test (all datasets) against HEAD
+npm run test:regression --full
+
+# Compare against a specific commit (fast mode)
 ./scripts/regression-test.sh abc123
+
+# Compare against a specific commit (full mode)
+./scripts/regression-test.sh abc123 --full
 
 # Compare against a branch
 ./scripts/regression-test.sh main
 
-# Compare against previous commit
-./scripts/regression-test.sh HEAD^
+# Compare against previous commit with full test suite
+./scripts/regression-test.sh HEAD^ --full
 ```
 
 ## Exit Codes
@@ -85,6 +107,7 @@ npm run test:regression
 ## Typical Workflow
 
 1. Make changes to drawing code in your working directory
-2. Run `npm run test:regression` to compare against HEAD
-3. If tests pass, commit your changes
-4. To compare against an older version: `./scripts/regression-test.sh <commit-hash>`
+2. Run `npm run test:regression` for quick validation (fast mode)
+3. If fast tests pass, optionally run `npm run test:regression --full` for comprehensive validation
+4. Commit your changes if tests pass
+5. To compare against an older version: `./scripts/regression-test.sh <commit-hash>`

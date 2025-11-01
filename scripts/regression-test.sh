@@ -2,7 +2,21 @@
 
 set -e
 
-BASELINE_COMMIT="${1:-HEAD}"
+BASELINE_COMMIT="HEAD"
+FULL_FLAG=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --full)
+            FULL_FLAG="--full"
+            shift
+            ;;
+        *)
+            BASELINE_COMMIT="$1"
+            shift
+            ;;
+    esac
+done
 
 echo "================================================================================"
 echo "SMILES DRAWER REGRESSION TEST"
@@ -48,11 +62,16 @@ echo "✓ Current build complete"
 echo ""
 
 echo "Step 5: Running regression tests..."
-echo "This will test all SMILES from all datasets (fail-fast mode)"
+if [ -n "${FULL_FLAG}" ]; then
+    echo "Mode: FULL - testing all datasets (fail-fast mode)"
+else
+    echo "Mode: FAST - testing fastregression dataset only"
+    echo "Use --full flag to test all datasets"
+fi
 echo ""
 
 cd "${CURRENT_DIR}/test"
-node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}"
+node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FULL_FLAG}
 
 REGRESSION_EXIT_CODE=$?
 

@@ -5,7 +5,11 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-const datasets = [
+const fastDatasets = [
+    { name: 'fastregression', file: './fastregression.js' }
+];
+
+const fullDatasets = [
     { name: 'chembl', file: './chembl.js' },
     { name: 'drugbank', file: './drugbank.js' },
     { name: 'fdb', file: './fdb.js' },
@@ -14,19 +18,27 @@ const datasets = [
     { name: 'schembl', file: './schembl.js' }
 ];
 
-const oldCodePath = process.argv[2];
-const newCodePath = process.argv[3];
+const args = process.argv.slice(2);
+const fullMode = args.includes('--full');
+const pathArgs = args.filter(arg => arg !== '--full');
+
+const oldCodePath = pathArgs[0];
+const newCodePath = pathArgs[1];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path>');
+    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [--full]');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
+    console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer --full');
     process.exit(2);
 }
+
+const datasets = fullMode ? fullDatasets : fastDatasets;
 
 console.log('='.repeat(80));
 console.log('SMILES DRAWER REGRESSION TEST SUITE');
 console.log('='.repeat(80));
+console.log('MODE: ' + (fullMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
 console.log('NEW CODE PATH: ' + newCodePath);
 console.log('='.repeat(80));
