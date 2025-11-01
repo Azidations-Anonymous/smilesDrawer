@@ -1,14 +1,13 @@
-// @ts-nocheck
-const Reaction = require('./Reaction')
+import Reaction = require('./Reaction');
 
 class ReactionParser {
     /**
-     * Returns the hex code of a color associated with a key from the current theme.
+     * Parses a reaction SMILES string and returns a Reaction object.
      *
      * @param {String} reactionSmiles A reaction SMILES.
      * @returns {Reaction} A reaction object.
      */
-    static parse(reactionSmiles) {
+    static parse(reactionSmiles: string): Reaction {
         let reaction = new Reaction(reactionSmiles);
 
         return reaction;
