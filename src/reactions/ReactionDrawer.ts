@@ -1,6 +1,7 @@
 import SvgDrawer = require('../drawing/SvgDrawer');
 import SvgWrapper = require('../drawing/SvgWrapper');
 import SvgUnicodeHelper = require('../drawing/helpers/SvgUnicodeHelper');
+import SvgTextHelper = require('../drawing/helpers/SvgTextHelper');
 import Options = require('../config/Options');
 import ThemeManager = require('../config/ThemeManager');
 import formulaToCommonName = require('../utils/FormulaToCommonName');
@@ -213,7 +214,7 @@ class ReactionDrawer {
 
         textAbove = textAbove.replace('{reagents}', reagentsText);
 
-        const topText = SvgWrapper.writeText(
+        const topText = SvgTextHelper.writeText(
             textAbove,
             this.themeManager,
             this.opts.fontSize * this.opts.scale,
@@ -233,7 +234,7 @@ class ReactionDrawer {
         });
 
         // Text below arrow
-        const bottomText = SvgWrapper.writeText(
+        const bottomText = SvgTextHelper.writeText(
             textBelow,
             this.themeManager,
             this.opts.fontSize * this.opts.scale,
