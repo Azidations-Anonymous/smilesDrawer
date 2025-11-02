@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":33,"./src/parsing/ReactionParser":34,"./src/reactions/ReactionDrawer":45}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":34,"./src/parsing/ReactionParser":35,"./src/reactions/ReactionDrawer":46}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4086,7 +4086,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":19,"./parsing/Parser":33,"./parsing/ReactionParser":34,"./reactions/ReactionDrawer":45}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":19,"./parsing/Parser":34,"./parsing/ReactionParser":35,"./reactions/ReactionDrawer":46}],4:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4354,7 +4354,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":48}],5:[function(require,module,exports){
+},{"../utils/MathHelper":49}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -5956,7 +5956,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../utils/ArrayHelper":46,"./CanvasWrapper":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../utils/ArrayHelper":47,"./CanvasWrapper":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6140,7 +6140,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":30,"../utils/PixelsToSvg":49,"chroma-js":2}],14:[function(require,module,exports){
+},{"../graph/Vector2":30,"../utils/PixelsToSvg":50,"chroma-js":2}],14:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -6608,7 +6608,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../preprocessing/MolecularPreprocessor":38,"../utils/ArrayHelper":46,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":22,"../graph/Line":27,"../graph/Vector2":30,"../preprocessing/MolecularPreprocessor":39,"../utils/ArrayHelper":47,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7375,7 +7375,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":27,"../graph/Vector2":30,"../utils/MathHelper":48,"./helpers/SvgTextHelper":20,"./helpers/SvgUnicodeHelper":21}],16:[function(require,module,exports){
+},{"../graph/Line":27,"../graph/Vector2":30,"../utils/MathHelper":49,"./helpers/SvgTextHelper":20,"./helpers/SvgUnicodeHelper":21}],16:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7580,7 +7580,7 @@ class CanvasPrimitiveDrawer {
 
 module.exports = CanvasPrimitiveDrawer;
 
-},{"../../utils/MathHelper":48}],17:[function(require,module,exports){
+},{"../../utils/MathHelper":49}],17:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7900,7 +7900,7 @@ class CanvasTextRenderer {
 
 module.exports = CanvasTextRenderer;
 
-},{"../../utils/MathHelper":48}],18:[function(require,module,exports){
+},{"../../utils/MathHelper":49}],18:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -8852,7 +8852,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":46}],23:[function(require,module,exports){
+},{"../utils/ArrayHelper":47}],23:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -10355,7 +10355,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":46,"./RingConnection":29,"./Vector2":30}],29:[function(require,module,exports){
+},{"../utils/ArrayHelper":47,"./RingConnection":29,"./Vector2":30}],29:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10525,12 +10525,15 @@ module.exports = RingConnection;
 
 },{}],30:[function(require,module,exports){
 "use strict";
+
+const Vector2Math = require("./helpers/Vector2Math");
 /**
  * A class representing a 2D vector.
  *
  * @property {Number} x The x component of the vector.
  * @property {Number} y The y component of the vector.
  */
+
 
 class Vector2 {
   constructor(x, y) {
@@ -10941,209 +10944,68 @@ class Vector2 {
     let dRef = vecC.whichSide(vecA, vecB);
     return d < 0 && dRef < 0 || d == 0 && dRef == 0 || d > 0 && dRef > 0;
   }
-  /**
-   * Adds two vectors and returns the result as a new vector.
-   *
-   * @static
-   * @param {Vector2} vecA A summand.
-   * @param {Vector2} vecB A summand.
-   * @returns {Vector2} Returns the sum of two vectors.
-   */
-
 
   static add(vecA, vecB) {
-    return new Vector2(vecA.x + vecB.x, vecA.y + vecB.y);
+    return Vector2Math.add(vecA, vecB);
   }
-  /**
-   * Subtracts one vector from another and returns the result as a new vector.
-   *
-   * @static
-   * @param {Vector2} vecA The minuend.
-   * @param {Vector2} vecB The subtrahend.
-   * @returns {Vector2} Returns the difference of two vectors.
-   */
-
 
   static subtract(vecA, vecB) {
-    return new Vector2(vecA.x - vecB.x, vecA.y - vecB.y);
+    return Vector2Math.subtract(vecA, vecB);
   }
-  /**
-   * Multiplies two vectors (value by value) and returns the result.
-   *
-   * @static
-   * @param {Vector2} vecA A vector.
-   * @param {Vector2} vecB A vector.
-   * @returns {Vector2} Returns the product of two vectors.
-   */
-
 
   static multiply(vecA, vecB) {
-    return new Vector2(vecA.x * vecB.x, vecA.y * vecB.y);
+    return Vector2Math.multiply(vecA, vecB);
   }
-  /**
-   * Multiplies two vectors (value by value) and returns the result.
-   *
-   * @static
-   * @param {Vector2} vec A vector.
-   * @param {Number} scalar A scalar.
-   * @returns {Vector2} Returns the product of two vectors.
-   */
-
 
   static multiplyScalar(vec, scalar) {
-    return new Vector2(vec.x, vec.y).multiplyScalar(scalar);
+    return Vector2Math.multiplyScalar(vec, scalar);
   }
-  /**
-   * Returns the midpoint of a line spanned by two vectors.
-   *
-   * @static
-   * @param {Vector2} vecA A vector spanning the line.
-   * @param {Vector2} vecB A vector spanning the line.
-   * @returns {Vector2} The midpoint of the line spanned by two vectors.
-   */
-
 
   static midpoint(vecA, vecB) {
-    return new Vector2((vecA.x + vecB.x) / 2, (vecA.y + vecB.y) / 2);
+    return Vector2Math.midpoint(vecA, vecB);
   }
-  /**
-   * Returns the normals of a line spanned by two vectors.
-   *
-   * @static
-   * @param {Vector2} vecA A vector spanning the line.
-   * @param {Vector2} vecB A vector spanning the line.
-   * @returns {Vector2[]} An array containing the two normals, each represented by a vector.
-   */
-
 
   static normals(vecA, vecB) {
-    let delta = Vector2.subtract(vecB, vecA);
-    return [new Vector2(-delta.y, delta.x), new Vector2(delta.y, -delta.x)];
+    return Vector2Math.normals(vecA, vecB);
   }
-  /**
-   * Returns the unit (normalized normal) vectors of a line spanned by two vectors.
-   *
-   * @static
-   * @param {Vector2} vecA A vector spanning the line.
-   * @param {Vector2} vecB A vector spanning the line.
-   * @returns {Vector2[]} An array containing the two unit vectors.
-   */
-
 
   static units(vecA, vecB) {
-    let delta = Vector2.subtract(vecB, vecA);
-    return [new Vector2(-delta.y, delta.x).normalize(), new Vector2(delta.y, -delta.x).normalize()];
+    return Vector2Math.units(vecA, vecB);
   }
-  /**
-   * Divides a vector by another vector and returns the result as new vector.
-   *
-   * @static
-   * @param {Vector2} vecA The dividend.
-   * @param {Vector2} vecB The divisor.
-   * @returns {Vector2} The fraction of the two vectors.
-   */
-
 
   static divide(vecA, vecB) {
-    return new Vector2(vecA.x / vecB.x, vecA.y / vecB.y);
+    return Vector2Math.divide(vecA, vecB);
   }
-  /**
-   * Divides a vector by a scalar and returns the result as new vector.
-   *
-   * @static
-   * @param {Vector2} vecA The dividend.
-   * @param {Number} s The scalar.
-   * @returns {Vector2} The fraction of the two vectors.
-   */
-
 
   static divideScalar(vecA, s) {
-    return new Vector2(vecA.x / s, vecA.y / s);
+    return Vector2Math.divideScalar(vecA, s);
   }
-  /**
-   * Returns the dot product of two vectors.
-   *
-   * @static
-   * @param {Vector2} vecA A vector.
-   * @param {Vector2} vecB A vector.
-   * @returns {Number} The dot product of two vectors.
-   */
-
 
   static dot(vecA, vecB) {
-    return vecA.x * vecB.x + vecA.y * vecB.y;
+    return Vector2Math.dot(vecA, vecB);
   }
-  /**
-   * Returns the angle between two vectors.
-   *
-   * @static
-   * @param {Vector2} vecA A vector.
-   * @param {Vector2} vecB A vector.
-   * @returns {Number} The angle between two vectors in radians.
-   */
-
 
   static angle(vecA, vecB) {
-    let dot = Vector2.dot(vecA, vecB);
-    return Math.acos(dot / (vecA.length() * vecB.length()));
+    return Vector2Math.angle(vecA, vecB);
   }
-  /**
-   * Returns the angle between two vectors based on a third vector in between.
-   *
-   * @static
-   * @param {Vector2} vecA A vector.
-   * @param {Vector2} vecB A (central) vector.
-   * @param {Vector2} vecC A vector.
-   * @returns {Number} The angle in radians.
-   */
-
 
   static threePointangle(vecA, vecB, vecC) {
-    let ab = Vector2.subtract(vecB, vecA);
-    let bc = Vector2.subtract(vecC, vecB);
-    let abLength = vecA.distance(vecB);
-    let bcLength = vecB.distance(vecC);
-    return Math.acos(Vector2.dot(ab, bc) / (abLength * bcLength));
+    return Vector2Math.threePointangle(vecA, vecB, vecC);
   }
-  /**
-   * Returns the scalar projection of a vector on another vector.
-   *
-   * @static
-   * @param {Vector2} vecA The vector to be projected.
-   * @param {Vector2} vecB The vector to be projection upon.
-   * @returns {Number} The scalar component.
-   */
-
 
   static scalarProjection(vecA, vecB) {
-    let unit = vecB.normalized();
-    return Vector2.dot(vecA, unit);
+    return Vector2Math.scalarProjection(vecA, vecB);
   }
-  /**
-  * Returns the average vector (normalized) of the input vectors.
-  *
-  * @static
-  * @param {Array} vecs An array containing vectors.
-  * @returns {Vector2} The resulting vector (normalized).
-  */
-
 
   static averageDirection(vecs) {
-    let avg = new Vector2(0.0, 0.0);
-
-    for (var i = 0; i < vecs.length; i++) {
-      let vec = vecs[i];
-      avg.add(vec);
-    }
-
-    return avg.normalize();
+    return Vector2Math.averageDirection(vecs);
   }
 
 }
 
 module.exports = Vector2;
 
-},{}],31:[function(require,module,exports){
+},{"./helpers/Vector2Math":32}],31:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11520,7 +11382,213 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":46,"../utils/MathHelper":48,"./Vector2":30}],32:[function(require,module,exports){
+},{"../utils/ArrayHelper":47,"../utils/MathHelper":49,"./Vector2":30}],32:[function(require,module,exports){
+"use strict";
+
+const Vector2 = require("../Vector2");
+
+class Vector2Math {
+  /**
+   * Adds two vectors and returns the result as a new vector.
+   *
+   * @static
+   * @param {Vector2} vecA A summand.
+   * @param {Vector2} vecB A summand.
+   * @returns {Vector2} Returns the sum of two vectors.
+   */
+  static add(vecA, vecB) {
+    return new Vector2(vecA.x + vecB.x, vecA.y + vecB.y);
+  }
+  /**
+   * Subtracts one vector from another and returns the result as a new vector.
+   *
+   * @static
+   * @param {Vector2} vecA The minuend.
+   * @param {Vector2} vecB The subtrahend.
+   * @returns {Vector2} Returns the difference of two vectors.
+   */
+
+
+  static subtract(vecA, vecB) {
+    return new Vector2(vecA.x - vecB.x, vecA.y - vecB.y);
+  }
+  /**
+   * Multiplies two vectors (value by value) and returns the result.
+   *
+   * @static
+   * @param {Vector2} vecA A vector.
+   * @param {Vector2} vecB A vector.
+   * @returns {Vector2} Returns the product of two vectors.
+   */
+
+
+  static multiply(vecA, vecB) {
+    return new Vector2(vecA.x * vecB.x, vecA.y * vecB.y);
+  }
+  /**
+   * Multiplies two vectors (value by value) and returns the result.
+   *
+   * @static
+   * @param {Vector2} vec A vector.
+   * @param {Number} scalar A scalar.
+   * @returns {Vector2} Returns the product of two vectors.
+   */
+
+
+  static multiplyScalar(vec, scalar) {
+    return new Vector2(vec.x, vec.y).multiplyScalar(scalar);
+  }
+  /**
+   * Returns the midpoint of a line spanned by two vectors.
+   *
+   * @static
+   * @param {Vector2} vecA A vector spanning the line.
+   * @param {Vector2} vecB A vector spanning the line.
+   * @returns {Vector2} The midpoint of the line spanned by two vectors.
+   */
+
+
+  static midpoint(vecA, vecB) {
+    return new Vector2((vecA.x + vecB.x) / 2, (vecA.y + vecB.y) / 2);
+  }
+  /**
+   * Returns the normals of a line spanned by two vectors.
+   *
+   * @static
+   * @param {Vector2} vecA A vector spanning the line.
+   * @param {Vector2} vecB A vector spanning the line.
+   * @returns {Vector2[]} An array containing the two normals, each represented by a vector.
+   */
+
+
+  static normals(vecA, vecB) {
+    let delta = Vector2.subtract(vecB, vecA);
+    return [new Vector2(-delta.y, delta.x), new Vector2(delta.y, -delta.x)];
+  }
+  /**
+   * Returns the unit (normalized normal) vectors of a line spanned by two vectors.
+   *
+   * @static
+   * @param {Vector2} vecA A vector spanning the line.
+   * @param {Vector2} vecB A vector spanning the line.
+   * @returns {Vector2[]} An array containing the two unit vectors.
+   */
+
+
+  static units(vecA, vecB) {
+    let delta = Vector2.subtract(vecB, vecA);
+    return [new Vector2(-delta.y, delta.x).normalize(), new Vector2(delta.y, -delta.x).normalize()];
+  }
+  /**
+   * Divides a vector by another vector and returns the result as new vector.
+   *
+   * @static
+   * @param {Vector2} vecA The dividend.
+   * @param {Vector2} vecB The divisor.
+   * @returns {Vector2} The fraction of the two vectors.
+   */
+
+
+  static divide(vecA, vecB) {
+    return new Vector2(vecA.x / vecB.x, vecA.y / vecB.y);
+  }
+  /**
+   * Divides a vector by a scalar and returns the result as new vector.
+   *
+   * @static
+   * @param {Vector2} vecA The dividend.
+   * @param {Number} s The scalar.
+   * @returns {Vector2} The fraction of the two vectors.
+   */
+
+
+  static divideScalar(vecA, s) {
+    return new Vector2(vecA.x / s, vecA.y / s);
+  }
+  /**
+   * Returns the dot product of two vectors.
+   *
+   * @static
+   * @param {Vector2} vecA A vector.
+   * @param {Vector2} vecB A vector.
+   * @returns {Number} The dot product of two vectors.
+   */
+
+
+  static dot(vecA, vecB) {
+    return vecA.x * vecB.x + vecA.y * vecB.y;
+  }
+  /**
+   * Returns the angle between two vectors.
+   *
+   * @static
+   * @param {Vector2} vecA A vector.
+   * @param {Vector2} vecB A vector.
+   * @returns {Number} The angle between two vectors in radians.
+   */
+
+
+  static angle(vecA, vecB) {
+    let dot = Vector2.dot(vecA, vecB);
+    return Math.acos(dot / (vecA.length() * vecB.length()));
+  }
+  /**
+   * Returns the angle between two vectors based on a third vector in between.
+   *
+   * @static
+   * @param {Vector2} vecA A vector.
+   * @param {Vector2} vecB A (central) vector.
+   * @param {Vector2} vecC A vector.
+   * @returns {Number} The angle in radians.
+   */
+
+
+  static threePointangle(vecA, vecB, vecC) {
+    let ab = Vector2.subtract(vecB, vecA);
+    let bc = Vector2.subtract(vecC, vecB);
+    let abLength = vecA.distance(vecB);
+    let bcLength = vecB.distance(vecC);
+    return Math.acos(Vector2.dot(ab, bc) / (abLength * bcLength));
+  }
+  /**
+   * Returns the scalar projection of a vector on another vector.
+   *
+   * @static
+   * @param {Vector2} vecA The vector to be projected.
+   * @param {Vector2} vecB The vector to be projection upon.
+   * @returns {Number} The scalar component.
+   */
+
+
+  static scalarProjection(vecA, vecB) {
+    let unit = vecB.normalized();
+    return Vector2.dot(vecA, unit);
+  }
+  /**
+  * Returns the average vector (normalized) of the input vectors.
+  *
+  * @static
+  * @param {Array} vecs An array containing vectors.
+  * @returns {Vector2} The resulting vector (normalized).
+  */
+
+
+  static averageDirection(vecs) {
+    let avg = new Vector2(0.0, 0.0);
+
+    for (var i = 0; i < vecs.length; i++) {
+      let vec = vecs[i];
+      avg.add(vec);
+    }
+
+    return avg.normalize();
+  }
+
+}
+
+module.exports = Vector2Math;
+
+},{"../Vector2":30}],33:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11709,7 +11777,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":28,"../graph/RingConnection":29,"../utils/ArrayHelper":46}],33:[function(require,module,exports){
+},{"../graph/Ring":28,"../graph/RingConnection":29,"../utils/ArrayHelper":47}],34:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13607,7 +13675,7 @@ module.exports = function () {
   };
 }();
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13628,7 +13696,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":44}],35:[function(require,module,exports){
+},{"../reactions/Reaction":45}],36:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13765,7 +13833,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":48}],36:[function(require,module,exports){
+},{"../utils/MathHelper":49}],37:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13820,7 +13888,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":24}],37:[function(require,module,exports){
+},{"../graph/Graph":24}],38:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13912,7 +13980,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":22,"../graph/Graph":24}],38:[function(require,module,exports){
+},{"../graph/Atom":22,"../graph/Graph":24}],39:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14700,7 +14768,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":35,"./InitializationManager":36,"./MolecularInfoManager":37,"./OverlapResolutionManager":39,"./PositioningManager":40,"./PseudoElementManager":41,"./RingManager":42,"./StereochemistryManager":43}],39:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":36,"./InitializationManager":37,"./MolecularInfoManager":38,"./OverlapResolutionManager":40,"./PositioningManager":41,"./PseudoElementManager":42,"./RingManager":43,"./StereochemistryManager":44}],40:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15002,7 +15070,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],40:[function(require,module,exports){
+},{"../graph/Vector2":30,"../utils/ArrayHelper":47,"../utils/MathHelper":49}],41:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15467,7 +15535,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":30,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],41:[function(require,module,exports){
+},{"../graph/Vector2":30,"../utils/ArrayHelper":47,"../utils/MathHelper":49}],42:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15596,7 +15664,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":22}],42:[function(require,module,exports){
+},{"../graph/Atom":22}],43:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16217,7 +16285,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":5,"../graph/Edge":23,"../graph/Ring":28,"../graph/RingConnection":29,"../graph/Vector2":30,"../handlers/BridgedRingHandler":32,"../utils/ArrayHelper":46,"../utils/MathHelper":48}],43:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":23,"../graph/Ring":28,"../graph/RingConnection":29,"../graph/Vector2":30,"../handlers/BridgedRingHandler":33,"../utils/ArrayHelper":47,"../utils/MathHelper":49}],44:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16441,7 +16509,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":48}],44:[function(require,module,exports){
+},{"../utils/MathHelper":49}],45:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16497,7 +16565,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":33}],45:[function(require,module,exports){
+},{"../parsing/Parser":34}],46:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -16871,7 +16939,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":20,"../drawing/helpers/SvgUnicodeHelper":21,"../utils/FormulaToCommonName":47}],46:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":20,"../drawing/helpers/SvgUnicodeHelper":21,"../utils/FormulaToCommonName":48}],47:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17272,7 +17340,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17310,7 +17378,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17483,7 +17551,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
