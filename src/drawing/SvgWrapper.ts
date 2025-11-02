@@ -1,4 +1,5 @@
 import Line = require('../graph/Line');
+import SvgUnicodeHelper = require('./helpers/SvgUnicodeHelper');
 import Vector2 = require('../graph/Vector2');
 import MathHelper = require('../utils/MathHelper');
 
@@ -227,26 +228,6 @@ class SvgWrapper {
     elem.setAttributeNS(null, 'class', 'sub');
 
     return elem;
-  }
-
-  static createUnicodeCharge(n: number): string {
-    if (n === 1) {
-      return '⁺';
-    }
-
-    if (n === -1) {
-      return '⁻';
-    }
-
-    if (n > 1) {
-      return SvgWrapper.createUnicodeSuperscript(n) + '⁺';
-    }
-
-    if (n < -1) {
-      return SvgWrapper.createUnicodeSuperscript(n) + '⁻';
-    }
-
-    return ''
   }
 
   /**
@@ -603,11 +584,11 @@ class SvgWrapper {
     let display = elementName;
 
     if (charge !== 0 && charge !== null) {
-      display += SvgWrapper.createUnicodeCharge(charge);
+      display += SvgUnicodeHelper.createUnicodeCharge(charge);
     }
 
     if (isotope !== 0 && isotope !== null) {
-      display = SvgWrapper.createUnicodeSuperscript(isotope) + display;
+      display = SvgUnicodeHelper.createUnicodeSuperscript(isotope) + display;
     }
 
     text.push([display, elementName]);
@@ -615,7 +596,7 @@ class SvgWrapper {
     if (hydrogens === 1) {
       text.push(['H', 'H'])
     } else if (hydrogens > 1) {
-      text.push(['H' + SvgWrapper.createUnicodeSubscript(hydrogens), 'H'])
+      text.push(['H' + SvgUnicodeHelper.createUnicodeSubscript(hydrogens), 'H'])
     }
 
     // TODO: Better handle exceptions
@@ -635,11 +616,11 @@ class SvgWrapper {
       let display = pe.element;
 
       if (pe.count > 1) {
-        display += SvgWrapper.createUnicodeSubscript(pe.count);
+        display += SvgUnicodeHelper.createUnicodeSubscript(pe.count);
       }
 
       if (pe.charge !== '') {
-        display += SvgWrapper.createUnicodeCharge(charge);
+        display += SvgUnicodeHelper.createUnicodeCharge(charge);
       }
 
       text.push([display, pe.element]);
@@ -647,7 +628,7 @@ class SvgWrapper {
       if (pe.hydrogenCount === 1) {
         text.push(['H', 'H'])
       } else if (pe.hydrogenCount > 1) {
-        text.push(['H' + SvgWrapper.createUnicodeSubscript(pe.hydrogenCount), 'H'])
+        text.push(['H' + SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount), 'H'])
       }
     }
 
@@ -808,42 +789,6 @@ class SvgWrapper {
     };
 
     image.src = 'data:image/svg+xml;charset-utf-8,' + encodeURIComponent(this.svg.outerHTML);
-  }
-
-  static createUnicodeSubscript(n: number): string {
-    let result = '';
-
-    n.toString().split('').forEach(d => {
-      result += ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'][parseInt(d)];
-    });
-
-    return result
-  }
-
-  static createUnicodeSuperscript(n: number): string {
-    let result = '';
-
-    n.toString().split('').forEach(d => {
-      let parsed = parseInt(d);
-      if (Number.isFinite(parsed)) {
-        result += ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'][parsed];
-      }
-    });
-
-    return result
-  }
-
-  static replaceNumbersWithSubscript(text: string): string {
-    let subscriptNumbers = {
-      '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
-      '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
-    };
-
-    for (const [key, value] of Object.entries(subscriptNumbers)) {
-      text = text.replaceAll(key, value);
-    }
-
-    return text;
   }
 
   static measureText(text: string, fontSize: number, fontFamily: string, lineHeight: number = 0.9): {width: number, height: number} {

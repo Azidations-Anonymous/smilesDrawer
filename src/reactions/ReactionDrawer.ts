@@ -1,5 +1,6 @@
 import SvgDrawer = require('../drawing/SvgDrawer');
 import SvgWrapper = require('../drawing/SvgWrapper');
+import SvgUnicodeHelper = require('../drawing/helpers/SvgUnicodeHelper');
 import Options = require('../config/Options');
 import ThemeManager = require('../config/ThemeManager');
 import formulaToCommonName = require('../utils/FormulaToCommonName');
@@ -207,7 +208,7 @@ class ReactionDrawer {
                 text = formulaToCommonName[text];
             }
 
-            reagentsText += SvgWrapper.replaceNumbersWithSubscript(text);
+            reagentsText += SvgUnicodeHelper.replaceNumbersWithSubscript(text);
         }
 
         textAbove = textAbove.replace('{reagents}', reagentsText);
