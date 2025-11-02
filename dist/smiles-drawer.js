@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":17,"./src/ReactionDrawer":22,"./src/ReactionParser":23,"./src/SmilesDrawer":28,"./src/SvgDrawer":30}],2:[function(require,module,exports){
+},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":18,"./src/ReactionDrawer":23,"./src/ReactionParser":24,"./src/SmilesDrawer":29,"./src/SvgDrawer":31}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":14,"./Vector2":33}],6:[function(require,module,exports){
+},{"./MathHelper":14,"./Vector2":34}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,7 +5605,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":30}],7:[function(require,module,exports){
+},{"./SvgDrawer":31}],7:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -5624,11 +5624,11 @@ const DrawingManager_1 = __importDefault(require("./DrawingManager"));
 
 const PseudoElementManager_1 = __importDefault(require("./PseudoElementManager"));
 
+const MolecularInfoManager_1 = __importDefault(require("./MolecularInfoManager"));
+
 const RingManager = require("./RingManager");
 
 const MathHelper = require("./MathHelper");
-
-const Atom = require("./Atom");
 
 const Graph = require("./Graph");
 
@@ -5660,6 +5660,7 @@ class DrawerBase {
     this.positioningManager = new PositioningManager_1.default(this);
     this.drawingManager = new DrawingManager_1.default(this);
     this.pseudoElementManager = new PseudoElementManager_1.default(this);
+    this.molecularInfoManager = new MolecularInfoManager_1.default(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -6002,15 +6003,7 @@ class DrawerBase {
 
 
   getHeavyAtomCount() {
-    let hac = 0;
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      if (this.graph.vertices[i].value.element !== 'H') {
-        hac++;
-      }
-    }
-
-    return hac;
+    return this.molecularInfoManager.getHeavyAtomCount();
   }
   /**
    * Returns the molecular formula of the loaded molecule as a string.
@@ -6020,67 +6013,7 @@ class DrawerBase {
 
 
   getMolecularFormula(data = null) {
-    let molecularFormula = '';
-    let counts = new Map();
-    let graph = data === null ? this.graph : new Graph(data, this.opts.isomeric); // Initialize element count
-
-    for (var i = 0; i < graph.vertices.length; i++) {
-      let atom = graph.vertices[i].value;
-
-      if (counts.has(atom.element)) {
-        counts.set(atom.element, counts.get(atom.element) + 1);
-      } else {
-        counts.set(atom.element, 1);
-      } // Hydrogens attached to a chiral center were added as vertices,
-      // those in non chiral brackets are added here
-
-
-      if (atom.bracket && !atom.bracket.chirality) {
-        if (counts.has('H')) {
-          counts.set('H', counts.get('H') + atom.bracket.hcount);
-        } else {
-          counts.set('H', atom.bracket.hcount);
-        }
-      } // Add the implicit hydrogens according to valency, exclude
-      // bracket atoms as they were handled and always have the number
-      // of hydrogens specified explicitly
-
-
-      if (!atom.bracket) {
-        let nHydrogens = Atom.maxBonds[atom.element] - atom.bondCount;
-
-        if (atom.isPartOfAromaticRing) {
-          nHydrogens--;
-        }
-
-        if (counts.has('H')) {
-          counts.set('H', counts.get('H') + nHydrogens);
-        } else {
-          counts.set('H', nHydrogens);
-        }
-      }
-    }
-
-    if (counts.has('C')) {
-      let count = counts.get('C');
-      molecularFormula += 'C' + (count > 1 ? count : '');
-      counts.delete('C');
-    }
-
-    if (counts.has('H')) {
-      let count = counts.get('H');
-      molecularFormula += 'H' + (count > 1 ? count : '');
-      counts.delete('H');
-    }
-
-    let elements = Object.keys(Atom.atomicNumbers).sort();
-    elements.map(e => {
-      if (counts.has(e)) {
-        let count = counts.get(e);
-        molecularFormula += e + (count > 1 ? count : '');
-      }
-    });
-    return molecularFormula;
+    return this.molecularInfoManager.getMolecularFormula(data);
   }
   /**
    * Returns the type of the ringbond (e.g. '=' for a double bond). The ringbond represents the break in a ring introduced when creating the MST. If the two vertices supplied as arguments are not part of a common ringbond, the method returns null.
@@ -6827,7 +6760,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./Atom":4,"./DrawingManager":8,"./Graph":12,"./MathHelper":14,"./Options":15,"./OverlapResolutionManager":16,"./PositioningManager":19,"./PseudoElementManager":20,"./RingManager":26,"./StereochemistryManager":29}],8:[function(require,module,exports){
+},{"./DrawingManager":8,"./Graph":12,"./MathHelper":14,"./MolecularInfoManager":15,"./Options":16,"./OverlapResolutionManager":17,"./PositioningManager":20,"./PseudoElementManager":21,"./RingManager":27,"./StereochemistryManager":30}],8:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -7160,7 +7093,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":13,"./ThemeManager":32,"./Vector2":33}],9:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":13,"./ThemeManager":33,"./Vector2":34}],9:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -7448,7 +7381,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":18,"./Vector2":33,"chroma-js":2}],12:[function(require,module,exports){
+},{"./PixelsToSvg":19,"./Vector2":34,"chroma-js":2}],12:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -8406,7 +8339,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":9,"./MathHelper":14,"./Vertex":34}],13:[function(require,module,exports){
+},{"./Atom":4,"./Edge":9,"./MathHelper":14,"./Vertex":35}],13:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -8714,7 +8647,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":33}],14:[function(require,module,exports){
+},{"./Vector2":34}],14:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -8890,6 +8823,98 @@ module.exports = MathHelper;
 },{}],15:[function(require,module,exports){
 "use strict";
 
+const Graph = require("./Graph");
+
+const Atom = require("./Atom");
+
+class MolecularInfoManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+
+  getHeavyAtomCount() {
+    let hac = 0;
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      if (this.drawer.graph.vertices[i].value.element !== 'H') {
+        hac++;
+      }
+    }
+
+    return hac;
+  }
+
+  getMolecularFormula(data = null) {
+    let molecularFormula = '';
+    let counts = new Map();
+    let graph = data === null ? this.drawer.graph : new Graph(data, this.drawer.opts.isomeric); // Initialize element count
+
+    for (var i = 0; i < graph.vertices.length; i++) {
+      let atom = graph.vertices[i].value;
+
+      if (counts.has(atom.element)) {
+        counts.set(atom.element, counts.get(atom.element) + 1);
+      } else {
+        counts.set(atom.element, 1);
+      } // Hydrogens attached to a chiral center were added as vertices,
+      // those in non chiral brackets are added here
+
+
+      if (atom.bracket && !atom.bracket.chirality) {
+        if (counts.has('H')) {
+          counts.set('H', counts.get('H') + atom.bracket.hcount);
+        } else {
+          counts.set('H', atom.bracket.hcount);
+        }
+      } // Add the implicit hydrogens according to valency, exclude
+      // bracket atoms as they were handled and always have the number
+      // of hydrogens specified explicitly
+
+
+      if (!atom.bracket) {
+        let nHydrogens = Atom.maxBonds[atom.element] - atom.bondCount;
+
+        if (atom.isPartOfAromaticRing) {
+          nHydrogens--;
+        }
+
+        if (counts.has('H')) {
+          counts.set('H', counts.get('H') + nHydrogens);
+        } else {
+          counts.set('H', nHydrogens);
+        }
+      }
+    }
+
+    if (counts.has('C')) {
+      let count = counts.get('C');
+      molecularFormula += 'C' + (count > 1 ? count : '');
+      counts.delete('C');
+    }
+
+    if (counts.has('H')) {
+      let count = counts.get('H');
+      molecularFormula += 'H' + (count > 1 ? count : '');
+      counts.delete('H');
+    }
+
+    let elements = Object.keys(Atom.atomicNumbers).sort();
+    elements.map(e => {
+      if (counts.has(e)) {
+        let count = counts.get(e);
+        molecularFormula += e + (count > 1 ? count : '');
+      }
+    });
+    return molecularFormula;
+  }
+
+}
+
+module.exports = MolecularInfoManager;
+
+},{"./Atom":4,"./Graph":12}],16:[function(require,module,exports){
+"use strict";
+
 class Options {
   /**
    * A helper method to extend the default options with user supplied ones.
@@ -8934,7 +8959,7 @@ class Options {
 
 module.exports = Options;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9236,7 +9261,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":33}],17:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":34}],18:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -11134,7 +11159,7 @@ module.exports = function () {
   };
 }();
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
@@ -11256,7 +11281,7 @@ function convertImage(img) {
 
 module.exports = convertImage;
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -11721,7 +11746,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":33}],20:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":34}],21:[function(require,module,exports){
 "use strict";
 
 const Atom = require("./Atom");
@@ -11850,7 +11875,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"./Atom":4}],21:[function(require,module,exports){
+},{"./Atom":4}],22:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -11906,7 +11931,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"./Parser":17}],22:[function(require,module,exports){
+},{"./Parser":18}],23:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -12278,7 +12303,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":10,"./Options":15,"./SvgDrawer":30,"./SvgWrapper":31,"./ThemeManager":32}],23:[function(require,module,exports){
+},{"./FormulaToCommonName":10,"./Options":16,"./SvgDrawer":31,"./SvgWrapper":32,"./ThemeManager":33}],24:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12299,7 +12324,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"./Reaction":21}],24:[function(require,module,exports){
+},{"./Reaction":22}],25:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("./ArrayHelper");
@@ -12518,7 +12543,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":25,"./Vector2":33}],25:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":26,"./Vector2":34}],26:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -12686,7 +12711,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -13471,7 +13496,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":14,"./Ring":24,"./RingConnection":25,"./SSSR":27,"./Vector2":33}],27:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":14,"./Ring":25,"./RingConnection":26,"./SSSR":28,"./Vector2":34}],28:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -14081,7 +14106,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":12}],28:[function(require,module,exports){
+},{"./Graph":12}],29:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14427,7 +14452,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":15,"./Parser":17,"./ReactionDrawer":22,"./ReactionParser":23,"./SvgDrawer":30,"./SvgWrapper":31}],29:[function(require,module,exports){
+},{"./Options":16,"./Parser":18,"./ReactionDrawer":23,"./ReactionParser":24,"./SvgDrawer":31,"./SvgWrapper":32}],30:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -14651,7 +14676,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"./MathHelper":14}],30:[function(require,module,exports){
+},{"./MathHelper":14}],31:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -15119,7 +15144,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":13,"./SvgWrapper":31,"./ThemeManager":32,"./Vector2":33}],31:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":13,"./SvgWrapper":32,"./ThemeManager":33,"./Vector2":34}],32:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -16096,7 +16121,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":13,"./MathHelper":14,"./Vector2":33}],32:[function(require,module,exports){
+},{"./Line":13,"./MathHelper":14,"./Vector2":34}],33:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -16144,7 +16169,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16764,7 +16789,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -17141,5 +17166,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":33}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":34}]},{},[1])
 
