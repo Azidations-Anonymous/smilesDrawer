@@ -132,12 +132,7 @@ class SvgDrawer {
     svg.setAttributeNS(null, 'height', 500 + '');
     svg.setAttributeNS(null, 'style', 'visibility: hidden: position: absolute; left: -1000px');
     document.body.appendChild(svg);
-    // KNOWN BUG: infoOnly is incorrectly passed as the 4th parameter (weights) instead of 5th.
-    // This causes infoOnly to be interpreted as weights when true, triggering incorrect weight-related
-    // code paths, and the actual infoOnly parameter defaults to false.
-    // Correct call would be: this.draw(data, svg, themeName, null, infoOnly);
-    // Preserving buggy behavior for backward compatibility during TypeScript migration.
-    this.draw(data, svg, themeName, infoOnly as any);
+    this.draw(data, svg, themeName, null, infoOnly);
     this.svgWrapper.toCanvas(canvas, this.opts.width, this.opts.height);
     document.body.removeChild(svg);
     return target;
