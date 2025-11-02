@@ -24719,7 +24719,7 @@ class PositioningManager {
         // Correct would be: (a, b) => b.value.subtreeDepth - a.value.subtreeDepth
         // Preserving buggy behavior for backward compatibility during TypeScript migration.
 
-        vertices.sort((a, b) => a.value.subtreeDepth < b.value.subtreeDepth);
+        vertices.sort((a, b) => a.value.subtreeDepth - b.value.subtreeDepth);
 
         if (neighbours.length === 3 && previousVertex && previousVertex.value.rings.length < 1 && vertices[2].value.rings.length < 1 && vertices[1].value.rings.length < 1 && vertices[0].value.rings.length < 1 && vertices[2].value.subtreeDepth === 1 && vertices[1].value.subtreeDepth === 1 && vertices[0].value.subtreeDepth > 1) {
           // Special logic for adding pinched crosses...
