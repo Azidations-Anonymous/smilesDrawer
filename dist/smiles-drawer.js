@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":27,"./src/parsing/ReactionParser":28,"./src/reactions/ReactionDrawer":39}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":30,"./src/parsing/ReactionParser":31,"./src/reactions/ReactionDrawer":42}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -3751,7 +3751,7 @@ const SvgDrawer = require("./drawing/SvgDrawer");
 
 const ReactionDrawer = require("./reactions/ReactionDrawer");
 
-const SvgWrapper = require("./drawing/SvgWrapper");
+const SvgConversionHelper = require("./drawing/helpers/SvgConversionHelper");
 
 const Options = require("./config/Options");
 
@@ -4030,7 +4030,7 @@ class SmilesDrawer {
     }
 
     let dims = this.getDimensions(canvas, svg);
-    SvgWrapper.svgToCanvas(svg, canvas, dims.w, dims.h);
+    SvgConversionHelper.svgToCanvas(svg, canvas, dims.w, dims.h);
     return canvas;
   }
 
@@ -4040,7 +4040,7 @@ class SmilesDrawer {
     }
 
     let dims = this.getDimensions(img, svg);
-    SvgWrapper.svgToImg(svg, img, dims.w, dims.h);
+    SvgConversionHelper.svgToImg(svg, img, dims.w, dims.h);
     return img;
   }
   /**
@@ -4086,7 +4086,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/SvgWrapper":15,"./parsing/Parser":27,"./parsing/ReactionParser":28,"./reactions/ReactionDrawer":39}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":16,"./parsing/Parser":30,"./parsing/ReactionParser":31,"./reactions/ReactionDrawer":42}],4:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4354,7 +4354,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":42}],5:[function(require,module,exports){
+},{"../utils/MathHelper":45}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -4964,7 +4964,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"../graph/Graph":18}],6:[function(require,module,exports){
+},{"../graph/Graph":21}],6:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -6137,7 +6137,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"../graph/Vector2":24,"../utils/MathHelper":42}],11:[function(require,module,exports){
+},{"../graph/Vector2":27,"../utils/MathHelper":45}],11:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -6549,7 +6549,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":16,"../graph/Line":21,"../graph/Vector2":24,"../utils/ArrayHelper":40,"./CanvasWrapper":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":19,"../graph/Line":24,"../graph/Vector2":27,"../utils/ArrayHelper":43,"./CanvasWrapper":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6733,7 +6733,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":24,"../utils/PixelsToSvg":43,"chroma-js":2}],14:[function(require,module,exports){
+},{"../graph/Vector2":27,"../utils/PixelsToSvg":46,"chroma-js":2}],14:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -7201,10 +7201,14 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":9,"../graph/Atom":16,"../graph/Line":21,"../graph/Vector2":24,"../preprocessing/MolecularPreprocessor":32,"../utils/ArrayHelper":40,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":19,"../graph/Line":24,"../graph/Vector2":27,"../preprocessing/MolecularPreprocessor":35,"../utils/ArrayHelper":43,"./GaussDrawer":13,"./SvgWrapper":15}],15:[function(require,module,exports){
 "use strict";
 
+const SvgTextHelper = require("./helpers/SvgTextHelper");
+
 const Line = require("../graph/Line");
+
+const SvgUnicodeHelper = require("./helpers/SvgUnicodeHelper");
 
 const Vector2 = require("../graph/Vector2");
 
@@ -7403,26 +7407,6 @@ class SvgWrapper {
     elem.appendChild(document.createTextNode(text));
     elem.setAttributeNS(null, 'class', 'sub');
     return elem;
-  }
-
-  static createUnicodeCharge(n) {
-    if (n === 1) {
-      return '⁺';
-    }
-
-    if (n === -1) {
-      return '⁻';
-    }
-
-    if (n > 1) {
-      return SvgWrapper.createUnicodeSuperscript(n) + '⁺';
-    }
-
-    if (n < -1) {
-      return SvgWrapper.createUnicodeSuperscript(n) + '⁻';
-    }
-
-    return '';
   }
   /**
    * Determine drawing dimensiosn based on vertex positions.
@@ -7766,11 +7750,11 @@ class SvgWrapper {
     let display = elementName;
 
     if (charge !== 0 && charge !== null) {
-      display += SvgWrapper.createUnicodeCharge(charge);
+      display += SvgUnicodeHelper.createUnicodeCharge(charge);
     }
 
     if (isotope !== 0 && isotope !== null) {
-      display = SvgWrapper.createUnicodeSuperscript(isotope) + display;
+      display = SvgUnicodeHelper.createUnicodeSuperscript(isotope) + display;
     }
 
     text.push([display, elementName]);
@@ -7778,7 +7762,7 @@ class SvgWrapper {
     if (hydrogens === 1) {
       text.push(['H', 'H']);
     } else if (hydrogens > 1) {
-      text.push(['H' + SvgWrapper.createUnicodeSubscript(hydrogens), 'H']);
+      text.push(['H' + SvgUnicodeHelper.createUnicodeSubscript(hydrogens), 'H']);
     } // TODO: Better handle exceptions
     // Exception for nitro (draw nitro as NO2 instead of N+O-O)
 
@@ -7805,11 +7789,11 @@ class SvgWrapper {
       let display = pe.element;
 
       if (pe.count > 1) {
-        display += SvgWrapper.createUnicodeSubscript(pe.count);
+        display += SvgUnicodeHelper.createUnicodeSubscript(pe.count);
       }
 
       if (pe.charge !== '') {
-        display += SvgWrapper.createUnicodeCharge(charge);
+        display += SvgUnicodeHelper.createUnicodeCharge(charge);
       }
 
       text.push([display, pe.element]);
@@ -7817,7 +7801,7 @@ class SvgWrapper {
       if (pe.hydrogenCount === 1) {
         text.push(['H', 'H']);
       } else if (pe.hydrogenCount > 1) {
-        text.push(['H' + SvgWrapper.createUnicodeSubscript(pe.hydrogenCount), 'H']);
+        text.push(['H' + SvgUnicodeHelper.createUnicodeSubscript(pe.hydrogenCount), 'H']);
       }
     }
 
@@ -7826,7 +7810,7 @@ class SvgWrapper {
 
   write(text, direction, x, y, singleVertex) {
     // Measure element name only, without charge or isotope ...
-    let bbox = SvgWrapper.measureText(text[0][1], this.opts.fontSizeLarge, this.opts.fontFamily); // ... but for direction left move to the right to 
+    let bbox = SvgTextHelper.measureText(text[0][1], this.opts.fontSizeLarge, this.opts.fontFamily); // ... but for direction left move to the right to 
 
     if (direction === 'left' && text[0][0] !== text[0][1]) {
       bbox.width *= 2.0;
@@ -7980,58 +7964,14 @@ class SvgWrapper {
     image.src = 'data:image/svg+xml;charset-utf-8,' + encodeURIComponent(this.svg.outerHTML);
   }
 
-  static createUnicodeSubscript(n) {
-    let result = '';
-    n.toString().split('').forEach(d => {
-      result += ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'][parseInt(d)];
-    });
-    return result;
-  }
+}
 
-  static createUnicodeSuperscript(n) {
-    let result = '';
-    n.toString().split('').forEach(d => {
-      let parsed = parseInt(d);
+module.exports = SvgWrapper;
 
-      if (Number.isFinite(parsed)) {
-        result += ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'][parsed];
-      }
-    });
-    return result;
-  }
+},{"../graph/Line":24,"../graph/Vector2":27,"../utils/MathHelper":45,"./helpers/SvgTextHelper":17,"./helpers/SvgUnicodeHelper":18}],16:[function(require,module,exports){
+"use strict";
 
-  static replaceNumbersWithSubscript(text) {
-    let subscriptNumbers = {
-      '0': '₀',
-      '1': '₁',
-      '2': '₂',
-      '3': '₃',
-      '4': '₄',
-      '5': '₅',
-      '6': '₆',
-      '7': '₇',
-      '8': '₈',
-      '9': '₉'
-    };
-
-    for (const [key, value] of Object.entries(subscriptNumbers)) {
-      text = text.replaceAll(key, value);
-    }
-
-    return text;
-  }
-
-  static measureText(text, fontSize, fontFamily, lineHeight = 0.9) {
-    const element = document.createElement('canvas');
-    const ctx = element.getContext("2d");
-    ctx.font = `${fontSize}pt ${fontFamily}`;
-    let textMetrics = ctx.measureText(text);
-    let compWidth = Math.abs(textMetrics.actualBoundingBoxLeft) + Math.abs(textMetrics.actualBoundingBoxRight);
-    return {
-      'width': textMetrics.width > compWidth ? textMetrics.width : compWidth,
-      'height': (Math.abs(textMetrics.actualBoundingBoxAscent) + Math.abs(textMetrics.actualBoundingBoxAscent)) * lineHeight
-    };
-  }
+class SvgConversionHelper {
   /**
    * Convert an SVG to a canvas. Warning: This happens async!
    *
@@ -8042,8 +7982,6 @@ class SvgWrapper {
    * @param {CallableFunction} callback
    * @returns {HTMLCanvasElement} The input html canvas element after drawing to.
    */
-
-
   static svgToCanvas(svg, canvas, width, height, callback = null) {
     svg.setAttributeNS(null, 'width', width.toString());
     svg.setAttributeNS(null, 'height', height.toString());
@@ -8080,9 +8018,29 @@ class SvgWrapper {
 
   static svgToImg(svg, img, width, height) {
     let canvas = document.createElement('canvas');
-    this.svgToCanvas(svg, canvas, width, height, result => {
+    SvgConversionHelper.svgToCanvas(svg, canvas, width, height, result => {
       img.src = canvas.toDataURL("image/png");
     });
+  }
+
+}
+
+module.exports = SvgConversionHelper;
+
+},{}],17:[function(require,module,exports){
+"use strict";
+
+class SvgTextHelper {
+  static measureText(text, fontSize, fontFamily, lineHeight = 0.9) {
+    const element = document.createElement('canvas');
+    const ctx = element.getContext("2d");
+    ctx.font = `${fontSize}pt ${fontFamily}`;
+    let textMetrics = ctx.measureText(text);
+    let compWidth = Math.abs(textMetrics.actualBoundingBoxLeft) + Math.abs(textMetrics.actualBoundingBoxRight);
+    return {
+      'width': textMetrics.width > compWidth ? textMetrics.width : compWidth,
+      'height': (Math.abs(textMetrics.actualBoundingBoxAscent) + Math.abs(textMetrics.actualBoundingBoxAscent)) * lineHeight
+    };
   }
   /**
    * Create an SVG element containing text.
@@ -8109,7 +8067,7 @@ class SvgWrapper {
     let totalHeight = 0.0;
     let lines = [];
     text.split("\n").forEach(line => {
-      let dims = SvgWrapper.measureText(line, fontSize, fontFamily, 1.0);
+      let dims = SvgTextHelper.measureText(line, fontSize, fontFamily, 1.0);
 
       if (dims.width >= maxWidth) {
         let totalWordsWidth = 0.0;
@@ -8118,7 +8076,7 @@ class SvgWrapper {
         let offset = 0;
 
         for (let i = 0; i < words.length; i++) {
-          let wordDims = SvgWrapper.measureText(words[i], fontSize, fontFamily, 1.0);
+          let wordDims = SvgTextHelper.measureText(words[i], fontSize, fontFamily, 1.0);
 
           if (totalWordsWidth + wordDims.width > maxWidth) {
             lines.push({
@@ -8176,9 +8134,78 @@ class SvgWrapper {
 
 }
 
-module.exports = SvgWrapper;
+module.exports = SvgTextHelper;
 
-},{"../graph/Line":21,"../graph/Vector2":24,"../utils/MathHelper":42}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
+"use strict";
+
+class SvgUnicodeHelper {
+  static createUnicodeCharge(n) {
+    if (n === 1) {
+      return '⁺';
+    }
+
+    if (n === -1) {
+      return '⁻';
+    }
+
+    if (n > 1) {
+      return SvgUnicodeHelper.createUnicodeSuperscript(n) + '⁺';
+    }
+
+    if (n < -1) {
+      return SvgUnicodeHelper.createUnicodeSuperscript(n) + '⁻';
+    }
+
+    return '';
+  }
+
+  static createUnicodeSubscript(n) {
+    let result = '';
+    n.toString().split('').forEach(d => {
+      result += ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'][parseInt(d)];
+    });
+    return result;
+  }
+
+  static createUnicodeSuperscript(n) {
+    let result = '';
+    n.toString().split('').forEach(d => {
+      let parsed = parseInt(d);
+
+      if (Number.isFinite(parsed)) {
+        result += ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'][parsed];
+      }
+    });
+    return result;
+  }
+
+  static replaceNumbersWithSubscript(text) {
+    let subscriptNumbers = {
+      '0': '₀',
+      '1': '₁',
+      '2': '₂',
+      '3': '₃',
+      '4': '₄',
+      '5': '₅',
+      '6': '₆',
+      '7': '₇',
+      '8': '₈',
+      '9': '₉'
+    };
+
+    for (const [key, value] of Object.entries(subscriptNumbers)) {
+      text = text.replaceAll(key, value);
+    }
+
+    return text;
+  }
+
+}
+
+module.exports = SvgUnicodeHelper;
+
+},{}],19:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -8739,7 +8766,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":40}],17:[function(require,module,exports){
+},{"../utils/ArrayHelper":43}],20:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8805,7 +8832,7 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 const Vertex = require("./Vertex");
@@ -9230,7 +9257,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"../algorithms/KamadaKawaiLayout":4,"./Atom":16,"./Edge":17,"./GraphAlgorithms":19,"./GraphMatrixOperations":20,"./Vertex":25}],19:[function(require,module,exports){
+},{"../algorithms/KamadaKawaiLayout":4,"./Atom":19,"./Edge":20,"./GraphAlgorithms":22,"./GraphMatrixOperations":23,"./Vertex":28}],22:[function(require,module,exports){
 "use strict";
 /**
  * A class providing graph algorithms including bridge detection,
@@ -9486,7 +9513,7 @@ class GraphAlgorithms {
 
 module.exports = GraphAlgorithms;
 
-},{}],20:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 /**
  * A class providing matrix and list operations for molecular graphs.
@@ -9715,7 +9742,7 @@ class GraphMatrixOperations {
 
 module.exports = GraphMatrixOperations;
 
-},{}],21:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10023,7 +10050,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":24}],22:[function(require,module,exports){
+},{"./Vector2":27}],25:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -10242,7 +10269,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":40,"./RingConnection":23,"./Vector2":24}],23:[function(require,module,exports){
+},{"../utils/ArrayHelper":43,"./RingConnection":26,"./Vector2":27}],26:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -10410,7 +10437,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],24:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -11030,7 +11057,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -11407,7 +11434,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":40,"../utils/MathHelper":42,"./Vector2":24}],26:[function(require,module,exports){
+},{"../utils/ArrayHelper":43,"../utils/MathHelper":45,"./Vector2":27}],29:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11596,7 +11623,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":22,"../graph/RingConnection":23,"../utils/ArrayHelper":40}],27:[function(require,module,exports){
+},{"../graph/Ring":25,"../graph/RingConnection":26,"../utils/ArrayHelper":43}],30:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13494,7 +13521,7 @@ module.exports = function () {
   };
 }();
 
-},{}],28:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("../reactions/Reaction");
@@ -13515,7 +13542,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":38}],29:[function(require,module,exports){
+},{"../reactions/Reaction":41}],32:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13652,7 +13679,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":42}],30:[function(require,module,exports){
+},{"../utils/MathHelper":45}],33:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13707,7 +13734,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"../graph/Graph":18}],31:[function(require,module,exports){
+},{"../graph/Graph":21}],34:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13799,7 +13826,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":16,"../graph/Graph":18}],32:[function(require,module,exports){
+},{"../graph/Atom":19,"../graph/Graph":21}],35:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14587,7 +14614,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":29,"./InitializationManager":30,"./MolecularInfoManager":31,"./OverlapResolutionManager":33,"./PositioningManager":34,"./PseudoElementManager":35,"./RingManager":36,"./StereochemistryManager":37}],33:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":32,"./InitializationManager":33,"./MolecularInfoManager":34,"./OverlapResolutionManager":36,"./PositioningManager":37,"./PseudoElementManager":38,"./RingManager":39,"./StereochemistryManager":40}],36:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -14889,7 +14916,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":24,"../utils/ArrayHelper":40,"../utils/MathHelper":42}],34:[function(require,module,exports){
+},{"../graph/Vector2":27,"../utils/ArrayHelper":43,"../utils/MathHelper":45}],37:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15354,7 +15381,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":24,"../utils/ArrayHelper":40,"../utils/MathHelper":42}],35:[function(require,module,exports){
+},{"../graph/Vector2":27,"../utils/ArrayHelper":43,"../utils/MathHelper":45}],38:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15483,7 +15510,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":16}],36:[function(require,module,exports){
+},{"../graph/Atom":19}],39:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16104,7 +16131,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":5,"../graph/Edge":17,"../graph/Ring":22,"../graph/RingConnection":23,"../graph/Vector2":24,"../handlers/BridgedRingHandler":26,"../utils/ArrayHelper":40,"../utils/MathHelper":42}],37:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":20,"../graph/Ring":25,"../graph/RingConnection":26,"../graph/Vector2":27,"../handlers/BridgedRingHandler":29,"../utils/ArrayHelper":43,"../utils/MathHelper":45}],40:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16328,7 +16355,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":42}],38:[function(require,module,exports){
+},{"../utils/MathHelper":45}],41:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16384,12 +16411,14 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":27}],39:[function(require,module,exports){
+},{"../parsing/Parser":30}],42:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
 
-const SvgWrapper = require("../drawing/SvgWrapper");
+const SvgUnicodeHelper = require("../drawing/helpers/SvgUnicodeHelper");
+
+const SvgTextHelper = require("../drawing/helpers/SvgTextHelper");
 
 const Options = require("../config/Options");
 
@@ -16593,11 +16622,11 @@ class ReactionDrawer {
         text = formulaToCommonName[text];
       }
 
-      reagentsText += SvgWrapper.replaceNumbersWithSubscript(text);
+      reagentsText += SvgUnicodeHelper.replaceNumbersWithSubscript(text);
     }
 
     textAbove = textAbove.replace('{reagents}', reagentsText);
-    const topText = SvgWrapper.writeText(textAbove, this.themeManager, this.opts.fontSize * this.opts.scale, this.opts.fontFamily, this.opts.arrow.length * this.opts.scale);
+    const topText = SvgTextHelper.writeText(textAbove, this.themeManager, this.opts.fontSize * this.opts.scale, this.opts.fontFamily, this.opts.arrow.length * this.opts.scale);
     let centerOffsetX = (this.opts.arrow.length * this.opts.scale - topText.width) / 2.0;
     elements.push({
       svg: topText.svg,
@@ -16608,7 +16637,7 @@ class ReactionDrawer {
       position: 'relative'
     }); // Text below arrow
 
-    const bottomText = SvgWrapper.writeText(textBelow, this.themeManager, this.opts.fontSize * this.opts.scale, this.opts.fontFamily, this.opts.arrow.length * this.opts.scale);
+    const bottomText = SvgTextHelper.writeText(textBelow, this.themeManager, this.opts.fontSize * this.opts.scale, this.opts.fontFamily, this.opts.arrow.length * this.opts.scale);
     centerOffsetX = (this.opts.arrow.length * this.opts.scale - bottomText.width) / 2.0;
     elements.push({
       svg: bottomText.svg,
@@ -16756,7 +16785,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/SvgWrapper":15,"../utils/FormulaToCommonName":41}],40:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":17,"../drawing/helpers/SvgUnicodeHelper":18,"../utils/FormulaToCommonName":44}],43:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17157,7 +17186,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],41:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17195,7 +17224,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],42:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17368,7 +17397,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],43:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
