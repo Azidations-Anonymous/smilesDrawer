@@ -4,7 +4,6 @@ import Vector2 = require('./Vector2');
 import Line = require('./Line');
 import Vertex = require('./Vertex');
 import Ring = require('./Ring');
-import { getChargeText } from './UtilityFunctions';
 
 /**
  * A class wrapping a canvas element.
@@ -47,8 +46,8 @@ class CanvasWrapper {
      * @param {Object} options The smiles drawer options object.
      */
     constructor(target: string | HTMLCanvasElement, themeManager: any, options: any) {
-        if (typeof target === 'string' || target instanceof String) {
-            this.canvas = document.getElementById(target);
+        if (typeof target === 'string') {
+            this.canvas = document.getElementById(target) as HTMLCanvasElement;
         } else {
             this.canvas = target;
         }
@@ -83,9 +82,8 @@ class CanvasWrapper {
      */
     updateSize(width: number, height: number): void {
         this.devicePixelRatio = window.devicePixelRatio || 1;
-        this.backingStoreRatio = this.ctx.webkitBackingStorePixelRatio || this.ctx.mozBackingStorePixelRatio ||
-            this.ctx.msBackingStorePixelRatio || this.ctx.oBackingStorePixelRatio ||
-            this.ctx.backingStorePixelRatio || 1;
+        // @ts-ignore - Vendor-specific canvas properties not in TypeScript definitions
+        this.backingStoreRatio = this.ctx.webkitBackingStorePixelRatio || this.ctx.mozBackingStorePixelRatio || this.ctx.msBackingStorePixelRatio || this.ctx.oBackingStorePixelRatio || this.ctx.backingStorePixelRatio || 1;
         this.ratio = this.devicePixelRatio / this.backingStoreRatio;
 
         if (this.ratio !== 1) {
@@ -576,7 +574,7 @@ class CanvasWrapper {
         let chargeWidth = 0;
 
         if (charge) {
-            chargeText = getChargeText(charge);
+            chargeText = this.getChargeText(charge);
 
             ctx.font = this.fontSmall;
             chargeWidth = ctx.measureText(chargeText).width;
@@ -606,7 +604,9 @@ class CanvasWrapper {
 
         let dim = ctx.measureText(elementName);
 
+        // @ts-ignore - Adding custom properties to TextMetrics for internal use
         dim.totalWidth = dim.width + chargeWidth;
+        // @ts-ignore - Adding custom properties to TextMetrics for internal use
         dim.height = parseInt(this.fontLarge, 10);
 
         let r = (dim.width > this.opts.fontSizeLarge) ? dim.width : this.opts.fontSizeLarge;
@@ -675,7 +675,7 @@ class CanvasWrapper {
 
             hydrogenWidth = this.hydrogenWidth;
             ctx.font = this.fontSmall;
-            hydrogenCountWidth = ctx.measureText(hydrogens).width;
+            hydrogenCountWidth = ctx.measureText(hydrogens.toString()).width;
             cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
 
             if (direction === 'left') {
@@ -698,7 +698,7 @@ class CanvasWrapper {
             ctx.fillText('H', hx, hy)
 
             ctx.font = this.fontSmall;
-            ctx.fillText(hydrogens, hx + this.halfHydrogenWidth + hydrogenCountWidth, hy + this.opts.fifthFontSizeSmall);
+            ctx.fillText(hydrogens.toString(), hx + this.halfHydrogenWidth + hydrogenCountWidth, hy + this.opts.fifthFontSizeSmall);
 
             cursorPos += hydrogenWidth + this.halfHydrogenWidth + hydrogenCountWidth;
         }
@@ -747,7 +747,7 @@ class CanvasWrapper {
             }
 
             if (elementCharge !== 0) {
-                elementChargeText = getChargeText(elementCharge);
+                elementChargeText = this.getChargeText(elementCharge);
                 elementChargeWidth = ctx.measureText(elementChargeText).width;
             }
 

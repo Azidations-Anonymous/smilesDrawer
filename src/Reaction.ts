@@ -48,15 +48,15 @@ class Reaction {
         }
 
         for (var i = 0; i < this.reactantsSmiles.length; i++) {
-            this.reactants.push(Parser.parse(this.reactantsSmiles[i]));
+            this.reactants.push(Parser.parse(this.reactantsSmiles[i], {}));
         }
 
         for (var i = 0; i < this.reagentsSmiles.length; i++) {
-            this.reagents.push(Parser.parse(this.reagentsSmiles[i]));
+            this.reagents.push(Parser.parse(this.reagentsSmiles[i], {}));
         }
 
         for (var i = 0; i < this.productsSmiles.length; i++) {
-            this.products.push(Parser.parse(this.productsSmiles[i]));
+            this.products.push(Parser.parse(this.productsSmiles[i], {}));
         }
     }
 }

@@ -4708,8 +4708,6 @@ module.exports = Atom;
 const MathHelper = require("./MathHelper");
 
 const Vector2 = require("./Vector2");
-
-const UtilityFunctions_1 = require("./UtilityFunctions");
 /**
  * A class wrapping a canvas element.
  *
@@ -4735,7 +4733,7 @@ class CanvasWrapper {
    * @param {Object} options The smiles drawer options object.
    */
   constructor(target, themeManager, options) {
-    if (typeof target === 'string' || target instanceof String) {
+    if (typeof target === 'string') {
       this.canvas = document.getElementById(target);
     } else {
       this.canvas = target;
@@ -4766,7 +4764,8 @@ class CanvasWrapper {
 
 
   updateSize(width, height) {
-    this.devicePixelRatio = window.devicePixelRatio || 1;
+    this.devicePixelRatio = window.devicePixelRatio || 1; // @ts-ignore - Vendor-specific canvas properties not in TypeScript definitions
+
     this.backingStoreRatio = this.ctx.webkitBackingStorePixelRatio || this.ctx.mozBackingStorePixelRatio || this.ctx.msBackingStorePixelRatio || this.ctx.oBackingStorePixelRatio || this.ctx.backingStorePixelRatio || 1;
     this.ratio = this.devicePixelRatio / this.backingStoreRatio;
 
@@ -5207,7 +5206,7 @@ class CanvasWrapper {
     let chargeWidth = 0;
 
     if (charge) {
-      chargeText = (0, UtilityFunctions_1.getChargeText)(charge);
+      chargeText = this.getChargeText(charge);
       ctx.font = this.fontSmall;
       chargeWidth = ctx.measureText(chargeText).width;
     }
@@ -5238,8 +5237,10 @@ class CanvasWrapper {
 
     ctx.font = this.fontLarge;
     ctx.fillStyle = this.themeManager.getColor('BACKGROUND');
-    let dim = ctx.measureText(elementName);
-    dim.totalWidth = dim.width + chargeWidth;
+    let dim = ctx.measureText(elementName); // @ts-ignore - Adding custom properties to TextMetrics for internal use
+
+    dim.totalWidth = dim.width + chargeWidth; // @ts-ignore - Adding custom properties to TextMetrics for internal use
+
     dim.height = parseInt(this.fontLarge, 10);
     let r = dim.width > this.opts.fontSizeLarge ? dim.width : this.opts.fontSizeLarge;
     r /= 1.5;
@@ -5300,7 +5301,7 @@ class CanvasWrapper {
       let hy = y + offsetY + this.opts.halfFontSizeLarge;
       hydrogenWidth = this.hydrogenWidth;
       ctx.font = this.fontSmall;
-      hydrogenCountWidth = ctx.measureText(hydrogens).width;
+      hydrogenCountWidth = ctx.measureText(hydrogens.toString()).width;
       cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
 
       if (direction === 'left') {
@@ -5322,7 +5323,7 @@ class CanvasWrapper {
       ctx.font = this.fontLarge;
       ctx.fillText('H', hx, hy);
       ctx.font = this.fontSmall;
-      ctx.fillText(hydrogens, hx + this.halfHydrogenWidth + hydrogenCountWidth, hy + this.opts.fifthFontSizeSmall);
+      ctx.fillText(hydrogens.toString(), hx + this.halfHydrogenWidth + hydrogenCountWidth, hy + this.opts.fifthFontSizeSmall);
       cursorPos += hydrogenWidth + this.halfHydrogenWidth + hydrogenCountWidth;
     }
 
@@ -5366,7 +5367,7 @@ class CanvasWrapper {
       }
 
       if (elementCharge !== 0) {
-        elementChargeText = (0, UtilityFunctions_1.getChargeText)(elementCharge);
+        elementChargeText = this.getChargeText(elementCharge);
         elementChargeWidth = ctx.measureText(elementChargeText).width;
       }
 
@@ -5525,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":13,"./UtilityFunctions":27,"./Vector2":28}],6:[function(require,module,exports){
+},{"./MathHelper":13,"./Vector2":27}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5565,7 +5566,7 @@ class Drawer {
   draw(data, target, themeName = 'light', infoOnly = false, highlight_atoms = []) {
     let canvas = null;
 
-    if (typeof target === 'string' || target instanceof String) {
+    if (typeof target === 'string') {
       canvas = document.getElementById(target);
     } else {
       canvas = target;
@@ -5896,7 +5897,7 @@ class DrawerBase {
 
 
   draw(data, target, themeName = 'light', infoOnly = false) {
-    this.initDraw(data, themeName, infoOnly);
+    this.initDraw(data, themeName, infoOnly, null);
 
     if (!this.infoOnly) {
       this.themeManager = new ThemeManager(this.opts.themes, themeName);
@@ -7252,8 +7253,6 @@ class DrawerBase {
 
 
   drawVertices(debug) {
-    var i = this.graph.vertices.length;
-
     for (var i = 0; i < this.graph.vertices.length; i++) {
       let vertex = this.graph.vertices[i];
       let atom = vertex.value;
@@ -7311,9 +7310,9 @@ class DrawerBase {
 
 
     if (this.opts.debug) {
-      for (var i = 0; i < this.rings.length; i++) {
-        let center = this.rings[i].center;
-        this.canvasWrapper.drawDebugPoint(center.x, center.y, 'r: ' + this.rings[i].id);
+      for (var j = 0; j < this.rings.length; j++) {
+        let center = this.rings[j].center;
+        this.canvasWrapper.drawDebugPoint(center.x, center.y, 'r: ' + this.rings[j].id);
       }
     }
   }
@@ -8111,6 +8110,11 @@ class DrawerBase {
           return newvertex;
         }); // This puts all the longest subtrees on the far side...
         // TODO: Maybe try to balance this better?
+        // KNOWN BUG: Sort comparator returns boolean instead of number.
+        // JavaScript coerces false->0, true->1, effectively sorting in ascending order
+        // (shortest subtrees first), opposite of what the comment suggests.
+        // Correct would be: (a, b) => b.value.subtreeDepth - a.value.subtreeDepth
+        // Preserving buggy behavior for backward compatibility during TypeScript migration.
 
         vertices.sort((a, b) => a.value.subtreeDepth < b.value.subtreeDepth);
 
@@ -8658,7 +8662,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":28}],8:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Edge":8,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./Ring":20,"./RingConnection":21,"./SSSR":22,"./ThemeManager":26,"./Vector2":27}],8:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8765,63 +8769,17 @@ module.exports = formulaToCommonName;
 },{}],10:[function(require,module,exports){
 "use strict";
 
-var __createBinding = undefined && undefined.__createBinding || (Object.create ? function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  var desc = Object.getOwnPropertyDescriptor(m, k);
-
-  if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-    desc = {
-      enumerable: true,
-      get: function () {
-        return m[k];
-      }
-    };
-  }
-
-  Object.defineProperty(o, k2, desc);
-} : function (o, m, k, k2) {
-  if (k2 === undefined) k2 = k;
-  o[k2] = m[k];
-});
-
-var __setModuleDefault = undefined && undefined.__setModuleDefault || (Object.create ? function (o, v) {
-  Object.defineProperty(o, "default", {
-    enumerable: true,
-    value: v
-  });
-} : function (o, v) {
-  o["default"] = v;
-});
-
-var __importStar = undefined && undefined.__importStar || function () {
-  var ownKeys = function (o) {
-    ownKeys = Object.getOwnPropertyNames || function (o) {
-      var ar = [];
-
-      for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-
-      return ar;
-    };
-
-    return ownKeys(o);
+var __importDefault = undefined && undefined.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
   };
-
-  return function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-
-    __setModuleDefault(result, mod);
-
-    return result;
-  };
-}();
+};
 
 const Vector2 = require("./Vector2");
 
 const convertImage = require("./PixelsToSvg");
 
-const chroma = __importStar(require("chroma-js"));
+const chroma_js_1 = __importDefault(require("chroma-js"));
 
 class GaussDrawer {
   /**
@@ -8920,7 +8878,7 @@ class GaussDrawer {
       abs_max = Math.max(Math.abs(min), Math.abs(max));
     }
 
-    const scale = chroma.scale(this.colormap).domain([-1.0, 1.0]);
+    const scale = chroma_js_1.default.scale(this.colormap).domain([-1.0, 1.0]);
 
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
@@ -8992,7 +8950,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":16,"./Vector2":28,"chroma-js":2}],11:[function(require,module,exports){
+},{"./PixelsToSvg":16,"./Vector2":27,"chroma-js":2}],11:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -9950,7 +9908,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":29}],12:[function(require,module,exports){
+},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":28}],12:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -10258,7 +10216,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":28}],13:[function(require,module,exports){
+},{"./Vector2":27}],13:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -10275,7 +10233,7 @@ class MathHelper {
    */
   static round(value, decimals) {
     decimals = decimals ? decimals : 1;
-    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+    return Number(Math.round(parseFloat(value + 'e' + decimals)) + 'e-' + decimals);
   }
   /**
    * Returns the means of the angles contained in an array. In radians.
@@ -12394,8 +12352,8 @@ function convertImage(img) {
         }
       }
     } else {
-      for (i in obj) {
-        if (fn.call(obj[i], i, obj[i]) === false) {
+      for (let key in obj) {
+        if (fn.call(obj[key], key, obj[key]) === false) {
           break;
         }
       }
@@ -12538,15 +12496,15 @@ class Reaction {
     }
 
     for (var i = 0; i < this.reactantsSmiles.length; i++) {
-      this.reactants.push(Parser.parse(this.reactantsSmiles[i]));
+      this.reactants.push(Parser.parse(this.reactantsSmiles[i], {}));
     }
 
     for (var i = 0; i < this.reagentsSmiles.length; i++) {
-      this.reagents.push(Parser.parse(this.reagentsSmiles[i]));
+      this.reagents.push(Parser.parse(this.reagentsSmiles[i], {}));
     }
 
     for (var i = 0; i < this.productsSmiles.length; i++) {
-      this.products.push(Parser.parse(this.productsSmiles[i]));
+      this.products.push(Parser.parse(this.productsSmiles[i], {}));
     }
   }
 
@@ -12701,7 +12659,7 @@ class ReactionDrawer {
       svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       svg.setAttributeNS(null, 'width', 500 + '');
       svg.setAttributeNS(null, 'height', 500 + '');
-    } else if (typeof target === 'string' || target instanceof String) {
+    } else if (typeof target === 'string') {
       svg = document.getElementById(target);
     } else {
       svg = target;
@@ -12824,10 +12782,10 @@ class ReactionDrawer {
 
       let offsetX = (_a = element.offsetX) !== null && _a !== void 0 ? _a : 0.0;
       let offsetY = (_b = element.offsetY) !== null && _b !== void 0 ? _b : 0.0;
-      element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX));
-      element.svg.setAttributeNS(null, 'y', Math.round((maxHeight - element.height) / 2.0 + offsetY));
-      element.svg.setAttributeNS(null, 'width', Math.round(element.width));
-      element.svg.setAttributeNS(null, 'height', Math.round(element.height));
+      element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX).toString());
+      element.svg.setAttributeNS(null, 'y', Math.round((maxHeight - element.height) / 2.0 + offsetY).toString());
+      element.svg.setAttributeNS(null, 'width', Math.round(element.width).toString());
+      element.svg.setAttributeNS(null, 'height', Math.round(element.height).toString());
       svg.appendChild(element.svg);
 
       if (element.position !== 'relative') {
@@ -12847,15 +12805,15 @@ class ReactionDrawer {
     let rect_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     let rect_v = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     svg.setAttributeNS(null, 'id', 'plus');
-    rect_h.setAttributeNS(null, 'x', 0);
-    rect_h.setAttributeNS(null, 'y', s / 2.0 - w / 2.0);
-    rect_h.setAttributeNS(null, 'width', s);
-    rect_h.setAttributeNS(null, 'height', w);
+    rect_h.setAttributeNS(null, 'x', '0');
+    rect_h.setAttributeNS(null, 'y', (s / 2.0 - w / 2.0).toString());
+    rect_h.setAttributeNS(null, 'width', s.toString());
+    rect_h.setAttributeNS(null, 'height', w.toString());
     rect_h.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
-    rect_v.setAttributeNS(null, 'x', s / 2.0 - w / 2.0);
-    rect_v.setAttributeNS(null, 'y', 0);
-    rect_v.setAttributeNS(null, 'width', w);
-    rect_v.setAttributeNS(null, 'height', s);
+    rect_v.setAttributeNS(null, 'x', (s / 2.0 - w / 2.0).toString());
+    rect_v.setAttributeNS(null, 'y', '0');
+    rect_v.setAttributeNS(null, 'width', w.toString());
+    rect_v.setAttributeNS(null, 'height', s.toString());
     rect_v.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
     svg.appendChild(rect_h);
     svg.appendChild(rect_v);
@@ -12870,10 +12828,10 @@ class ReactionDrawer {
     marker.setAttributeNS(null, 'id', 'arrowhead');
     marker.setAttributeNS(null, 'viewBox', `0 0 ${s} ${s}`);
     marker.setAttributeNS(null, 'markerUnits', 'userSpaceOnUse');
-    marker.setAttributeNS(null, 'markerWidth', s);
-    marker.setAttributeNS(null, 'markerHeight', s);
-    marker.setAttributeNS(null, 'refX', 0);
-    marker.setAttributeNS(null, 'refY', s / 2);
+    marker.setAttributeNS(null, 'markerWidth', s.toString());
+    marker.setAttributeNS(null, 'markerHeight', s.toString());
+    marker.setAttributeNS(null, 'refX', '0');
+    marker.setAttributeNS(null, 'refY', (s / 2).toString());
     marker.setAttributeNS(null, 'orient', 'auto');
     marker.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
     polygon.setAttributeNS(null, 'points', `0 0, ${s} ${s / 2}, 0 ${s}`);
@@ -12889,10 +12847,10 @@ class ReactionDrawer {
     marker.setAttributeNS(null, 'id', 'arrowhead');
     marker.setAttributeNS(null, 'viewBox', `0 0 ${sw} ${s}`);
     marker.setAttributeNS(null, 'markerUnits', 'userSpaceOnUse');
-    marker.setAttributeNS(null, 'markerWidth', sw * 2);
-    marker.setAttributeNS(null, 'markerHeight', s * 2);
-    marker.setAttributeNS(null, 'refX', 2.2);
-    marker.setAttributeNS(null, 'refY', 2.2);
+    marker.setAttributeNS(null, 'markerWidth', (sw * 2).toString());
+    marker.setAttributeNS(null, 'markerHeight', (s * 2).toString());
+    marker.setAttributeNS(null, 'refX', '2.2');
+    marker.setAttributeNS(null, 'refY', '2.2');
     marker.setAttributeNS(null, 'orient', 'auto');
     marker.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
     path.setAttributeNS(null, 'style', 'fill-rule:nonzero;');
@@ -12910,11 +12868,11 @@ class ReactionDrawer {
     defs.appendChild(this.getCDArrowhead());
     svg.appendChild(defs);
     svg.setAttributeNS(null, 'id', 'arrow');
-    line.setAttributeNS(null, 'x1', 0.0);
-    line.setAttributeNS(null, 'y1', -this.opts.arrow.thickness / 2.0);
-    line.setAttributeNS(null, 'x2', l);
-    line.setAttributeNS(null, 'y2', -this.opts.arrow.thickness / 2.0);
-    line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness);
+    line.setAttributeNS(null, 'x1', '0');
+    line.setAttributeNS(null, 'y1', (-this.opts.arrow.thickness / 2.0).toString());
+    line.setAttributeNS(null, 'x2', l.toString());
+    line.setAttributeNS(null, 'y2', (-this.opts.arrow.thickness / 2.0).toString());
+    line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness.toString());
     line.setAttributeNS(null, 'stroke', this.themeManager.getColor("C"));
     line.setAttributeNS(null, 'marker-end', 'url(#arrowhead)');
     svg.appendChild(line);
@@ -13166,7 +13124,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":28}],21:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":27}],21:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -14090,7 +14048,7 @@ class SmilesDrawer {
   }
 
   drawMolecule(smiles, target, theme, weights, callback) {
-    let parseTree = Parser.parse(smiles);
+    let parseTree = Parser.parse(smiles, {});
 
     if (target === null || target === 'svg') {
       let svg = this.drawer.draw(parseTree, null, theme, weights);
@@ -14334,9 +14292,9 @@ class SvgDrawer {
       target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       target.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-      target.setAttributeNS(null, 'width', this.opts.width);
-      target.setAttributeNS(null, 'height', this.opts.height);
-    } else if (target instanceof String) {
+      target.setAttributeNS(null, 'width', this.opts.width.toString());
+      target.setAttributeNS(null, 'height', this.opts.height.toString());
+    } else if (typeof target === 'string') {
       target = document.getElementById(target);
     }
 
@@ -14401,7 +14359,7 @@ class SvgDrawer {
   drawCanvas(data, target, themeName = 'light', infoOnly = false) {
     let canvas = null;
 
-    if (typeof target === 'string' || target instanceof String) {
+    if (typeof target === 'string') {
       canvas = document.getElementById(target);
     } else {
       canvas = target;
@@ -14414,9 +14372,14 @@ class SvgDrawer {
     svg.setAttributeNS(null, 'width', 500 + '');
     svg.setAttributeNS(null, 'height', 500 + '');
     svg.setAttributeNS(null, 'style', 'visibility: hidden: position: absolute; left: -1000px');
-    document.body.appendChild(svg);
-    this.svgDrawer.draw(data, svg, themeName, infoOnly);
-    this.svgDrawer.svgWrapper.toCanvas(canvas, this.svgDrawer.opts.width, this.svgDrawer.opts.height);
+    document.body.appendChild(svg); // KNOWN BUG: infoOnly is incorrectly passed as the 4th parameter (weights) instead of 5th.
+    // This causes infoOnly to be interpreted as weights when true, triggering incorrect weight-related
+    // code paths, and the actual infoOnly parameter defaults to false.
+    // Correct call would be: this.draw(data, svg, themeName, null, infoOnly);
+    // Preserving buggy behavior for backward compatibility during TypeScript migration.
+
+    this.draw(data, svg, themeName, infoOnly);
+    this.svgWrapper.toCanvas(canvas, this.opts.width, this.opts.height);
     document.body.removeChild(svg);
     return target;
   }
@@ -14616,7 +14579,6 @@ class SvgDrawer {
         graph = preprocessor.graph,
         rings = preprocessor.rings,
         svgWrapper = this.svgWrapper;
-    var i = graph.vertices.length;
 
     for (var i = 0; i < graph.vertices.length; i++) {
       let vertex = graph.vertices[i];
@@ -14683,9 +14645,9 @@ class SvgDrawer {
 
 
     if (opts.debug) {
-      for (var i = 0; i < rings.length; i++) {
-        let center = rings[i].center;
-        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[i].id);
+      for (var j = 0; j < rings.length; j++) {
+        let center = rings[j].center;
+        svgWrapper.drawDebugPoint(center.x, center.y, 'r: ' + rings[j].id);
       }
     }
   }
@@ -14754,7 +14716,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":25,"./ThemeManager":26,"./Vector2":28}],25:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":25,"./ThemeManager":26,"./Vector2":27}],25:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -14777,7 +14739,7 @@ function makeid(length) {
 
 class SvgWrapper {
   constructor(themeManager, target, options, clear = true) {
-    if (typeof target === 'string' || target instanceof String) {
+    if (typeof target === 'string') {
       this.svg = document.getElementById(target);
     } else {
       this.svg = target;
@@ -14845,10 +14807,10 @@ class SvgWrapper {
         vertices = document.createElementNS('http://www.w3.org/2000/svg', 'g'),
         pathChildNodes = this.paths;
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    mask.setAttributeNS(null, 'x', this.minX);
-    mask.setAttributeNS(null, 'y', this.minY);
-    mask.setAttributeNS(null, 'width', this.maxX - this.minX);
-    mask.setAttributeNS(null, 'height', this.maxY - this.minY);
+    mask.setAttributeNS(null, 'x', this.minX.toString());
+    mask.setAttributeNS(null, 'y', this.minY.toString());
+    mask.setAttributeNS(null, 'width', (this.maxX - this.minX).toString());
+    mask.setAttributeNS(null, 'height', (this.maxY - this.minY).toString());
     mask.setAttributeNS(null, 'fill', 'white');
     masks.appendChild(mask); // give the mask an id
 
@@ -14926,10 +14888,10 @@ class SvgWrapper {
         toY = r.y;
     gradient.setAttributeNS(null, 'id', gradientUrl);
     gradient.setAttributeNS(null, 'gradientUnits', 'userSpaceOnUse');
-    gradient.setAttributeNS(null, 'x1', fromX);
-    gradient.setAttributeNS(null, 'y1', fromY);
-    gradient.setAttributeNS(null, 'x2', toX);
-    gradient.setAttributeNS(null, 'y2', toY);
+    gradient.setAttributeNS(null, 'x1', fromX.toString());
+    gradient.setAttributeNS(null, 'y1', fromY.toString());
+    gradient.setAttributeNS(null, 'x2', toX.toString());
+    gradient.setAttributeNS(null, 'y2', toY.toString());
     let firstStop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     firstStop.setAttributeNS(null, 'stop-color', this.themeManager.getColor(line.getLeftElement()) || this.themeManager.getColor('C'));
     firstStop.setAttributeNS(null, 'offset', '20%');
@@ -15061,9 +15023,9 @@ class SvgWrapper {
     }
 
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    ball.setAttributeNS(null, 'cx', x);
-    ball.setAttributeNS(null, 'cy', y);
-    ball.setAttributeNS(null, 'r', r);
+    ball.setAttributeNS(null, 'cx', x.toString());
+    ball.setAttributeNS(null, 'cy', y.toString());
+    ball.setAttributeNS(null, 'r', r.toString());
     ball.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
     this.vertices.push(ball);
   }
@@ -15092,7 +15054,7 @@ class SvgWrapper {
         v = Vector2.add(end, Vector2.multiplyScalar(normals[1], 3.0 + this.opts.fontSizeLarge / 4.0)),
         w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.halfBondThickness));
     let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon'),
-        gradient = this.createGradient(line, l.x, l.y, r.x, r.y);
+        gradient = this.createGradient(line);
     polygon.setAttributeNS(null, 'points', `${t.x},${t.y} ${u.x},${u.y} ${v.x},${v.y} ${w.x},${w.y}`);
     polygon.setAttributeNS(null, 'fill', `url('#${gradient}')`);
     this.paths.push(polygon);
@@ -15107,9 +15069,9 @@ class SvgWrapper {
 
   drawAtomHighlight(x, y, color = "#03fc9d") {
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    ball.setAttributeNS(null, 'cx', x);
-    ball.setAttributeNS(null, 'cy', y);
-    ball.setAttributeNS(null, 'r', this.opts.bondLength / 3);
+    ball.setAttributeNS(null, 'cx', x.toString());
+    ball.setAttributeNS(null, 'cy', y.toString());
+    ball.setAttributeNS(null, 'r', (this.opts.bondLength / 3).toString());
     ball.setAttributeNS(null, 'fill', color);
     this.highlights.push(ball);
   }
@@ -15171,8 +15133,8 @@ class SvgWrapper {
 
   drawDebugPoint(x, y, debugText = '', color = '#f00') {
     let point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    point.setAttributeNS(null, 'cx', x);
-    point.setAttributeNS(null, 'cy', y);
+    point.setAttributeNS(null, 'cx', x.toString());
+    point.setAttributeNS(null, 'cy', y.toString());
     point.setAttributeNS(null, 'r', '2');
     point.setAttributeNS(null, 'fill', '#f00');
     this.vertices.push(point);
@@ -15189,8 +15151,8 @@ class SvgWrapper {
 
   drawDebugText(x, y, text) {
     let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    textElem.setAttributeNS(null, 'x', x);
-    textElem.setAttributeNS(null, 'y', y);
+    textElem.setAttributeNS(null, 'x', x.toString());
+    textElem.setAttributeNS(null, 'y', y.toString());
     textElem.setAttributeNS(null, 'class', 'debug');
     textElem.setAttributeNS(null, 'fill', '#ff0000');
     textElem.setAttributeNS(null, 'style', `
@@ -15211,11 +15173,11 @@ class SvgWrapper {
   drawRing(x, y, s) {
     let circleElem = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     let radius = MathHelper.apothemFromSideLength(this.opts.bondLength, s);
-    circleElem.setAttributeNS(null, 'cx', x);
-    circleElem.setAttributeNS(null, 'cy', y);
-    circleElem.setAttributeNS(null, 'r', radius - this.opts.bondSpacing);
+    circleElem.setAttributeNS(null, 'cx', x.toString());
+    circleElem.setAttributeNS(null, 'cy', y.toString());
+    circleElem.setAttributeNS(null, 'r', (radius - this.opts.bondSpacing).toString());
     circleElem.setAttributeNS(null, 'stroke', this.themeManager.getColor('C'));
-    circleElem.setAttributeNS(null, 'stroke-width', this.opts.bondThickness);
+    circleElem.setAttributeNS(null, 'stroke-width', this.opts.bondThickness.toString());
     circleElem.setAttributeNS(null, 'fill', 'none');
     this.paths.push(circleElem);
   }
@@ -15239,15 +15201,15 @@ class SvgWrapper {
         toY = r.y;
     let styles = stylesArr.map(sub => sub.join(':')).join(';'),
         lineElem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    lineElem.setAttributeNS(null, 'x1', fromX);
-    lineElem.setAttributeNS(null, 'y1', fromY);
-    lineElem.setAttributeNS(null, 'x2', toX);
-    lineElem.setAttributeNS(null, 'y2', toY);
+    lineElem.setAttributeNS(null, 'x1', fromX.toString());
+    lineElem.setAttributeNS(null, 'y1', fromY.toString());
+    lineElem.setAttributeNS(null, 'x2', toX.toString());
+    lineElem.setAttributeNS(null, 'y2', toY.toString());
     lineElem.setAttributeNS(null, 'style', styles);
     this.paths.push(lineElem);
 
     if (gradient == null) {
-      gradient = this.createGradient(line, fromX, fromY, toX, toY);
+      gradient = this.createGradient(line);
     }
 
     lineElem.setAttributeNS(null, 'stroke', `url('#${gradient}')`);
@@ -15282,16 +15244,16 @@ class SvgWrapper {
 
 
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    mask.setAttributeNS(null, 'cx', x);
-    mask.setAttributeNS(null, 'cy', y);
+    mask.setAttributeNS(null, 'cx', x.toString());
+    mask.setAttributeNS(null, 'cy', y.toString());
     mask.setAttributeNS(null, 'r', '1.5');
     mask.setAttributeNS(null, 'fill', 'black');
     this.maskElements.push(mask); // now create the point
 
     let point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    point.setAttributeNS(null, 'cx', x);
-    point.setAttributeNS(null, 'cy', y);
-    point.setAttributeNS(null, 'r', r);
+    point.setAttributeNS(null, 'cx', x.toString());
+    point.setAttributeNS(null, 'cy', y.toString());
+    point.setAttributeNS(null, 'r', r.toString());
     point.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
     this.vertices.push(point);
   }
@@ -15412,7 +15374,7 @@ class SvgWrapper {
         if (x - bbox.width * text.length < this.minX) {
           this.minX = x - bbox.width * text.length;
         }
-      } else if (direction !== 'left') {
+      } else {
         if (x + bbox.width * text.length > this.maxX) {
           this.maxX = x + bbox.width * text.length;
         }
@@ -15504,9 +15466,9 @@ class SvgWrapper {
     }
 
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    mask.setAttributeNS(null, 'cx', cx);
-    mask.setAttributeNS(null, 'cy', cy);
-    mask.setAttributeNS(null, 'r', maskRadius);
+    mask.setAttributeNS(null, 'cx', cx.toString());
+    mask.setAttributeNS(null, 'cy', cy.toString());
+    mask.setAttributeNS(null, 'r', maskRadius.toString());
     mask.setAttributeNS(null, 'fill', 'black');
     this.maskElements.push(mask);
     this.vertices.push(g);
@@ -15518,7 +15480,7 @@ class SvgWrapper {
 
 
   toCanvas(canvas, width, height) {
-    if (typeof canvas === 'string' || canvas instanceof String) {
+    if (typeof canvas === 'string') {
       canvas = document.getElementById(canvas);
     }
 
@@ -15598,8 +15560,8 @@ class SvgWrapper {
 
 
   static svgToCanvas(svg, canvas, width, height, callback = null) {
-    svg.setAttributeNS(null, 'width', width);
-    svg.setAttributeNS(null, 'height', height);
+    svg.setAttributeNS(null, 'width', width.toString());
+    svg.setAttributeNS(null, 'height', height.toString());
     let image = new Image();
 
     image.onload = function () {
@@ -15731,7 +15693,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":12,"./MathHelper":13,"./Vector2":28}],26:[function(require,module,exports){
+},{"./Line":12,"./MathHelper":13,"./Vector2":27}],26:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -15780,32 +15742,6 @@ class ThemeManager {
 module.exports = ThemeManager;
 
 },{}],27:[function(require,module,exports){
-"use strict";
-/**
- * Translate the integer indicating the charge to the appropriate text.
- * @param {Number} charge The integer indicating the charge.
- * @returns {String} A string representing a charge.
- */
-
-function getChargeText(charge) {
-  if (charge === 1) {
-    return '+';
-  } else if (charge === 2) {
-    return '2+';
-  } else if (charge === -1) {
-    return '-';
-  } else if (charge === -2) {
-    return '2-';
-  } else {
-    return '';
-  }
-}
-
-module.exports = {
-  getChargeText
-};
-
-},{}],28:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16425,7 +16361,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -16802,5 +16738,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":28}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":27}]},{},[1])
 

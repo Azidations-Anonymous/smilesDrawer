@@ -40,10 +40,10 @@ class SvgDrawer {
       target = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       target.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-      target.setAttributeNS(null, 'width', this.opts.width);
-      target.setAttributeNS(null, 'height', this.opts.height);
-    } else if (target instanceof String) {
-      target = document.getElementById(target);
+      target.setAttributeNS(null, 'width', this.opts.width.toString());
+      target.setAttributeNS(null, 'height', this.opts.height.toString());
+    } else if (typeof target === 'string') {
+      target = document.getElementById(target) as unknown as SVGElement;
     }
 
     let optionBackup = {
@@ -109,7 +109,7 @@ class SvgDrawer {
  */
   drawCanvas(data: any, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false): string | HTMLCanvasElement {
     let canvas = null;
-    if (typeof target === 'string' || target instanceof String) {
+    if (typeof target === 'string') {
       canvas = document.getElementById(target);
     } else {
       canvas = target;
@@ -123,8 +123,13 @@ class SvgDrawer {
     svg.setAttributeNS(null, 'height', 500 + '');
     svg.setAttributeNS(null, 'style', 'visibility: hidden: position: absolute; left: -1000px');
     document.body.appendChild(svg);
-    this.svgDrawer.draw(data, svg, themeName, infoOnly);
-    this.svgDrawer.svgWrapper.toCanvas(canvas, this.svgDrawer.opts.width, this.svgDrawer.opts.height);
+    // KNOWN BUG: infoOnly is incorrectly passed as the 4th parameter (weights) instead of 5th.
+    // This causes infoOnly to be interpreted as weights when true, triggering incorrect weight-related
+    // code paths, and the actual infoOnly parameter defaults to false.
+    // Correct call would be: this.draw(data, svg, themeName, null, infoOnly);
+    // Preserving buggy behavior for backward compatibility during TypeScript migration.
+    this.draw(data, svg, themeName, infoOnly as any);
+    this.svgWrapper.toCanvas(canvas, this.opts.width, this.opts.height);
     document.body.removeChild(svg);
     return target;
   }

@@ -297,7 +297,7 @@ class DrawerBase {
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
    */
   draw(data: any, target: any, themeName: string = 'light', infoOnly: boolean = false): void {
-    this.initDraw(data, themeName, infoOnly);
+    this.initDraw(data, themeName, infoOnly, null);
 
     if (!this.infoOnly) {
       this.themeManager = new ThemeManager(this.opts.themes, themeName);
@@ -985,7 +985,7 @@ class DrawerBase {
     let leftovers = new Set();
 
     for (let id of vertices) {
-      let vertex = this.graph.vertices[id];
+      let vertex = this.graph.vertices[id as number];
       let intersection = ArrayHelper.intersection(ringIds, vertex.value.rings);
 
       if (vertex.value.rings.length === 1 || intersection.length === 1) {
@@ -1002,7 +1002,7 @@ class DrawerBase {
     let insideRing = Array();
 
     for (let id of leftovers) {
-      let vertex = this.graph.vertices[id];
+      let vertex = this.graph.vertices[id as number];
       let onRing = false;
 
       for (let j = 0; j < vertex.edges.length; j++) {
@@ -1021,11 +1021,11 @@ class DrawerBase {
     }
 
     // Create the ring
-    let ring = new Ring([...ringMembers]);
+    let ring = new Ring([...ringMembers] as number[]);
     this.addRing(ring);
 
     ring.isBridged = true;
-    ring.neighbours = [...neighbours];
+    ring.neighbours = [...neighbours] as number[];
 
     for (var i = 0; i < ringIds.length; i++) {
       ring.rings.push(this.getRing(ringIds[i]).clone());
@@ -1044,7 +1044,7 @@ class DrawerBase {
 
     // Remove former rings from members of the bridged ring and add the bridged ring
     for (let id of ringMembers) {
-      let vertex = this.graph.vertices[id];
+      let vertex = this.graph.vertices[id as number];
       vertex.value.rings = ArrayHelper.removeAll(vertex.value.rings, ringIds);
       vertex.value.rings.push(ring.id);
     }
@@ -1058,13 +1058,13 @@ class DrawerBase {
 
     // Update the ring connections and add this ring to the neighbours neighbours
     for (let id of neighbours) {
-      let connections = this.getRingConnections(id, ringIds);
+      let connections = this.getRingConnections(id as number, ringIds);
 
       for (var j = 0; j < connections.length; j++) {
         this.getRingConnection(connections[j]).updateOther(ring.id, id);
       }
 
-      this.getRing(id).neighbours.push(ring.id);
+      this.getRing(id as number).neighbours.push(ring.id);
     }
 
     return ring;
@@ -1416,7 +1416,7 @@ class DrawerBase {
     let sideCount = [0, 0];
 
     for (var i = 0; i < tn.length; i++) {
-      let v = this.graph.vertices[tn[i]].position;
+      let v = this.graph.vertices[tn[i] as number].position;
 
       if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
         sideCount[0]++;
@@ -1548,7 +1548,7 @@ class DrawerBase {
     let normals = this.getEdgeNormals(edge);
 
     // Create a point on each side of the line
-    let sides = ArrayHelper.clone(normals);
+    let sides = ArrayHelper.clone(normals) as any[];
 
     sides[0].multiplyScalar(10).add(a);
     sides[1].multiplyScalar(10).add(a);
@@ -2594,7 +2594,12 @@ class DrawerBase {
 
         // This puts all the longest subtrees on the far side...
         // TODO: Maybe try to balance this better?
-        vertices.sort((a, b) => (a.value.subtreeDepth < b.value.subtreeDepth))
+        // KNOWN BUG: Sort comparator returns boolean instead of number.
+        // JavaScript coerces false->0, true->1, effectively sorting in ascending order
+        // (shortest subtrees first), opposite of what the comment suggests.
+        // Correct would be: (a, b) => b.value.subtreeDepth - a.value.subtreeDepth
+        // Preserving buggy behavior for backward compatibility during TypeScript migration.
+        vertices.sort((a, b) => (a.value.subtreeDepth < b.value.subtreeDepth) as any)
 
         if (neighbours.length === 3 &&
           previousVertex &&

@@ -168,7 +168,7 @@ class ReactionDrawer {
             svg.setAttributeNS(null, 'width', 500 + '');
             svg.setAttributeNS(null, 'height', 500 + '');
         }
-        else if (typeof target === 'string' || target instanceof String) {
+        else if (typeof target === 'string') {
             svg = document.getElementById(target);
         }
         else {
@@ -274,10 +274,10 @@ class ReactionDrawer {
             var _a, _b;
             let offsetX = (_a = element.offsetX) !== null &amp;&amp; _a !== void 0 ? _a : 0.0;
             let offsetY = (_b = element.offsetY) !== null &amp;&amp; _b !== void 0 ? _b : 0.0;
-            element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX));
-            element.svg.setAttributeNS(null, 'y', Math.round(((maxHeight - element.height) / 2.0) + offsetY));
-            element.svg.setAttributeNS(null, 'width', Math.round(element.width));
-            element.svg.setAttributeNS(null, 'height', Math.round(element.height));
+            element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX).toString());
+            element.svg.setAttributeNS(null, 'y', Math.round(((maxHeight - element.height) / 2.0) + offsetY).toString());
+            element.svg.setAttributeNS(null, 'width', Math.round(element.width).toString());
+            element.svg.setAttributeNS(null, 'height', Math.round(element.height).toString());
             svg.appendChild(element.svg);
             if (element.position !== 'relative') {
                 totalWidth += Math.round(element.width + this.opts.spacing + offsetX);
@@ -295,15 +295,15 @@ class ReactionDrawer {
         let rect_h = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         let rect_v = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         svg.setAttributeNS(null, 'id', 'plus');
-        rect_h.setAttributeNS(null, 'x', 0);
-        rect_h.setAttributeNS(null, 'y', s / 2.0 - w / 2.0);
-        rect_h.setAttributeNS(null, 'width', s);
-        rect_h.setAttributeNS(null, 'height', w);
+        rect_h.setAttributeNS(null, 'x', '0');
+        rect_h.setAttributeNS(null, 'y', (s / 2.0 - w / 2.0).toString());
+        rect_h.setAttributeNS(null, 'width', s.toString());
+        rect_h.setAttributeNS(null, 'height', w.toString());
         rect_h.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
-        rect_v.setAttributeNS(null, 'x', s / 2.0 - w / 2.0);
-        rect_v.setAttributeNS(null, 'y', 0);
-        rect_v.setAttributeNS(null, 'width', w);
-        rect_v.setAttributeNS(null, 'height', s);
+        rect_v.setAttributeNS(null, 'x', (s / 2.0 - w / 2.0).toString());
+        rect_v.setAttributeNS(null, 'y', '0');
+        rect_v.setAttributeNS(null, 'width', w.toString());
+        rect_v.setAttributeNS(null, 'height', s.toString());
         rect_v.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
         svg.appendChild(rect_h);
         svg.appendChild(rect_v);
@@ -317,10 +317,10 @@ class ReactionDrawer {
         marker.setAttributeNS(null, 'id', 'arrowhead');
         marker.setAttributeNS(null, 'viewBox', `0 0 ${s} ${s}`);
         marker.setAttributeNS(null, 'markerUnits', 'userSpaceOnUse');
-        marker.setAttributeNS(null, 'markerWidth', s);
-        marker.setAttributeNS(null, 'markerHeight', s);
-        marker.setAttributeNS(null, 'refX', 0);
-        marker.setAttributeNS(null, 'refY', s / 2);
+        marker.setAttributeNS(null, 'markerWidth', s.toString());
+        marker.setAttributeNS(null, 'markerHeight', s.toString());
+        marker.setAttributeNS(null, 'refX', '0');
+        marker.setAttributeNS(null, 'refY', (s / 2).toString());
         marker.setAttributeNS(null, 'orient', 'auto');
         marker.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
         polygon.setAttributeNS(null, 'points', `0 0, ${s} ${s / 2}, 0 ${s}`);
@@ -335,10 +335,10 @@ class ReactionDrawer {
         marker.setAttributeNS(null, 'id', 'arrowhead');
         marker.setAttributeNS(null, 'viewBox', `0 0 ${sw} ${s}`);
         marker.setAttributeNS(null, 'markerUnits', 'userSpaceOnUse');
-        marker.setAttributeNS(null, 'markerWidth', sw * 2);
-        marker.setAttributeNS(null, 'markerHeight', s * 2);
-        marker.setAttributeNS(null, 'refX', 2.2);
-        marker.setAttributeNS(null, 'refY', 2.2);
+        marker.setAttributeNS(null, 'markerWidth', (sw * 2).toString());
+        marker.setAttributeNS(null, 'markerHeight', (s * 2).toString());
+        marker.setAttributeNS(null, 'refX', '2.2');
+        marker.setAttributeNS(null, 'refY', '2.2');
         marker.setAttributeNS(null, 'orient', 'auto');
         marker.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
         path.setAttributeNS(null, 'style', 'fill-rule:nonzero;');
@@ -355,11 +355,11 @@ class ReactionDrawer {
         defs.appendChild(this.getCDArrowhead());
         svg.appendChild(defs);
         svg.setAttributeNS(null, 'id', 'arrow');
-        line.setAttributeNS(null, 'x1', 0.0);
-        line.setAttributeNS(null, 'y1', -this.opts.arrow.thickness / 2.0);
-        line.setAttributeNS(null, 'x2', l);
-        line.setAttributeNS(null, 'y2', -this.opts.arrow.thickness / 2.0);
-        line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness);
+        line.setAttributeNS(null, 'x1', '0');
+        line.setAttributeNS(null, 'y1', (-this.opts.arrow.thickness / 2.0).toString());
+        line.setAttributeNS(null, 'x2', l.toString());
+        line.setAttributeNS(null, 'y2', (-this.opts.arrow.thickness / 2.0).toString());
+        line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness.toString());
         line.setAttributeNS(null, 'stroke', this.themeManager.getColor("C"));
         line.setAttributeNS(null, 'marker-end', 'url(#arrowhead)');
         svg.appendChild(line);
@@ -382,7 +382,7 @@ module.exports = ReactionDrawer;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sat Nov 01 2025 19:58:49 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a> on Sun Nov 02 2025 11:31:19 GMT+1100 (Australian Eastern Daylight Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

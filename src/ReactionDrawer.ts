@@ -142,7 +142,7 @@ class ReactionDrawer {
             svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
             svg.setAttributeNS(null, 'width', 500 + '');
             svg.setAttributeNS(null, 'height', 500 + '');
-        } else if (typeof target === 'string' || target instanceof String) {
+        } else if (typeof target === 'string') {
             svg = document.getElementById(target);
         } else {
             svg = target;
@@ -289,10 +289,10 @@ class ReactionDrawer {
             let offsetX = element.offsetX ?? 0.0;
             let offsetY = element.offsetY ?? 0.0;
 
-            element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX));
-            element.svg.setAttributeNS(null, 'y', Math.round(((maxHeight - element.height) / 2.0) + offsetY));
-            element.svg.setAttributeNS(null, 'width', Math.round(element.width));
-            element.svg.setAttributeNS(null, 'height', Math.round(element.height));
+            element.svg.setAttributeNS(null, 'x', Math.round(totalWidth + offsetX).toString());
+            element.svg.setAttributeNS(null, 'y', Math.round(((maxHeight - element.height) / 2.0) + offsetY).toString());
+            element.svg.setAttributeNS(null, 'width', Math.round(element.width).toString());
+            element.svg.setAttributeNS(null, 'height', Math.round(element.height).toString());
             svg.appendChild(element.svg);
 
             if (element.position !== 'relative') {
@@ -316,16 +316,16 @@ class ReactionDrawer {
 
         svg.setAttributeNS(null, 'id', 'plus');
 
-        rect_h.setAttributeNS(null, 'x', 0);
-        rect_h.setAttributeNS(null, 'y', s / 2.0 - w / 2.0);
-        rect_h.setAttributeNS(null, 'width', s);
-        rect_h.setAttributeNS(null, 'height', w);
+        rect_h.setAttributeNS(null, 'x', '0');
+        rect_h.setAttributeNS(null, 'y', (s / 2.0 - w / 2.0).toString());
+        rect_h.setAttributeNS(null, 'width', s.toString());
+        rect_h.setAttributeNS(null, 'height', w.toString());
         rect_h.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
 
-        rect_v.setAttributeNS(null, 'x', s / 2.0 - w / 2.0);
-        rect_v.setAttributeNS(null, 'y', 0);
-        rect_v.setAttributeNS(null, 'width', w);
-        rect_v.setAttributeNS(null, 'height', s);
+        rect_v.setAttributeNS(null, 'x', (s / 2.0 - w / 2.0).toString());
+        rect_v.setAttributeNS(null, 'y', '0');
+        rect_v.setAttributeNS(null, 'width', w.toString());
+        rect_v.setAttributeNS(null, 'height', s.toString());
         rect_v.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
 
         svg.appendChild(rect_h);
@@ -343,10 +343,10 @@ class ReactionDrawer {
         marker.setAttributeNS(null, 'id', 'arrowhead');
         marker.setAttributeNS(null, 'viewBox', `0 0 ${s} ${s}`);
         marker.setAttributeNS(null, 'markerUnits', 'userSpaceOnUse');
-        marker.setAttributeNS(null, 'markerWidth', s);
-        marker.setAttributeNS(null, 'markerHeight', s);
-        marker.setAttributeNS(null, 'refX', 0);
-        marker.setAttributeNS(null, 'refY', s / 2);
+        marker.setAttributeNS(null, 'markerWidth', s.toString());
+        marker.setAttributeNS(null, 'markerHeight', s.toString());
+        marker.setAttributeNS(null, 'refX', '0');
+        marker.setAttributeNS(null, 'refY', (s / 2).toString());
         marker.setAttributeNS(null, 'orient', 'auto');
         marker.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
 
@@ -366,10 +366,10 @@ class ReactionDrawer {
         marker.setAttributeNS(null, 'id', 'arrowhead');
         marker.setAttributeNS(null, 'viewBox', `0 0 ${sw} ${s}`);
         marker.setAttributeNS(null, 'markerUnits', 'userSpaceOnUse');
-        marker.setAttributeNS(null, 'markerWidth', sw * 2);
-        marker.setAttributeNS(null, 'markerHeight', s * 2);
-        marker.setAttributeNS(null, 'refX', 2.2);
-        marker.setAttributeNS(null, 'refY', 2.2);
+        marker.setAttributeNS(null, 'markerWidth', (sw * 2).toString());
+        marker.setAttributeNS(null, 'markerHeight', (s * 2).toString());
+        marker.setAttributeNS(null, 'refX', '2.2');
+        marker.setAttributeNS(null, 'refY', '2.2');
         marker.setAttributeNS(null, 'orient', 'auto');
         marker.setAttributeNS(null, 'fill', this.themeManager.getColor("C"));
 
@@ -394,11 +394,11 @@ class ReactionDrawer {
 
         svg.setAttributeNS(null, 'id', 'arrow');
 
-        line.setAttributeNS(null, 'x1', 0.0);
-        line.setAttributeNS(null, 'y1', -this.opts.arrow.thickness / 2.0);
-        line.setAttributeNS(null, 'x2', l);
-        line.setAttributeNS(null, 'y2', -this.opts.arrow.thickness / 2.0);
-        line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness);
+        line.setAttributeNS(null, 'x1', '0');
+        line.setAttributeNS(null, 'y1', (-this.opts.arrow.thickness / 2.0).toString());
+        line.setAttributeNS(null, 'x2', l.toString());
+        line.setAttributeNS(null, 'y2', (-this.opts.arrow.thickness / 2.0).toString());
+        line.setAttributeNS(null, 'stroke-width', this.opts.arrow.thickness.toString());
         line.setAttributeNS(null, 'stroke', this.themeManager.getColor("C"));
         line.setAttributeNS(null, 'marker-end', 'url(#arrowhead)');
 

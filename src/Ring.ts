@@ -68,11 +68,11 @@ class Ring {
         let clone = new Ring(this.members);
 
         clone.id = this.id;
-        clone.insiders = ArrayHelper.clone(this.insiders);
-        clone.neighbours = ArrayHelper.clone(this.neighbours);
+        clone.insiders = ArrayHelper.clone(this.insiders) as number[];
+        clone.neighbours = ArrayHelper.clone(this.neighbours) as number[];
         clone.positioned = this.positioned;
         clone.center = this.center.clone();
-        clone.rings = ArrayHelper.clone(this.rings);
+        clone.rings = ArrayHelper.clone(this.rings) as any[];
         clone.isBridged = this.isBridged;
         clone.isPartOfBridged = this.isPartOfBridged;
         clone.isSpiro = this.isSpiro;

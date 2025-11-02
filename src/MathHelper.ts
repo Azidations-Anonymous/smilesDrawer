@@ -12,7 +12,7 @@ class MathHelper {
      */
     static round(value: number, decimals?: number): number {
         decimals = decimals ? decimals : 1;
-        return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+        return Number(Math.round(parseFloat(value + 'e' + decimals)) + 'e-' + decimals);
     }
 
     /**

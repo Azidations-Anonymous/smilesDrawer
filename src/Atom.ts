@@ -11,6 +11,7 @@ interface BracketInfo {
   hcount: number | null;
   charge: string;
   isotope: number;
+  chirality?: string;
 }
 
 interface AttachedPseudoElement {

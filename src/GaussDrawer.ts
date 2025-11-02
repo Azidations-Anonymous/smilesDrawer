@@ -1,7 +1,7 @@
 import Vector2 = require('./Vector2');
 import convertImage = require('./PixelsToSvg');
 
-import * as chroma from 'chroma-js';
+import chroma from 'chroma-js';
 
 class GaussDrawer {
     points: Vector2[];
@@ -126,7 +126,7 @@ class GaussDrawer {
                     m[x][y] = Math.round(m[x][y] / this.interval) * this.interval;
                 }
 
-                let [r, g, b] = scale(m[x][y]).rgb();
+                let [r, g, b] = (scale(m[x][y]) as any).rgb();
                 this.setPixel(new Vector2(x, y), r, g, b);
             }
         }

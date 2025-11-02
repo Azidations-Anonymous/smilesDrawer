@@ -11,7 +11,7 @@ function convertImage(img: any): any {
         if (likeArray) {
             for (; i < length; i++) { if (fn.call(obj[i], i, obj[i]) === false) { break; } }
         } else {
-            for (i in obj) { if (fn.call(obj[i], i, obj[i]) === false) { break; } }
+            for (let key in obj) { if (fn.call(obj[key], key, obj[key]) === false) { break; } }
         }
     }
 

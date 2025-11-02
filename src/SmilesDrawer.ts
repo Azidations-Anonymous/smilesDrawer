@@ -141,7 +141,7 @@ class SmilesDrawer {
     }
 
     drawMolecule(smiles: string, target: any, theme: string, weights: any, callback: ((result: any) => void) | null): void {
-        let parseTree = Parser.parse(smiles);
+        let parseTree = Parser.parse(smiles, {});
 
         if (target === null || target === 'svg') {
             let svg = this.drawer.draw(parseTree, null, theme, weights);

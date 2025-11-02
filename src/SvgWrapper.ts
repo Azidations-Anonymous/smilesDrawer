@@ -1,4 +1,3 @@
-import { getChargeText } from './UtilityFunctions';
 import Line = require('./Line');
 import Vector2 = require('./Vector2');
 import MathHelper = require('./MathHelper');
@@ -36,8 +35,8 @@ class SvgWrapper {
   style: SVGStyleElement;
 
   constructor(themeManager: any, target: string | SVGElement, options: any, clear: boolean = true) {
-    if (typeof target === 'string' || target instanceof String) {
-      this.svg = document.getElementById(target);
+    if (typeof target === 'string') {
+      this.svg = document.getElementById(target) as unknown as SVGElement;
     } else {
       this.svg = target;
     }
@@ -113,10 +112,10 @@ class SvgWrapper {
 
 
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    mask.setAttributeNS(null, 'x', this.minX);
-    mask.setAttributeNS(null, 'y', this.minY);
-    mask.setAttributeNS(null, 'width', this.maxX - this.minX);
-    mask.setAttributeNS(null, 'height', this.maxY - this.minY);
+    mask.setAttributeNS(null, 'x', this.minX.toString());
+    mask.setAttributeNS(null, 'y', this.minY.toString());
+    mask.setAttributeNS(null, 'width', (this.maxX - this.minX).toString());
+    mask.setAttributeNS(null, 'height', (this.maxY - this.minY).toString());
     mask.setAttributeNS(null, 'fill', 'white');
 
     masks.appendChild(mask);
@@ -193,10 +192,10 @@ class SvgWrapper {
 
     gradient.setAttributeNS(null, 'id', gradientUrl);
     gradient.setAttributeNS(null, 'gradientUnits', 'userSpaceOnUse');
-    gradient.setAttributeNS(null, 'x1', fromX);
-    gradient.setAttributeNS(null, 'y1', fromY);
-    gradient.setAttributeNS(null, 'x2', toX);
-    gradient.setAttributeNS(null, 'y2', toY);
+    gradient.setAttributeNS(null, 'x1', fromX.toString());
+    gradient.setAttributeNS(null, 'y1', fromY.toString());
+    gradient.setAttributeNS(null, 'x2', toX.toString());
+    gradient.setAttributeNS(null, 'y2', toY.toString());
 
     let firstStop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     firstStop.setAttributeNS(null, 'stop-color', this.themeManager.getColor(line.getLeftElement()) || this.themeManager.getColor('C'));
@@ -333,9 +332,9 @@ class SvgWrapper {
     }
 
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    ball.setAttributeNS(null, 'cx', x);
-    ball.setAttributeNS(null, 'cy', y);
-    ball.setAttributeNS(null, 'r', r);
+    ball.setAttributeNS(null, 'cx', x.toString());
+    ball.setAttributeNS(null, 'cy', y.toString());
+    ball.setAttributeNS(null, 'r', r.toString());
     ball.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
 
     this.vertices.push(ball);
@@ -369,7 +368,7 @@ class SvgWrapper {
       w = Vector2.add(start, Vector2.multiplyScalar(normals[1], this.halfBondThickness));
 
     let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon'),
-      gradient = this.createGradient(line, l.x, l.y, r.x, r.y);
+      gradient = this.createGradient(line);
     polygon.setAttributeNS(null, 'points', `${t.x},${t.y} ${u.x},${u.y} ${v.x},${v.y} ${w.x},${w.y}`);
     polygon.setAttributeNS(null, 'fill', `url('#${gradient}')`);
     this.paths.push(polygon);
@@ -383,9 +382,9 @@ class SvgWrapper {
    */
   drawAtomHighlight(x: number, y: number, color: string = "#03fc9d"): void {
     let ball = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    ball.setAttributeNS(null, 'cx', x);
-    ball.setAttributeNS(null, 'cy', y);
-    ball.setAttributeNS(null, 'r', this.opts.bondLength / 3);
+    ball.setAttributeNS(null, 'cx', x.toString());
+    ball.setAttributeNS(null, 'cy', y.toString());
+    ball.setAttributeNS(null, 'r', (this.opts.bondLength / 3).toString());
     ball.setAttributeNS(null, 'fill', color);
 
     this.highlights.push(ball);
@@ -452,8 +451,8 @@ class SvgWrapper {
    */
   drawDebugPoint(x: number, y: number, debugText: string = '', color: string = '#f00'): void {
     let point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    point.setAttributeNS(null, 'cx', x);
-    point.setAttributeNS(null, 'cy', y);
+    point.setAttributeNS(null, 'cx', x.toString());
+    point.setAttributeNS(null, 'cy', y.toString());
     point.setAttributeNS(null, 'r', '2');
     point.setAttributeNS(null, 'fill', '#f00');
     this.vertices.push(point);
@@ -469,8 +468,8 @@ class SvgWrapper {
    */
   drawDebugText(x: number, y: number, text: string): void {
     let textElem = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    textElem.setAttributeNS(null, 'x', x);
-    textElem.setAttributeNS(null, 'y', y);
+    textElem.setAttributeNS(null, 'x', x.toString());
+    textElem.setAttributeNS(null, 'y', y.toString());
     textElem.setAttributeNS(null, 'class', 'debug');
     textElem.setAttributeNS(null, 'fill', '#ff0000');
     textElem.setAttributeNS(null, 'style', `
@@ -492,11 +491,11 @@ class SvgWrapper {
   drawRing(x: number, y: number, s: number): void {
     let circleElem = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     let radius = MathHelper.apothemFromSideLength(this.opts.bondLength, s);
-    circleElem.setAttributeNS(null, 'cx', x);
-    circleElem.setAttributeNS(null, 'cy', y);
-    circleElem.setAttributeNS(null, 'r', radius - this.opts.bondSpacing);
+    circleElem.setAttributeNS(null, 'cx', x.toString());
+    circleElem.setAttributeNS(null, 'cy', y.toString());
+    circleElem.setAttributeNS(null, 'r', (radius - this.opts.bondSpacing).toString());
     circleElem.setAttributeNS(null, 'stroke', this.themeManager.getColor('C'));
-    circleElem.setAttributeNS(null, 'stroke-width', this.opts.bondThickness);
+    circleElem.setAttributeNS(null, 'stroke-width', this.opts.bondThickness.toString());
     circleElem.setAttributeNS(null, 'fill', 'none');
     this.paths.push(circleElem);
   }
@@ -526,15 +525,15 @@ class SvgWrapper {
     let styles = stylesArr.map(sub => sub.join(':')).join(';'),
       lineElem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
 
-    lineElem.setAttributeNS(null, 'x1', fromX);
-    lineElem.setAttributeNS(null, 'y1', fromY);
-    lineElem.setAttributeNS(null, 'x2', toX);
-    lineElem.setAttributeNS(null, 'y2', toY);
+    lineElem.setAttributeNS(null, 'x1', fromX.toString());
+    lineElem.setAttributeNS(null, 'y1', fromY.toString());
+    lineElem.setAttributeNS(null, 'x2', toX.toString());
+    lineElem.setAttributeNS(null, 'y2', toY.toString());
     lineElem.setAttributeNS(null, 'style', styles);
     this.paths.push(lineElem);
 
     if (gradient == null) {
-      gradient = this.createGradient(line, fromX, fromY, toX, toY);
+      gradient = this.createGradient(line);
     }
     lineElem.setAttributeNS(null, 'stroke', `url('#${gradient}')`);
   }
@@ -567,17 +566,17 @@ class SvgWrapper {
 
     // first create a mask
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    mask.setAttributeNS(null, 'cx', x);
-    mask.setAttributeNS(null, 'cy', y);
+    mask.setAttributeNS(null, 'cx', x.toString());
+    mask.setAttributeNS(null, 'cy', y.toString());
     mask.setAttributeNS(null, 'r', '1.5');
     mask.setAttributeNS(null, 'fill', 'black');
     this.maskElements.push(mask);
 
     // now create the point
     let point = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    point.setAttributeNS(null, 'cx', x);
-    point.setAttributeNS(null, 'cy', y);
-    point.setAttributeNS(null, 'r', r);
+    point.setAttributeNS(null, 'cx', x.toString());
+    point.setAttributeNS(null, 'cy', y.toString());
+    point.setAttributeNS(null, 'r', r.toString());
     point.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
     this.vertices.push(point);
   }
@@ -687,7 +686,7 @@ class SvgWrapper {
         if (x - bbox.width * text.length < this.minX) {
           this.minX = x - bbox.width * text.length;
         }
-      } else if (direction !== 'left') {
+      } else {
         if (x + bbox.width * text.length > this.maxX) {
           this.maxX = x + bbox.width * text.length;
         }
@@ -781,9 +780,9 @@ class SvgWrapper {
     }
 
     let mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    mask.setAttributeNS(null, 'cx', cx);
-    mask.setAttributeNS(null, 'cy', cy);
-    mask.setAttributeNS(null, 'r', maskRadius);
+    mask.setAttributeNS(null, 'cx', cx.toString());
+    mask.setAttributeNS(null, 'cy', cy.toString());
+    mask.setAttributeNS(null, 'r', maskRadius.toString());
     mask.setAttributeNS(null, 'fill', 'black');
 
     this.maskElements.push(mask);
@@ -796,8 +795,8 @@ class SvgWrapper {
    * @param {HTMLCanvasElement} canvas The canvas element to draw the svg to.
    */
   toCanvas(canvas: string | HTMLCanvasElement, width: number, height: number): void {
-    if (typeof canvas === 'string' || canvas instanceof String) {
-      canvas = document.getElementById(canvas);
+    if (typeof canvas === 'string') {
+      canvas = document.getElementById(canvas) as HTMLCanvasElement;
     }
 
     let image = new Image();
@@ -871,8 +870,8 @@ class SvgWrapper {
    * @returns {HTMLCanvasElement} The input html canvas element after drawing to.
    */
   static svgToCanvas(svg: SVGElement, canvas: HTMLCanvasElement, width: number, height: number, callback: ((canvas: HTMLCanvasElement) => void) | null = null): HTMLCanvasElement {
-    svg.setAttributeNS(null, 'width', width);
-    svg.setAttributeNS(null, 'height', height);
+    svg.setAttributeNS(null, 'width', width.toString());
+    svg.setAttributeNS(null, 'height', height.toString());
 
     let image = new Image();
     image.onload = function () {

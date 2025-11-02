@@ -427,7 +427,7 @@ class SSSR {
      * @returns {Set<Number>} An array of vertices.
      */
     static bondsToAtoms(bonds: any): Set<number> {
-        let atoms = new Set();
+        let atoms = new Set<number>();
 
         var i = bonds.length;
         while (i--) {

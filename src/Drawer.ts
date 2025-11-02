@@ -34,7 +34,7 @@ class Drawer {
    */
   draw(data: any, target: string | HTMLCanvasElement, themeName: string = 'light', infoOnly: boolean = false, highlight_atoms: any[] = []): void {
     let canvas = null;
-    if (typeof target === 'string' || target instanceof String) {
+    if (typeof target === 'string') {
       canvas = document.getElementById(target);
     } else {
       canvas = target;

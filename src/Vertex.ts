@@ -183,9 +183,9 @@ class Vertex {
     clone.id = this.id;
     clone.previousPosition = new Vector2(this.previousPosition.x, this.previousPosition.y);
     clone.parentVertexId = this.parentVertexId;
-    clone.children = ArrayHelper.clone(this.children);
-    clone.spanningTreeChildren = ArrayHelper.clone(this.spanningTreeChildren);
-    clone.edges = ArrayHelper.clone(this.edges);
+    clone.children = ArrayHelper.clone(this.children) as number[];
+    clone.spanningTreeChildren = ArrayHelper.clone(this.spanningTreeChildren) as number[];
+    clone.edges = ArrayHelper.clone(this.edges) as number[];
     clone.positioned = this.positioned;
     clone.angle = this.angle;
     clone.forcePositioned = this.forcePositioned;
