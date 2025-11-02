@@ -172,28 +172,6 @@ for (const dataset of datasets) {
         if (oldJson !== newJson) {
             totalDifferences++;
 
-            if (failEarly) {
-                // Save JSON to file instead of printing to console
-                const jsonFilePath = path.join(outputDir, '1.json');
-                const jsonOutput = {
-                    old: JSON.parse(oldJson),
-                    new: JSON.parse(newJson)
-                };
-                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
-
-                console.error('\n' + '!'.repeat(80));
-                console.error('DIFFERENCE DETECTED!');
-                console.error('!'.repeat(80));
-                console.error('Dataset: ' + dataset.name);
-                console.error('Index: ' + index + '/' + smilesList.length);
-                console.error('SMILES: ' + smiles);
-                console.error('Old JSON length: ' + oldJson.length + ' bytes');
-                console.error('New JSON length: ' + newJson.length + ' bytes');
-                console.error('JSON saved to: ' + jsonFilePath);
-                console.error('\n' + '!'.repeat(80));
-                process.exit(1);
-            }
-
             console.log('  DIFFERENCE DETECTED' + (noVisual ? '' : ' - Generating SVG comparison'));
 
             if (!noVisual) {
@@ -255,6 +233,24 @@ for (const dataset of datasets) {
                 };
                 fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
                 console.log('  JSON saved: ' + totalDifferences + '.json');
+            }
+
+            // Exit early if -failearly flag is set
+            if (failEarly) {
+                console.error('\n' + '!'.repeat(80));
+                console.error('DIFFERENCE DETECTED - STOPPING (fail-early mode)');
+                console.error('!'.repeat(80));
+                console.error('Dataset: ' + dataset.name);
+                console.error('Index: ' + index + '/' + smilesList.length);
+                console.error('SMILES: ' + smiles);
+                console.error('\nReports saved to: ' + outputDir);
+                if (noVisual) {
+                    console.error('Files: 1.json');
+                } else {
+                    console.error('Files: 1.html, 1.json');
+                }
+                console.error('!'.repeat(80));
+                process.exit(1);
             }
         } else {
             console.log('  MATCH: Identical output ✓');
