@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":17,"./src/ReactionDrawer":21,"./src/ReactionParser":22,"./src/SmilesDrawer":27,"./src/SvgDrawer":29}],2:[function(require,module,exports){
+},{"./src/Drawer":6,"./src/GaussDrawer":11,"./src/Parser":17,"./src/ReactionDrawer":22,"./src/ReactionParser":23,"./src/SmilesDrawer":28,"./src/SvgDrawer":30}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":14,"./Vector2":32}],6:[function(require,module,exports){
+},{"./MathHelper":14,"./Vector2":33}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,7 +5605,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":29}],7:[function(require,module,exports){
+},{"./SvgDrawer":30}],7:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -5621,6 +5621,8 @@ const OverlapResolutionManager_1 = __importDefault(require("./OverlapResolutionM
 const PositioningManager_1 = __importDefault(require("./PositioningManager"));
 
 const DrawingManager_1 = __importDefault(require("./DrawingManager"));
+
+const PseudoElementManager_1 = __importDefault(require("./PseudoElementManager"));
 
 const RingManager = require("./RingManager");
 
@@ -5657,6 +5659,7 @@ class DrawerBase {
     this.overlapResolver = new OverlapResolutionManager_1.default(this);
     this.positioningManager = new PositioningManager_1.default(this);
     this.drawingManager = new DrawingManager_1.default(this);
+    this.pseudoElementManager = new PseudoElementManager_1.default(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -6761,118 +6764,7 @@ class DrawerBase {
 
 
   initPseudoElements() {
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      const vertex = this.graph.vertices[i];
-      const neighbourIds = vertex.neighbours;
-      let neighbours = Array(neighbourIds.length);
-
-      for (var j = 0; j < neighbourIds.length; j++) {
-        neighbours[j] = this.graph.vertices[neighbourIds[j]];
-      } // Ignore atoms that have less than 3 neighbours, except if
-      // the vertex is connected to a ring and has two neighbours
-
-
-      if (vertex.getNeighbourCount() < 3 || vertex.value.rings.length > 0) {
-        continue;
-      } // TODO: This exceptions should be handled more elegantly (via config file?)
-      // Ignore phosphates (especially for triphosphates)
-
-
-      if (vertex.value.element === 'P') {
-        continue;
-      } // Ignore also guanidine
-
-
-      if (vertex.value.element === 'C' && neighbours.length === 3 && neighbours[0].value.element === 'N' && neighbours[1].value.element === 'N' && neighbours[2].value.element === 'N') {
-        continue;
-      } // Continue if there are less than two heteroatoms
-      // or if a neighbour has more than 1 neighbour
-
-
-      let heteroAtomCount = 0;
-      let ctn = 0;
-
-      for (var j = 0; j < neighbours.length; j++) {
-        let neighbour = neighbours[j];
-        let neighbouringElement = neighbour.value.element;
-        let neighbourCount = neighbour.getNeighbourCount();
-
-        if (neighbouringElement !== 'C' && neighbouringElement !== 'H' && neighbourCount === 1) {
-          heteroAtomCount++;
-        }
-
-        if (neighbourCount > 1) {
-          ctn++;
-        }
-      }
-
-      if (ctn > 1 || heteroAtomCount < 2) {
-        continue;
-      } // Get the previous atom (the one which is not terminal)
-
-
-      let previous = null;
-
-      for (var j = 0; j < neighbours.length; j++) {
-        let neighbour = neighbours[j];
-
-        if (neighbour.getNeighbourCount() > 1) {
-          previous = neighbour;
-        }
-      }
-
-      for (var j = 0; j < neighbours.length; j++) {
-        let neighbour = neighbours[j];
-
-        if (neighbour.getNeighbourCount() > 1) {
-          continue;
-        }
-
-        neighbour.value.isDrawn = false;
-        let hydrogens = Atom.maxBonds[neighbour.value.element] - neighbour.value.bondCount;
-        let charge = '';
-
-        if (neighbour.value.bracket) {
-          hydrogens = neighbour.value.bracket.hcount;
-          charge = neighbour.value.bracket.charge || 0;
-        }
-
-        vertex.value.attachPseudoElement(neighbour.value.element, previous ? previous.value.element : null, hydrogens, charge);
-      }
-    } // The second pass
-
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      const vertex = this.graph.vertices[i];
-      const atom = vertex.value;
-      const element = atom.element;
-
-      if (element === 'C' || element === 'H' || !atom.isDrawn) {
-        continue;
-      }
-
-      const neighbourIds = vertex.neighbours;
-      let neighbours = Array(neighbourIds.length);
-
-      for (var j = 0; j < neighbourIds.length; j++) {
-        neighbours[j] = this.graph.vertices[neighbourIds[j]];
-      }
-
-      for (var j = 0; j < neighbours.length; j++) {
-        let neighbour = neighbours[j].value;
-
-        if (!neighbour.hasAttachedPseudoElements || neighbour.getAttachedPseudoElementsCount() !== 2) {
-          continue;
-        }
-
-        const pseudoElements = neighbour.getAttachedPseudoElements();
-
-        if (pseudoElements.hasOwnProperty('0O') && pseudoElements.hasOwnProperty('3C')) {
-          neighbour.isDrawn = false;
-          vertex.value.attachPseudoElement('Ac', '', 0);
-        }
-      }
-    }
+    this.pseudoElementManager.initPseudoElements();
   }
 
   get ringIdCounter() {
@@ -6935,7 +6827,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./Atom":4,"./DrawingManager":8,"./Graph":12,"./MathHelper":14,"./Options":15,"./OverlapResolutionManager":16,"./PositioningManager":19,"./RingManager":25,"./StereochemistryManager":28}],8:[function(require,module,exports){
+},{"./Atom":4,"./DrawingManager":8,"./Graph":12,"./MathHelper":14,"./Options":15,"./OverlapResolutionManager":16,"./PositioningManager":19,"./PseudoElementManager":20,"./RingManager":26,"./StereochemistryManager":29}],8:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -7268,7 +7160,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":13,"./ThemeManager":31,"./Vector2":32}],9:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":13,"./ThemeManager":32,"./Vector2":33}],9:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -7556,7 +7448,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":18,"./Vector2":32,"chroma-js":2}],12:[function(require,module,exports){
+},{"./PixelsToSvg":18,"./Vector2":33,"chroma-js":2}],12:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -8514,7 +8406,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":9,"./MathHelper":14,"./Vertex":33}],13:[function(require,module,exports){
+},{"./Atom":4,"./Edge":9,"./MathHelper":14,"./Vertex":34}],13:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -8822,7 +8714,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":32}],14:[function(require,module,exports){
+},{"./Vector2":33}],14:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -9344,7 +9236,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":32}],17:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":33}],17:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -11829,7 +11721,136 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":32}],20:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":33}],20:[function(require,module,exports){
+"use strict";
+
+const Atom = require("./Atom");
+
+class PseudoElementManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+
+  initPseudoElements() {
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      const vertex = this.drawer.graph.vertices[i];
+      const neighbourIds = vertex.neighbours;
+      let neighbours = Array(neighbourIds.length);
+
+      for (var j = 0; j < neighbourIds.length; j++) {
+        neighbours[j] = this.drawer.graph.vertices[neighbourIds[j]];
+      } // Ignore atoms that have less than 3 neighbours, except if
+      // the vertex is connected to a ring and has two neighbours
+
+
+      if (vertex.getNeighbourCount() < 3 || vertex.value.rings.length > 0) {
+        continue;
+      } // TODO: This exceptions should be handled more elegantly (via config file?)
+      // Ignore phosphates (especially for triphosphates)
+
+
+      if (vertex.value.element === 'P') {
+        continue;
+      } // Ignore also guanidine
+
+
+      if (vertex.value.element === 'C' && neighbours.length === 3 && neighbours[0].value.element === 'N' && neighbours[1].value.element === 'N' && neighbours[2].value.element === 'N') {
+        continue;
+      } // Continue if there are less than two heteroatoms
+      // or if a neighbour has more than 1 neighbour
+
+
+      let heteroAtomCount = 0;
+      let ctn = 0;
+
+      for (var j = 0; j < neighbours.length; j++) {
+        let neighbour = neighbours[j];
+        let neighbouringElement = neighbour.value.element;
+        let neighbourCount = neighbour.getNeighbourCount();
+
+        if (neighbouringElement !== 'C' && neighbouringElement !== 'H' && neighbourCount === 1) {
+          heteroAtomCount++;
+        }
+
+        if (neighbourCount > 1) {
+          ctn++;
+        }
+      }
+
+      if (ctn > 1 || heteroAtomCount < 2) {
+        continue;
+      } // Get the previous atom (the one which is not terminal)
+
+
+      let previous = null;
+
+      for (var j = 0; j < neighbours.length; j++) {
+        let neighbour = neighbours[j];
+
+        if (neighbour.getNeighbourCount() > 1) {
+          previous = neighbour;
+        }
+      }
+
+      for (var j = 0; j < neighbours.length; j++) {
+        let neighbour = neighbours[j];
+
+        if (neighbour.getNeighbourCount() > 1) {
+          continue;
+        }
+
+        neighbour.value.isDrawn = false;
+        let hydrogens = Atom.maxBonds[neighbour.value.element] - neighbour.value.bondCount;
+        let charge = '';
+
+        if (neighbour.value.bracket) {
+          hydrogens = neighbour.value.bracket.hcount;
+          charge = neighbour.value.bracket.charge || 0;
+        }
+
+        vertex.value.attachPseudoElement(neighbour.value.element, previous ? previous.value.element : null, hydrogens, charge);
+      }
+    } // The second pass
+
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      const vertex = this.drawer.graph.vertices[i];
+      const atom = vertex.value;
+      const element = atom.element;
+
+      if (element === 'C' || element === 'H' || !atom.isDrawn) {
+        continue;
+      }
+
+      const neighbourIds = vertex.neighbours;
+      let neighbours = Array(neighbourIds.length);
+
+      for (var j = 0; j < neighbourIds.length; j++) {
+        neighbours[j] = this.drawer.graph.vertices[neighbourIds[j]];
+      }
+
+      for (var j = 0; j < neighbours.length; j++) {
+        let neighbour = neighbours[j].value;
+
+        if (!neighbour.hasAttachedPseudoElements || neighbour.getAttachedPseudoElementsCount() !== 2) {
+          continue;
+        }
+
+        const pseudoElements = neighbour.getAttachedPseudoElements();
+
+        if (pseudoElements.hasOwnProperty('0O') && pseudoElements.hasOwnProperty('3C')) {
+          neighbour.isDrawn = false;
+          vertex.value.attachPseudoElement('Ac', '', 0);
+        }
+      }
+    }
+  }
+
+}
+
+module.exports = PseudoElementManager;
+
+},{"./Atom":4}],21:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -11885,7 +11906,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"./Parser":17}],21:[function(require,module,exports){
+},{"./Parser":17}],22:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -12257,7 +12278,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":10,"./Options":15,"./SvgDrawer":29,"./SvgWrapper":30,"./ThemeManager":31}],22:[function(require,module,exports){
+},{"./FormulaToCommonName":10,"./Options":15,"./SvgDrawer":30,"./SvgWrapper":31,"./ThemeManager":32}],23:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12278,7 +12299,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"./Reaction":20}],23:[function(require,module,exports){
+},{"./Reaction":21}],24:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("./ArrayHelper");
@@ -12497,7 +12518,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":24,"./Vector2":32}],24:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":25,"./Vector2":33}],25:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -12665,7 +12686,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -13450,7 +13471,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":14,"./Ring":23,"./RingConnection":24,"./SSSR":26,"./Vector2":32}],26:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":14,"./Ring":24,"./RingConnection":25,"./SSSR":27,"./Vector2":33}],27:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -14060,7 +14081,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":12}],27:[function(require,module,exports){
+},{"./Graph":12}],28:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14406,7 +14427,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":15,"./Parser":17,"./ReactionDrawer":21,"./ReactionParser":22,"./SvgDrawer":29,"./SvgWrapper":30}],28:[function(require,module,exports){
+},{"./Options":15,"./Parser":17,"./ReactionDrawer":22,"./ReactionParser":23,"./SvgDrawer":30,"./SvgWrapper":31}],29:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -14630,7 +14651,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"./MathHelper":14}],29:[function(require,module,exports){
+},{"./MathHelper":14}],30:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -15098,7 +15119,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":13,"./SvgWrapper":30,"./ThemeManager":31,"./Vector2":32}],30:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":11,"./Line":13,"./SvgWrapper":31,"./ThemeManager":32,"./Vector2":33}],31:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -16075,7 +16096,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":13,"./MathHelper":14,"./Vector2":32}],31:[function(require,module,exports){
+},{"./Line":13,"./MathHelper":14,"./Vector2":33}],32:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -16123,7 +16144,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16743,7 +16764,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -17120,5 +17141,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":32}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":14,"./Vector2":33}]},{},[1])
 
