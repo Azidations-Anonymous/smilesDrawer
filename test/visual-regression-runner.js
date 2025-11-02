@@ -55,11 +55,12 @@ if (!oldCodePath || !newCodePath) {
 
 const datasets = fullMode ? fullDatasets : fastDatasets;
 
-// Create output directory for individual HTML reports
+// Create output directory for individual HTML reports (delete old results)
 const outputDir = path.join(process.cwd(), 'visual-regression-results');
-if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+if (fs.existsSync(outputDir)) {
+    fs.rmSync(outputDir, { recursive: true, force: true });
 }
+fs.mkdirSync(outputDir, { recursive: true });
 
 console.log('='.repeat(80));
 console.log('SMILES DRAWER VISUAL REGRESSION TEST');
