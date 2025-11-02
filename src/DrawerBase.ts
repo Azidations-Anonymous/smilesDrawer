@@ -6,8 +6,7 @@ import PseudoElementManager from "./PseudoElementManager";
 import MolecularInfoManager from "./MolecularInfoManager";
 import InitializationManager from "./InitializationManager";
 import GraphProcessingManager from "./GraphProcessingManager";
-import getDefaultOptions from "./DefaultOptions";
-
+import OptionsManager from "./OptionsManager";
 import RingManager = require("./RingManager");
 
 import MathHelper = require('./MathHelper');
@@ -43,7 +42,6 @@ class DrawerBase {
   doubleBondConfig: any;
   canvasWrapper: any;
   totalOverlapScore: number;
-  defaultOptions: any;
   opts: any;
   theme: any;
   themeManager: any;
@@ -57,34 +55,26 @@ class DrawerBase {
    * @param {Object} options An object containing custom values for different options. It is merged with the default options.
    */
   constructor(options: any) {
-    this.ringManager = new RingManager(this);
-      this.stereochemistryManager = new StereochemistryManager(this);
-      this.overlapResolver = new OverlapResolutionManager(this);
-      this.positioningManager = new PositioningManager(this);
-      this.drawingManager = new DrawingManager(this);
-      this.pseudoElementManager = new PseudoElementManager(this);
-      this.molecularInfoManager = new MolecularInfoManager(this);
-      this.initializationManager = new InitializationManager(this);
-      this.graphProcessingManager = new GraphProcessingManager(this);
-    this.graph = null;
-    this.doubleBondConfigCount = 0;
-    this.doubleBondConfig = null;
-    this.ringIdCounter = 0;
-    this.ringConnectionIdCounter = 0;
-    this.canvasWrapper = null;
-    this.totalOverlapScore = 0;
+      this.ringManager = new RingManager(this);
+        this.stereochemistryManager = new StereochemistryManager(this);
+        this.overlapResolver = new OverlapResolutionManager(this);
+        this.positioningManager = new PositioningManager(this);
+        this.drawingManager = new DrawingManager(this);
+        this.pseudoElementManager = new PseudoElementManager(this);
+        this.molecularInfoManager = new MolecularInfoManager(this);
+        this.initializationManager = new InitializationManager(this);
+        this.graphProcessingManager = new GraphProcessingManager(this);
+      this.graph = null;
+      this.doubleBondConfigCount = 0;
+      this.doubleBondConfig = null;
+      this.ringIdCounter = 0;
+      this.ringConnectionIdCounter = 0;
+      this.canvasWrapper = null;
+      this.totalOverlapScore = 0;
 
-    this.defaultOptions = getDefaultOptions();
-
-    this.opts = Options.extend(true, this.defaultOptions, options);
-    this.opts.halfBondSpacing = this.opts.bondSpacing / 2.0;
-    this.opts.bondLengthSq = this.opts.bondLength * this.opts.bondLength;
-    this.opts.halfFontSizeLarge = this.opts.fontSizeLarge / 2.0;
-    this.opts.quarterFontSizeLarge = this.opts.fontSizeLarge / 4.0;
-    this.opts.fifthFontSizeSmall = this.opts.fontSizeSmall / 5.0;
-
-    // Set the default theme.
-    this.theme = this.opts.themes.dark;
+      const optionsManager = new OptionsManager(options);
+          this.opts = optionsManager.opts;
+          this.theme = optionsManager.theme;
   }
 
   /**
