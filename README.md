@@ -194,7 +194,11 @@ npm run test:visual -novisual
 npm run test:visual <commit/branch> -all -failearly
 ```
 
-Visual regression tests generate HTML reports with side-by-side SVG comparisons, making it easy to spot rendering changes.
+Visual regression tests generate reports in the `regression-results/` directory:
+- **HTML files** (`N.html`) - Side-by-side SVG comparisons for visual inspection
+- **JSON files** (`N.json`) - Structured data with `{old, new}` fields for programmatic comparison
+
+This makes it easy to both visually spot rendering changes and programmatically analyze differences.
 
 ### Getting Started
 

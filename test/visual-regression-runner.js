@@ -6,13 +6,18 @@
  * @description
  * Compares molecular structure renderings between two versions of SmilesDrawer.
  * By default, continues testing even when differences are found and generates
- * HTML reports with side-by-side SVG comparisons.
+ * HTML reports with side-by-side SVG comparisons and JSON output files.
  *
  * ## Features
  * - Tests all SMILES (with optional fail-early mode)
  * - Generates SVG for both old and new versions (optional)
- * - Creates interactive HTML report showing differences
+ * - Creates interactive HTML reports showing differences
+ * - Saves JSON output to regression-results/ directory
  * - Allows manual visual inspection of changes
+ *
+ * ## Output
+ * - regression-results/[N].html - Side-by-side SVG comparison
+ * - regression-results/[N].json - JSON with {old, new} fields for data comparison
  *
  * ## Usage
  * node test/visual-regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]
@@ -64,14 +69,12 @@ if (!oldCodePath || !newCodePath) {
 
 const datasets = allMode ? fullDatasets : fastDatasets;
 
-// Create output directory for individual HTML reports (delete old results)
-const outputDir = path.join(process.cwd(), 'visual-regression-results');
-if (!noVisual) {
-    if (fs.existsSync(outputDir)) {
-        fs.rmSync(outputDir, { recursive: true, force: true });
-    }
-    fs.mkdirSync(outputDir, { recursive: true });
+// Create output directory for reports (delete old results)
+const outputDir = path.join(process.cwd(), 'regression-results');
+if (fs.existsSync(outputDir)) {
+    fs.rmSync(outputDir, { recursive: true, force: true });
 }
+fs.mkdirSync(outputDir, { recursive: true });
 
 console.log('='.repeat(80));
 console.log('SMILES DRAWER VISUAL REGRESSION TEST');
@@ -81,9 +84,7 @@ console.log('FAIL-EARLY: ' + (failEarly ? 'YES (stop at first difference)' : 'NO
 console.log('VISUAL: ' + (noVisual ? 'NO (skip SVG generation)' : 'YES (generate side-by-side comparisons)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
 console.log('NEW CODE PATH: ' + newCodePath);
-if (!noVisual) {
-    console.log('OUTPUT DIRECTORY: ' + outputDir);
-}
+console.log('OUTPUT DIRECTORY: ' + outputDir);
 console.log('='.repeat(80));
 
 let totalTested = 0;
@@ -172,6 +173,14 @@ for (const dataset of datasets) {
             totalDifferences++;
 
             if (failEarly) {
+                // Save JSON to file instead of printing to console
+                const jsonFilePath = path.join(outputDir, '1.json');
+                const jsonOutput = {
+                    old: JSON.parse(oldJson),
+                    new: JSON.parse(newJson)
+                };
+                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+
                 console.error('\n' + '!'.repeat(80));
                 console.error('DIFFERENCE DETECTED!');
                 console.error('!'.repeat(80));
@@ -180,10 +189,7 @@ for (const dataset of datasets) {
                 console.error('SMILES: ' + smiles);
                 console.error('Old JSON length: ' + oldJson.length + ' bytes');
                 console.error('New JSON length: ' + newJson.length + ' bytes');
-                console.error('\nOLD JSON:');
-                console.error(oldJson);
-                console.error('\nNEW JSON:');
-                console.error(newJson);
+                console.error('JSON saved to: ' + jsonFilePath);
                 console.error('\n' + '!'.repeat(80));
                 process.exit(1);
             }
@@ -216,6 +222,14 @@ for (const dataset of datasets) {
                     console.error('  WARNING: Failed to read SVG files');
                 }
 
+                // Save JSON to file
+                const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
+                const jsonOutput = {
+                    old: JSON.parse(oldJson),
+                    new: JSON.parse(newJson)
+                };
+                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+
                 // Generate and save individual HTML report immediately
                 const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
                 const html = generateIndividualHTMLReport({
@@ -231,7 +245,16 @@ for (const dataset of datasets) {
                 });
 
                 fs.writeFileSync(htmlFilePath, html, 'utf8');
-                console.log('  HTML report saved: ' + htmlFilePath);
+                console.log('  Reports saved: ' + totalDifferences + '.html, ' + totalDifferences + '.json');
+            } else {
+                // Save JSON even when -novisual is used
+                const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
+                const jsonOutput = {
+                    old: JSON.parse(oldJson),
+                    new: JSON.parse(newJson)
+                };
+                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+                console.log('  JSON saved: ' + totalDifferences + '.json');
             }
         } else {
             console.log('  MATCH: Identical output ✓');
@@ -248,17 +271,19 @@ for (const dataset of datasets) {
 console.log('\n' + '='.repeat(80));
 if (totalDifferences > 0) {
     if (noVisual) {
-        console.log('DIFFERENCES FOUND');
+        console.log('DIFFERENCES FOUND - JSON REPORTS GENERATED');
     } else {
-        console.log('DIFFERENCES FOUND - HTML REPORTS GENERATED');
+        console.log('DIFFERENCES FOUND - REPORTS GENERATED');
     }
     console.log('='.repeat(80));
     console.log('Total tested: ' + totalTested);
     console.log('Total skipped: ' + totalSkipped);
     console.log('Differences found: ' + totalDifferences);
-    if (!noVisual) {
-        console.log('\nHTML reports saved to: ' + outputDir);
-        console.log('Files: 1.html through ' + totalDifferences + '.html');
+    console.log('\nReports saved to: ' + outputDir);
+    if (noVisual) {
+        console.log('Files: 1.json through ' + totalDifferences + '.json');
+    } else {
+        console.log('Files: 1.html, 1.json through ' + totalDifferences + '.html, ' + totalDifferences + '.json');
     }
     console.log('='.repeat(80));
     process.exit(1);
