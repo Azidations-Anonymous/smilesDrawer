@@ -4,7 +4,7 @@ import Vector2 = require('../graph/Vector2');
 import Line = require('../graph/Line');
 import Vertex = require('../graph/Vertex');
 import Ring = require('../graph/Ring');
-import CanvasWedgeDrawer = require('./helpers/CanvasWedgeDrawer');
+import CanvasWedgeDrawer = require('./draw/CanvasWedgeDrawer');
 
 /**
  * A class wrapping a canvas element.
