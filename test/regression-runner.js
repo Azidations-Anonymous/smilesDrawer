@@ -9,7 +9,7 @@
  *
  * ## Test Modes
  * - **Fast mode (default)**: Tests only the fastregression dataset (~114 SMILES)
- * - **Full mode (--full)**: Tests all 6 datasets (thousands of SMILES)
+ * - **Full mode (-all)**: Tests all 6 datasets (thousands of SMILES)
  *
  * ## How it works
  * 1. For each SMILES string:
@@ -32,7 +32,7 @@
  *
  * @example
  * // Test all datasets
- * node test/regression-runner.js /path/to/old/code /path/to/new/code --full
+ * node test/regression-runner.js /path/to/old/code /path/to/new/code -all
  */
 
 const { spawnSync } = require('child_process');
@@ -54,26 +54,28 @@ const fullDatasets = [
 ];
 
 const args = process.argv.slice(2);
-const fullMode = args.includes('--full');
-const pathArgs = args.filter(arg => arg !== '--full');
+const allMode = args.includes('-all');
+const pathArgs = args.filter(arg => !arg.startsWith('-'));
 
 const oldCodePath = pathArgs[0];
 const newCodePath = pathArgs[1];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [--full]');
+    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all]');
+    console.error('  -all  Test all datasets (default: fastregression only)');
+    console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
-    console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer --full');
+    console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all');
     process.exit(2);
 }
 
-const datasets = fullMode ? fullDatasets : fastDatasets;
+const datasets = allMode ? fullDatasets : fastDatasets;
 
 console.log('='.repeat(80));
 console.log('SMILES DRAWER REGRESSION TEST SUITE');
 console.log('='.repeat(80));
-console.log('MODE: ' + (fullMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
+console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
 console.log('NEW CODE PATH: ' + newCodePath);
 console.log('='.repeat(80));

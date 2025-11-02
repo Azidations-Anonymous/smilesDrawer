@@ -147,18 +147,21 @@ npm run test:regression <commit/branch>
 Run against all datasets (not just fastregression):
 
 ```bash
-npm run test:regression -- --full
+npm run test:regression -all
 ```
 
 Or compare against a specific commit using all datasets:
 
 ```bash
-npm run test:regression <commit/branch> -- --full
+npm run test:regression <commit/branch> -all
 ```
+
+**Flags:**
+- `-all` - Test all datasets instead of just fastregression
 
 #### Visual Regression Testing
 
-Create side-by-side comparisons of molecules that render differently (non fail-early):
+Create side-by-side comparisons of molecules that render differently:
 
 ```bash
 npm run test:visual
@@ -170,13 +173,28 @@ Compare against a specific commit or branch:
 npm run test:visual <commit/branch>
 ```
 
-Run with full output:
+**Available flags:**
+- `-all` - Test all datasets (default: fastregression only)
+- `-failearly` - Stop at first difference (default: continue and collect all)
+- `-novisual` - Skip SVG generation (default: generate visual comparisons)
+
+**Examples:**
 
 ```bash
-npm run test:visual -- --full
+# Test all datasets with visual reports
+npm run test:visual -all
+
+# Fail early mode (stop at first difference)
+npm run test:visual -failearly
+
+# Quick check without visual output
+npm run test:visual -novisual
+
+# Combine flags
+npm run test:visual <commit/branch> -all -failearly
 ```
 
-Visual regression tests generate comparison images showing differences between versions, making it easy to spot rendering changes.
+Visual regression tests generate HTML reports with side-by-side SVG comparisons, making it easy to spot rendering changes.
 
 ### Getting Started
 

@@ -5,20 +5,22 @@
  * @module test/visual-regression-runner
  * @description
  * Compares molecular structure renderings between two versions of SmilesDrawer.
- * Unlike the standard regression test, this continues testing even when differences
- * are found and generates an HTML report with side-by-side SVG comparisons.
+ * By default, continues testing even when differences are found and generates
+ * HTML reports with side-by-side SVG comparisons.
  *
  * ## Features
- * - Tests all SMILES without early bailout
- * - Generates SVG for both old and new versions
+ * - Tests all SMILES (with optional fail-early mode)
+ * - Generates SVG for both old and new versions (optional)
  * - Creates interactive HTML report showing differences
  * - Allows manual visual inspection of changes
  *
  * ## Usage
- * node test/visual-regression-runner.js <old-code-path> <new-code-path> [--full]
+ * node test/visual-regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]
  *
  * @example
  * node test/visual-regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer
+ * node test/visual-regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -all
+ * node test/visual-regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -failearly
  */
 
 const { spawnSync } = require('child_process');
@@ -40,35 +42,48 @@ const fullDatasets = [
 ];
 
 const args = process.argv.slice(2);
-const fullMode = args.includes('--full');
-const pathArgs = args.filter(arg => arg !== '--full');
+const allMode = args.includes('-all');
+const failEarly = args.includes('-failearly');
+const noVisual = args.includes('-novisual');
+const pathArgs = args.filter(arg => !arg.startsWith('-'));
 
 const oldCodePath = pathArgs[0];
 const newCodePath = pathArgs[1];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node visual-regression-runner.js <old-code-path> <new-code-path> [--full]');
+    console.error('Usage: node visual-regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]');
+    console.error('  -all       Test all datasets (default: fastregression only)');
+    console.error('  -failearly Stop at first difference (default: continue)');
+    console.error('  -novisual  Skip SVG generation (default: generate visual comparisons)');
+    console.error('');
     console.error('Example: node visual-regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
+    console.error('Example: node visual-regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all -failearly');
     process.exit(2);
 }
 
-const datasets = fullMode ? fullDatasets : fastDatasets;
+const datasets = allMode ? fullDatasets : fastDatasets;
 
 // Create output directory for individual HTML reports (delete old results)
 const outputDir = path.join(process.cwd(), 'visual-regression-results');
-if (fs.existsSync(outputDir)) {
-    fs.rmSync(outputDir, { recursive: true, force: true });
+if (!noVisual) {
+    if (fs.existsSync(outputDir)) {
+        fs.rmSync(outputDir, { recursive: true, force: true });
+    }
+    fs.mkdirSync(outputDir, { recursive: true });
 }
-fs.mkdirSync(outputDir, { recursive: true });
 
 console.log('='.repeat(80));
 console.log('SMILES DRAWER VISUAL REGRESSION TEST');
 console.log('='.repeat(80));
-console.log('MODE: ' + (fullMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
+console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
+console.log('FAIL-EARLY: ' + (failEarly ? 'YES (stop at first difference)' : 'NO (collect all differences)'));
+console.log('VISUAL: ' + (noVisual ? 'NO (skip SVG generation)' : 'YES (generate side-by-side comparisons)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
 console.log('NEW CODE PATH: ' + newCodePath);
-console.log('OUTPUT DIRECTORY: ' + outputDir);
+if (!noVisual) {
+    console.log('OUTPUT DIRECTORY: ' + outputDir);
+}
 console.log('='.repeat(80));
 
 let totalTested = 0;
@@ -154,50 +169,70 @@ for (const dataset of datasets) {
 
         // Check if there's a difference
         if (oldJson !== newJson) {
-            console.log('  DIFFERENCE DETECTED - Generating SVG comparison');
             totalDifferences++;
 
-            // Generate SVG for both versions
-            const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-old-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
-            const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-new-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
-
-            spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
-                cwd: oldCodePath,
-                encoding: 'utf8'
-            });
-
-            spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
-                cwd: newCodePath,
-                encoding: 'utf8'
-            });
-
-            let oldSvg = '';
-            let newSvg = '';
-            try {
-                oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
-                newSvg = fs.readFileSync(newSvgFile, 'utf8');
-                fs.unlinkSync(oldSvgFile);
-                fs.unlinkSync(newSvgFile);
-            } catch (err) {
-                console.error('  WARNING: Failed to read SVG files');
+            if (failEarly) {
+                console.error('\n' + '!'.repeat(80));
+                console.error('DIFFERENCE DETECTED!');
+                console.error('!'.repeat(80));
+                console.error('Dataset: ' + dataset.name);
+                console.error('Index: ' + index + '/' + smilesList.length);
+                console.error('SMILES: ' + smiles);
+                console.error('Old JSON length: ' + oldJson.length + ' bytes');
+                console.error('New JSON length: ' + newJson.length + ' bytes');
+                console.error('\nOLD JSON:');
+                console.error(oldJson);
+                console.error('\nNEW JSON:');
+                console.error(newJson);
+                console.error('\n' + '!'.repeat(80));
+                process.exit(1);
             }
 
-            // Generate and save individual HTML report immediately
-            const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
-            const html = generateIndividualHTMLReport({
-                dataset: dataset.name,
-                index: index,
-                total: smilesList.length,
-                smiles: smiles,
-                oldSvg: oldSvg,
-                newSvg: newSvg,
-                oldJsonLength: oldJson.length,
-                newJsonLength: newJson.length,
-                diffNumber: totalDifferences
-            });
+            console.log('  DIFFERENCE DETECTED' + (noVisual ? '' : ' - Generating SVG comparison'));
 
-            fs.writeFileSync(htmlFilePath, html, 'utf8');
-            console.log('  HTML report saved: ' + htmlFilePath);
+            if (!noVisual) {
+                // Generate SVG for both versions
+                const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-old-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
+                const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-new-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
+
+                spawnSync('node', ['test/generate-svg.js', smiles, oldSvgFile], {
+                    cwd: oldCodePath,
+                    encoding: 'utf8'
+                });
+
+                spawnSync('node', ['test/generate-svg.js', smiles, newSvgFile], {
+                    cwd: newCodePath,
+                    encoding: 'utf8'
+                });
+
+                let oldSvg = '';
+                let newSvg = '';
+                try {
+                    oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
+                    newSvg = fs.readFileSync(newSvgFile, 'utf8');
+                    fs.unlinkSync(oldSvgFile);
+                    fs.unlinkSync(newSvgFile);
+                } catch (err) {
+                    console.error('  WARNING: Failed to read SVG files');
+                }
+
+                // Generate and save individual HTML report immediately
+                const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
+                const html = generateIndividualHTMLReport({
+                    dataset: dataset.name,
+                    index: index,
+                    total: smilesList.length,
+                    smiles: smiles,
+                    oldSvg: oldSvg,
+                    newSvg: newSvg,
+                    oldJsonLength: oldJson.length,
+                    newJsonLength: newJson.length,
+                    diffNumber: totalDifferences
+                });
+
+                fs.writeFileSync(htmlFilePath, html, 'utf8');
+                console.log('  HTML report saved: ' + htmlFilePath);
+            }
         } else {
             console.log('  MATCH: Identical output ✓');
         }
@@ -212,13 +247,19 @@ for (const dataset of datasets) {
 // Final summary
 console.log('\n' + '='.repeat(80));
 if (totalDifferences > 0) {
-    console.log('DIFFERENCES FOUND - HTML REPORTS GENERATED');
+    if (noVisual) {
+        console.log('DIFFERENCES FOUND');
+    } else {
+        console.log('DIFFERENCES FOUND - HTML REPORTS GENERATED');
+    }
     console.log('='.repeat(80));
     console.log('Total tested: ' + totalTested);
     console.log('Total skipped: ' + totalSkipped);
     console.log('Differences found: ' + totalDifferences);
-    console.log('\nHTML reports saved to: ' + outputDir);
-    console.log('Files: 1.html through ' + totalDifferences + '.html');
+    if (!noVisual) {
+        console.log('\nHTML reports saved to: ' + outputDir);
+        console.log('Files: 1.html through ' + totalDifferences + '.html');
+    }
     console.log('='.repeat(80));
     process.exit(1);
 } else {

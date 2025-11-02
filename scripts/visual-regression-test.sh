@@ -3,12 +3,12 @@
 set -e
 
 BASELINE_COMMIT="HEAD"
-FULL_FLAG=""
+FLAGS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --full)
-            FULL_FLAG="--full"
+        -all|-failearly|-novisual)
+            FLAGS="${FLAGS} $1"
             shift
             ;;
         *)
@@ -64,16 +64,11 @@ echo "✓ Current build complete"
 echo ""
 
 echo "Step 5: Running visual regression tests..."
-if [ -n "${FULL_FLAG}" ]; then
-    echo "Mode: FULL - testing all datasets"
-else
-    echo "Mode: FAST - testing fastregression dataset only"
-    echo "Use --full flag to test all datasets"
-fi
+echo "Flags:${FLAGS:-" (none)"}"
 echo ""
 
 cd "${CURRENT_DIR}/test"
-node visual-regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FULL_FLAG}
+node visual-regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
 
 REGRESSION_EXIT_CODE=$?
 
