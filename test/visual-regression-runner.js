@@ -54,7 +54,12 @@ if (!oldCodePath || !newCodePath) {
 }
 
 const datasets = fullMode ? fullDatasets : fastDatasets;
-const differences = [];
+
+// Create output directory for individual HTML reports
+const outputDir = path.join(process.cwd(), 'visual-regression-results');
+if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+}
 
 console.log('='.repeat(80));
 console.log('SMILES DRAWER VISUAL REGRESSION TEST');
@@ -62,6 +67,7 @@ console.log('='.repeat(80));
 console.log('MODE: ' + (fullMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
 console.log('NEW CODE PATH: ' + newCodePath);
+console.log('OUTPUT DIRECTORY: ' + outputDir);
 console.log('='.repeat(80));
 
 let totalTested = 0;
@@ -175,7 +181,9 @@ for (const dataset of datasets) {
                 console.error('  WARNING: Failed to read SVG files');
             }
 
-            differences.push({
+            // Generate and save individual HTML report immediately
+            const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
+            const html = generateIndividualHTMLReport({
                 dataset: dataset.name,
                 index: index,
                 total: smilesList.length,
@@ -183,8 +191,12 @@ for (const dataset of datasets) {
                 oldSvg: oldSvg,
                 newSvg: newSvg,
                 oldJsonLength: oldJson.length,
-                newJsonLength: newJson.length
+                newJsonLength: newJson.length,
+                diffNumber: totalDifferences
             });
+
+            fs.writeFileSync(htmlFilePath, html, 'utf8');
+            console.log('  HTML report saved: ' + htmlFilePath);
         } else {
             console.log('  MATCH: Identical output ✓');
         }
@@ -196,30 +208,24 @@ for (const dataset of datasets) {
     console.log('\n' + dataset.name + ' COMPLETE: ' + smilesList.length + ' SMILES tested');
 }
 
-// Generate HTML report
-if (differences.length > 0) {
-    const reportPath = path.join(process.cwd(), 'visual-regression-report.html');
-    const html = generateHTMLReport(differences, totalTested, totalSkipped, totalDifferences);
-    fs.writeFileSync(reportPath, html, 'utf8');
-    
-    console.log('\n' + '='.repeat(80));
-    console.log('VISUAL REGRESSION REPORT GENERATED');
+// Final summary
+console.log('\n' + '='.repeat(80));
+if (totalDifferences > 0) {
+    console.log('DIFFERENCES FOUND - HTML REPORTS GENERATED');
     console.log('='.repeat(80));
     console.log('Total tested: ' + totalTested);
     console.log('Total skipped: ' + totalSkipped);
     console.log('Differences found: ' + totalDifferences);
-    console.log('\nReport saved to: ' + reportPath);
+    console.log('\nHTML reports saved to: ' + outputDir);
+    console.log('Files: 1.html through ' + totalDifferences + '.html');
     console.log('='.repeat(80));
-    
     process.exit(1);
 } else {
-    console.log('\n' + '='.repeat(80));
     console.log('ALL TESTS PASSED - NO DIFFERENCES FOUND');
     console.log('='.repeat(80));
     console.log('Total tested: ' + totalTested);
     console.log('Total skipped: ' + totalSkipped);
     console.log('='.repeat(80));
-    
     process.exit(0);
 }
 
@@ -243,58 +249,20 @@ function escapeHtml(text) {
         .replace(/'/g, '&#039;');
 }
 
-function generateHTMLReport(differences, totalTested, totalSkipped, totalDifferences) {
-    const timestamp = new Date().toISOString();
-    
-    let differencesHTML = differences.map((diff, idx) => `
-        <div class="difference-card" id="diff-${idx}">
-            <div class="difference-header">
-                <h3>Difference #${idx + 1} of ${totalDifferences}</h3>
-                <div class="meta">
-                    <span class="dataset">${escapeHtml(diff.dataset)}</span>
-                    <span class="index">Test ${diff.index}/${diff.total}</span>
-                </div>
-            </div>
-            <div class="smiles-display">
-                <code>${escapeHtml(diff.smiles)}</code>
-            </div>
-            <div class="comparison-container">
-                <div class="comparison-side">
-                    <h4>Baseline (Old)</h4>
-                    <div class="svg-container">
-                        ${diff.oldSvg}
-                    </div>
-                    <div class="meta">JSON: ${diff.oldJsonLength} bytes</div>
-                </div>
-                <div class="comparison-side">
-                    <h4>Current (New)</h4>
-                    <div class="svg-container">
-                        ${diff.newSvg}
-                    </div>
-                    <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
-                </div>
-            </div>
-            <div class="nav-buttons">
-                ${idx > 0 ? `<button onclick="location.href='#diff-${idx-1}'">← Previous</button>` : '<button disabled>← Previous</button>'}
-                ${idx < differences.length - 1 ? `<button onclick="location.href='#diff-${idx+1}'">Next →</button>` : '<button disabled>Next →</button>'}
-                <button onclick="location.href='#top'">↑ Top</button>
-            </div>
-        </div>
-    `).join('\n');
-
+function generateIndividualHTMLReport(diff) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visual Regression Report - SMILES Drawer</title>
+    <title>Difference #${diff.diffNumber} - SMILES Drawer</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
@@ -302,7 +270,7 @@ function generateHTMLReport(differences, totalTested, totalSkipped, totalDiffere
             background: #f5f5f5;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -311,87 +279,7 @@ function generateHTMLReport(differences, totalTested, totalSkipped, totalDiffere
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        header {
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        
-        .summary {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 30px;
-        }
-        
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        
-        .summary-item {
-            text-align: center;
-        }
-        
-        .summary-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #3498db;
-        }
-        
-        .summary-label {
-            color: #7f8c8d;
-            font-size: 0.9em;
-        }
-        
-        .difference-card {
-            border: 2px solid #e74c3c;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            background: #fff;
-            scroll-margin-top: 20px;
-        }
-        
-        .difference-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        
-        .difference-header h3 {
-            color: #e74c3c;
-            font-size: 1.3em;
-        }
-        
-        .meta {
-            color: #7f8c8d;
-            font-size: 0.9em;
-        }
-        
-        .meta span {
-            margin-left: 15px;
-            padding: 3px 8px;
-            background: #ecf0f1;
-            border-radius: 3px;
-        }
-        
-        .dataset {
-            font-weight: bold;
-            color: #3498db;
-        }
-        
+
         .smiles-display {
             background: #2c3e50;
             color: #ecf0f1;
@@ -400,31 +288,30 @@ function generateHTMLReport(differences, totalTested, totalSkipped, totalDiffere
             margin-bottom: 20px;
             overflow-x: auto;
         }
-        
+
         .smiles-display code {
             font-family: 'Courier New', monospace;
             font-size: 0.95em;
         }
-        
+
         .comparison-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 20px;
         }
-        
+
         .comparison-side {
             border: 1px solid #bdc3c7;
             border-radius: 5px;
             padding: 15px;
         }
-        
+
         .comparison-side h4 {
             color: #2c3e50;
             margin-bottom: 10px;
             font-size: 1.1em;
         }
-        
+
         .svg-container {
             background: white;
             border: 1px solid #ecf0f1;
@@ -436,46 +323,17 @@ function generateHTMLReport(differences, totalTested, totalSkipped, totalDiffere
             justify-content: center;
             margin-bottom: 10px;
         }
-        
+
         .svg-container svg {
             max-width: 100%;
             height: auto;
         }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            padding-top: 15px;
-            border-top: 1px solid #ecf0f1;
+
+        .meta {
+            color: #7f8c8d;
+            font-size: 0.9em;
         }
-        
-        button {
-            padding: 8px 16px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.95em;
-            transition: background 0.3s;
-        }
-        
-        button:hover:not(:disabled) {
-            background: #2980b9;
-        }
-        
-        button:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-        }
-        
-        .timestamp {
-            color: #95a5a6;
-            font-size: 0.85em;
-            margin-top: 10px;
-        }
-        
+
         @media (max-width: 768px) {
             .comparison-container {
                 grid-template-columns: 1fr;
@@ -484,34 +342,27 @@ function generateHTMLReport(differences, totalTested, totalSkipped, totalDiffere
     </style>
 </head>
 <body>
-    <div class="container" id="top">
-        <header>
-            <h1>Visual Regression Test Report</h1>
-            <div class="timestamp">Generated: ${timestamp}</div>
-        </header>
-        
-        <div class="summary">
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <div class="summary-value">${totalTested}</div>
-                    <div class="summary-label">Total Tested</div>
+    <div class="container">
+        <div class="smiles-display">
+            <code>${escapeHtml(diff.smiles)}</code>
+        </div>
+
+        <div class="comparison-container">
+            <div class="comparison-side">
+                <h4>Baseline (Old)</h4>
+                <div class="svg-container">
+                    ${diff.oldSvg}
                 </div>
-                <div class="summary-item">
-                    <div class="summary-value">${totalDifferences}</div>
-                    <div class="summary-label">Differences Found</div>
+                <div class="meta">JSON: ${diff.oldJsonLength} bytes</div>
+            </div>
+            <div class="comparison-side">
+                <h4>Current (New)</h4>
+                <div class="svg-container">
+                    ${diff.newSvg}
                 </div>
-                <div class="summary-item">
-                    <div class="summary-value">${totalSkipped}</div>
-                    <div class="summary-label">Skipped</div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-value">${Math.round((totalDifferences / totalTested) * 100)}%</div>
-                    <div class="summary-label">Difference Rate</div>
-                </div>
+                <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
             </div>
         </div>
-        
-        ${differencesHTML}
     </div>
 </body>
 </html>`;

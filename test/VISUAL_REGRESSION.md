@@ -7,7 +7,7 @@ This directory contains tools for visual regression testing of SMILES Drawer.
 Visual regression testing allows you to:
 - Compare SVG output between two versions of the code
 - Continue testing even when differences are found (no early bailout)
-- Generate an interactive HTML report showing side-by-side comparisons
+- Generate individual HTML files for each difference showing side-by-side comparisons
 - Manually inspect whether changes are improvements or regressions
 
 ## Scripts
@@ -34,7 +34,7 @@ node test/visual-regression-runner.js <old-code-path> <new-code-path> [--full]
 - Compares JSON graph data first (fast check)
 - Only generates SVG when differences are detected
 - Continues testing all SMILES (no early exit)
-- Generates `visual-regression-report.html` if differences found
+- Generates individual HTML files in `visual-regression-results/` folder if differences found
 
 ### Running via npm
 
@@ -49,25 +49,24 @@ npm run test:visual <commit-hash>
 npm run test:visual -- --full
 ```
 
-## Generated Report
+## Generated Reports
 
-When differences are found, an HTML report is generated: `visual-regression-report.html`
+When differences are found, individual HTML files are generated in the `visual-regression-results/` folder.
 
-The report includes:
-- Summary statistics (total tested, differences found, skip rate)
-- Side-by-side SVG comparisons for each difference
-- SMILES string for each test case
-- Navigation buttons to browse through differences
-- Dataset and index information
-- JSON byte size comparison
+Each HTML file:
+- Named with a simple number: `1.html`, `2.html`, `3.html`, etc.
+- Shows the SMILES string at the top
+- Displays side-by-side SVG comparisons (Baseline vs Current)
+- Includes JSON byte size comparison
+- Is created immediately when the difference is detected (while tests are running)
 
 ## Report Features
 
+- **Simple layout**: SMILES at top, SVGs below
 - **Responsive design**: Works on desktop and mobile
-- **Easy navigation**: Previous/Next/Top buttons on each difference
-- **Visual highlighting**: Differences are clearly marked in red
-- **Detailed metadata**: Dataset name, test index, SMILES string
+- **Individual files**: Easy to open and compare specific failures
 - **SVG rendering**: Direct inline SVG for immediate visual comparison
+- **Real-time generation**: Files created as differences are found
 
 ## Use Cases
 
@@ -121,9 +120,10 @@ Sometimes "regressions" are actually improvements (better atom placement, cleare
 
 1. **Start with fast mode** to quickly identify if there are any differences
 2. **Use full mode** before merging to production
-3. **Open the HTML report in a browser** for best experience
-4. **Share the report** by committing it to a branch for team review
-5. **Archive reports** by renaming them with timestamps before running new tests
+3. **Open HTML files in a browser** for best experience
+4. **Share reports** by committing the folder to a branch for team review
+5. **Archive reports** by moving the folder with timestamps before running new tests
+6. **Clean up before re-running**: Remove or archive old `visual-regression-results/` folder
 
 ## Example Workflow
 
@@ -137,14 +137,14 @@ npx gulp
 # 3. Run visual regression (fast)
 npm run test:visual
 
-# 4. Review report if differences found
-open visual-regression-report.html
+# 4. Review reports if differences found
+open visual-regression-results/*.html
 
 # 5. If changes look good, run full test
 npm run test:visual -- --full
 
-# 6. Archive report for reference
-mv visual-regression-report.html reports/visual-$(date +%Y%m%d-%H%M%S).html
+# 6. Archive reports for reference
+mv visual-regression-results reports/visual-$(date +%Y%m%d-%H%M%S)
 ```
 
 ## Troubleshooting
