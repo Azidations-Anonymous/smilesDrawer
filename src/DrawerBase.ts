@@ -5,6 +5,7 @@ import DrawingManager from "./DrawingManager";
 import PseudoElementManager from "./PseudoElementManager";
 import MolecularInfoManager from "./MolecularInfoManager";
 import InitializationManager from "./InitializationManager";
+import GraphProcessingManager from "./GraphProcessingManager";
 import getDefaultOptions from "./DefaultOptions";
 
 import RingManager = require("./RingManager");
@@ -64,6 +65,7 @@ class DrawerBase {
       this.pseudoElementManager = new PseudoElementManager(this);
       this.molecularInfoManager = new MolecularInfoManager(this);
       this.initializationManager = new InitializationManager(this);
+      this.graphProcessingManager = new GraphProcessingManager(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -211,107 +213,7 @@ class DrawerBase {
   }
 
   processGraph(): void {
-    this.position();
-
-    // Restore the ring information (removes bridged rings and replaces them with the original, multiple, rings)
-    this.restoreRingInformation();
-
-    // Atoms bonded to the same ring atom
-    this.resolvePrimaryOverlaps();
-
-    let overlapScore = this.getOverlapScore();
-
-    this.totalOverlapScore = this.getOverlapScore().total;
-
-    for (var o = 0; o < this.opts.overlapResolutionIterations; o++) {
-      for (var i = 0; i < this.graph.edges.length; i++) {
-        let edge = this.graph.edges[i];
-        if (this.isEdgeRotatable(edge)) {
-          let subTreeDepthA = this.graph.getTreeDepth(edge.sourceId, edge.targetId);
-          let subTreeDepthB = this.graph.getTreeDepth(edge.targetId, edge.sourceId);
-
-          // Only rotate the shorter subtree
-          let a = edge.targetId;
-          let b = edge.sourceId;
-
-          if (subTreeDepthA > subTreeDepthB) {
-            a = edge.sourceId;
-            b = edge.targetId;
-          }
-
-          let subTreeOverlap = this.getSubtreeOverlapScore(b, a, overlapScore.vertexScores);
-          if (subTreeOverlap.value > this.opts.overlapSensitivity) {
-            let vertexA = this.graph.vertices[a];
-            let vertexB = this.graph.vertices[b];
-            let neighboursB = vertexB.getNeighbours(a);
-
-            if (neighboursB.length === 1) {
-              let neighbour = this.graph.vertices[neighboursB[0]];
-              let angle = neighbour.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-
-              this.rotateSubtree(neighbour.id, vertexB.id, angle, vertexB.position);
-              // If the new overlap is bigger, undo change
-              let newTotalOverlapScore = this.getOverlapScore().total;
-
-              if (newTotalOverlapScore > this.totalOverlapScore) {
-                this.rotateSubtree(neighbour.id, vertexB.id, -angle, vertexB.position);
-              } else {
-                this.totalOverlapScore = newTotalOverlapScore;
-              }
-            } else if (neighboursB.length === 2) {
-              // Switch places / sides
-              // If vertex a is in a ring, do nothing
-              if (vertexB.value.rings.length !== 0 && vertexA.value.rings.length !== 0) {
-                continue;
-              }
-
-              let neighbourA = this.graph.vertices[neighboursB[0]];
-              let neighbourB = this.graph.vertices[neighboursB[1]];
-
-              if (neighbourA.value.rings.length === 1 && neighbourB.value.rings.length === 1) {
-                // Both neighbours in same ring. TODO: does this create problems with wedges? (up = down and vice versa?)
-                if (neighbourA.value.rings[0] !== neighbourB.value.rings[0]) {
-                  continue;
-                }
-                // TODO: Rotate circle
-              } else if (neighbourA.value.rings.length !== 0 || neighbourB.value.rings.length !== 0) {
-                continue;
-              } else {
-                let angleA = neighbourA.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-                let angleB = neighbourB.position.getRotateAwayFromAngle(vertexA.position, vertexB.position, MathHelper.toRad(120));
-
-                this.rotateSubtree(neighbourA.id, vertexB.id, angleA, vertexB.position);
-                this.rotateSubtree(neighbourB.id, vertexB.id, angleB, vertexB.position);
-
-                let newTotalOverlapScore = this.getOverlapScore().total;
-
-                if (newTotalOverlapScore > this.totalOverlapScore) {
-                  this.rotateSubtree(neighbourA.id, vertexB.id, -angleA, vertexB.position);
-                  this.rotateSubtree(neighbourB.id, vertexB.id, -angleB, vertexB.position);
-                } else {
-                  this.totalOverlapScore = newTotalOverlapScore;
-                }
-              }
-            }
-
-            overlapScore = this.getOverlapScore();
-          }
-        }
-      }
-    }
-
-    this.resolveSecondaryOverlaps(overlapScore.scores);
-
-    if (this.opts.isomeric) {
-      this.annotateStereochemistry();
-    }
-
-    // Initialize pseudo elements or shortcuts
-    if (this.opts.compactDrawing && this.opts.atomVisualization === 'default') {
-      this.initPseudoElements();
-    }
-
-    this.rotateDrawing();
+      this.graphProcessingManager.processGraph();
   }
 
   /**
@@ -723,31 +625,7 @@ class DrawerBase {
    * @returns {Boolean} A boolean indicating whether or not the edge is rotatable.
    */
   isEdgeRotatable(edge: any): boolean {
-    let vertexA = this.graph.vertices[edge.sourceId];
-    let vertexB = this.graph.vertices[edge.targetId];
-
-    // Only single bonds are rotatable
-    if (edge.bondType !== '-') {
-      return false;
-    }
-
-    // Do not rotate edges that have a further single bond to each side - do that!
-    // If the bond is terminal, it doesn't make sense to rotate it
-    // if (vertexA.getNeighbourCount() + vertexB.getNeighbourCount() < 5) {
-    //   return false;
-    // }
-
-    if (vertexA.isTerminal() || vertexB.isTerminal()) {
-      return false;
-    }
-
-    // Ringbonds are not rotatable
-    if (vertexA.value.rings.length > 0 && vertexB.value.rings.length > 0 &&
-      this.areVerticesInSameRing(vertexA, vertexB)) {
-      return false;
-    }
-
-    return true;
+      return this.graphProcessingManager.isEdgeRotatable(edge);
   }
 
   /**
@@ -874,6 +752,7 @@ class DrawerBase {
     private pseudoElementManager: PseudoElementManager;
     private molecularInfoManager: MolecularInfoManager;
     private initializationManager: InitializationManager;
+    private graphProcessingManager: GraphProcessingManager;
 }
 
 export = DrawerBase;
