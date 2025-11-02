@@ -1,8 +1,8 @@
 import Vector2 = require('../../graph/Vector2');
-import CanvasWrapper = require('../CanvasWrapper');
+import CanvasDrawer = require('../CanvasDrawer');
 
 class CanvasWedgeDrawer {
-  constructor(private wrapper: CanvasWrapper) {}
+  constructor(private wrapper: CanvasDrawer) {}
 
 
 

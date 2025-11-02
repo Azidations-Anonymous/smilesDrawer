@@ -5320,12 +5320,12 @@ const CanvasWedgeDrawer = require("./draw/CanvasWedgeDrawer");
 
 const CanvasPrimitiveDrawer = require("./draw/CanvasPrimitiveDrawer");
 
-const CanvasTextRenderer = require("./draw/CanvasTextRenderer");
+const CanvasTextDrawer = require("./draw/CanvasTextDrawer");
 /**
  * A class wrapping a canvas element.
  *
- * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasWrapper instance.
- * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasWrapper instance.
+ * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasDrawer instance.
+ * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasDrawer instance.
  * @property {Object} colors The colors object as defined in the SmilesDrawer options.
  * @property {Object} opts The SmilesDrawer options.
  * @property {Number} drawingWidth The width of the canvas.
@@ -5337,7 +5337,7 @@ const CanvasTextRenderer = require("./draw/CanvasTextRenderer");
  */
 
 
-class CanvasWrapper {
+class CanvasDrawer {
   /**
    * The constructor for the class CanvasWrapper.
    *
@@ -5368,7 +5368,7 @@ class CanvasWrapper {
     this.halfBondThickness = this.opts.bondThickness / 2.0;
     this.wedgeDrawer = new CanvasWedgeDrawer(this);
     this.primitiveDrawer = new CanvasPrimitiveDrawer(this);
-    this.textRenderer = new CanvasTextRenderer(this);
+    this.textDrawer = new CanvasTextDrawer(this);
   }
   /**
    * Update the width and height of the canvas
@@ -5533,18 +5533,18 @@ class CanvasWrapper {
   }
 
   drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement = {}) {
-    this.textRenderer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
+    this.textDrawer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
   }
 
   getChargeText(charge) {
-    return this.textRenderer.getChargeText(charge);
+    return this.textDrawer.getChargeText(charge);
   }
 
 }
 
-module.exports = CanvasWrapper;
+module.exports = CanvasDrawer;
 
-},{"./draw/CanvasPrimitiveDrawer":16,"./draw/CanvasTextRenderer":17,"./draw/CanvasWedgeDrawer":18}],11:[function(require,module,exports){
+},{"./draw/CanvasPrimitiveDrawer":16,"./draw/CanvasTextDrawer":17,"./draw/CanvasWedgeDrawer":18}],11:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5554,7 +5554,7 @@ const SvgDrawer = require("./SvgDrawer");
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
- * @property {CanvasWrapper} canvasWrapper The CanvasWrapper associated with this SmilesDrawer.Drawer instance.
+ * @property {CanvasDrawer} canvasDrawer The CanvasDrawer associated with this SmilesDrawer.Drawer instance.
  * @property {Number} totalOverlapScore The current internal total overlap score.
  * @property {Object} defaultOptions The default options.
  * @property {Object} opts The merged options.
@@ -5634,7 +5634,7 @@ const Line = require("../graph/Line");
 
 const ThemeManager = require("../config/ThemeManager");
 
-const CanvasWrapper = require("./CanvasWrapper");
+const CanvasDrawer = require("./CanvasDrawer");
 
 const Atom = require("../graph/Atom");
 
@@ -5648,7 +5648,7 @@ class DrawingManager {
 
     if (!this.drawer.infoOnly) {
       this.drawer.themeManager = new ThemeManager(this.drawer.opts.themes, themeName);
-      this.drawer.canvasWrapper = new CanvasWrapper(target, this.drawer.themeManager, this.drawer.opts);
+      this.drawer.canvasWrapper = new CanvasDrawer(target, this.drawer.themeManager, this.drawer.opts);
     }
 
     if (!infoOnly) {
@@ -5956,7 +5956,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":25,"../graph/Line":30,"../graph/Vector2":33,"../utils/ArrayHelper":49,"./CanvasWrapper":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":25,"../graph/Line":30,"../graph/Vector2":33,"../utils/ArrayHelper":49,"./CanvasDrawer":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -7303,7 +7303,7 @@ module.exports = CanvasPrimitiveDrawer;
 
 const MathHelper = require("../../utils/MathHelper");
 
-class CanvasTextRenderer {
+class CanvasTextDrawer {
   constructor(wrapper) {
     this.wrapper = wrapper;
   }
@@ -7616,7 +7616,7 @@ class CanvasTextRenderer {
 
 }
 
-module.exports = CanvasTextRenderer;
+module.exports = CanvasTextDrawer;
 
 },{"../../utils/MathHelper":51}],18:[function(require,module,exports){
 "use strict";
@@ -14024,7 +14024,7 @@ const RingManager = require("./RingManager");
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
- * @property {CanvasWrapper} canvasWrapper The CanvasWrapper associated with this SmilesDrawer.Drawer instance.
+ * @property {CanvasDrawer} canvasDrawer The CanvasDrawer associated with this SmilesDrawer.Drawer instance.
  * @property {Number} totalOverlapScore The current internal total overlap score.
  * @property {Object} defaultOptions The default options.
  * @property {Object} opts The merged options.

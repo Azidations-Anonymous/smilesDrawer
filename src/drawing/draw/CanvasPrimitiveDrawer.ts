@@ -1,8 +1,8 @@
 import MathHelper = require('../../utils/MathHelper');
-import CanvasWrapper = require('../CanvasWrapper');
+import CanvasDrawer = require('../CanvasDrawer');
 
 class CanvasPrimitiveDrawer {
-  constructor(private wrapper: CanvasWrapper) {}
+  constructor(private wrapper: CanvasDrawer) {}
 
 
 

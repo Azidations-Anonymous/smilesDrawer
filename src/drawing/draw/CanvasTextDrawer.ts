@@ -1,8 +1,8 @@
 import MathHelper = require('../../utils/MathHelper');
-import CanvasWrapper = require('../CanvasWrapper');
+import CanvasDrawer = require('../CanvasDrawer');
 
-class CanvasTextRenderer {
-  constructor(private wrapper: CanvasWrapper) {}
+class CanvasTextDrawer {
+  constructor(private wrapper: CanvasDrawer) {}
 
 
 
@@ -335,4 +335,4 @@ class CanvasTextRenderer {
     }
 }
 
-export = CanvasTextRenderer;
+export = CanvasTextDrawer;

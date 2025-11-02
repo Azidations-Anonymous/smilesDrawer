@@ -6,7 +6,7 @@ import SvgDrawer = require('./SvgDrawer');
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
  * @property {Number} ringConnectionIdCounter An internal counter to keep track of ring connection ids.
- * @property {CanvasWrapper} canvasWrapper The CanvasWrapper associated with this SmilesDrawer.Drawer instance.
+ * @property {CanvasDrawer} canvasDrawer The CanvasDrawer associated with this SmilesDrawer.Drawer instance.
  * @property {Number} totalOverlapScore The current internal total overlap score.
  * @property {Object} defaultOptions The default options.
  * @property {Object} opts The merged options.

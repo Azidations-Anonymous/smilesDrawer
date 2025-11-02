@@ -6,13 +6,13 @@ import Vertex = require('../graph/Vertex');
 import Ring = require('../graph/Ring');
 import CanvasWedgeDrawer = require('./draw/CanvasWedgeDrawer');
 import CanvasPrimitiveDrawer = require('./draw/CanvasPrimitiveDrawer');
-import CanvasTextRenderer = require('./draw/CanvasTextRenderer');
+import CanvasTextDrawer = require('./draw/CanvasTextDrawer');
 
 /**
  * A class wrapping a canvas element.
  *
- * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasWrapper instance.
- * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasWrapper instance.
+ * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasDrawer instance.
+ * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasDrawer instance.
  * @property {Object} colors The colors object as defined in the SmilesDrawer options.
  * @property {Object} opts The SmilesDrawer options.
  * @property {Number} drawingWidth The width of the canvas.
@@ -22,7 +22,7 @@ import CanvasTextRenderer = require('./draw/CanvasTextRenderer');
  * @property {Number} fontLarge The large font size in pt.
  * @property {Number} fontSmall The small font size in pt.
  */
-class CanvasWrapper {
+class CanvasDrawer {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D | null;
     themeManager: any;
@@ -42,7 +42,7 @@ class CanvasWrapper {
     colors: any;
     private wedgeDrawer: CanvasWedgeDrawer;
     private primitiveDrawer: CanvasPrimitiveDrawer;
-    private textRenderer: CanvasTextRenderer;
+    private textDrawer: CanvasTextDrawer;
 
     /**
      * The constructor for the class CanvasWrapper.
@@ -78,7 +78,7 @@ class CanvasWrapper {
 
                 this.wedgeDrawer = new CanvasWedgeDrawer(this);
                 this.primitiveDrawer = new CanvasPrimitiveDrawer(this);
-                this.textRenderer = new CanvasTextRenderer(this);
+                this.textDrawer = new CanvasTextDrawer(this);
     }
 
     /**
@@ -243,12 +243,12 @@ class CanvasWrapper {
     }
 
     drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: any = {}): void {
-        this.textRenderer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
+        this.textDrawer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
     }
 
     getChargeText(charge: number): string {
-        return this.textRenderer.getChargeText(charge);
+        return this.textDrawer.getChargeText(charge);
     }
 }
 
-export = CanvasWrapper;
+export = CanvasDrawer;

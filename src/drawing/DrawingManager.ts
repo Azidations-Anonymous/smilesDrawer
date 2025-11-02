@@ -5,7 +5,7 @@ import ArrayHelper = require("../utils/ArrayHelper");
 import Line = require("../graph/Line");
 import Edge = require("../graph/Edge");
 import ThemeManager = require("../config/ThemeManager");
-import CanvasWrapper = require("./CanvasWrapper");
+import CanvasDrawer = require("./CanvasDrawer");
 import Atom = require("../graph/Atom");
 class DrawingManager {
     private drawer: MolecularPreprocessor;
@@ -19,7 +19,7 @@ class DrawingManager {
 
         if (!this.drawer.infoOnly) {
           this.drawer.themeManager = new ThemeManager(this.drawer.opts.themes, themeName);
-          this.drawer.canvasWrapper = new CanvasWrapper(target, this.drawer.themeManager, this.drawer.opts);
+          this.drawer.canvasWrapper = new CanvasDrawer(target, this.drawer.themeManager, this.drawer.opts);
         }
 
         if (!infoOnly) {
