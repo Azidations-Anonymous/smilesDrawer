@@ -132,7 +132,7 @@ SmilesDrawer includes comprehensive regression testing to ensure changes don't b
 
 #### Regression Testing
 
-Run fail-early regression tests that stop at the first difference:
+Run fail-early regression tests using the fast regression dataset:
 
 ```bash
 npm run test:regression
@@ -144,13 +144,13 @@ Compare against a specific commit or branch:
 npm run test:regression <commit/branch>
 ```
 
-Run full regression suite without stopping at first failure:
+Run against all datasets (not just fastregression):
 
 ```bash
 npm run test:regression -- --full
 ```
 
-Or compare against a specific commit with full output:
+Or compare against a specific commit using all datasets:
 
 ```bash
 npm run test:regression <commit/branch> -- --full
