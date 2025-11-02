@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":7,"./src/GaussDrawer":11,"./src/Parser":22,"./src/ReactionDrawer":27,"./src/ReactionParser":28,"./src/SmilesDrawer":33,"./src/SvgDrawer":35}],2:[function(require,module,exports){
+},{"./src/Drawer":8,"./src/GaussDrawer":12,"./src/Parser":23,"./src/ReactionDrawer":28,"./src/ReactionParser":29,"./src/SmilesDrawer":34,"./src/SvgDrawer":36}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4703,6 +4703,195 @@ class Atom {
 module.exports = Atom;
 
 },{"./ArrayHelper":3}],5:[function(require,module,exports){
+"use strict";
+
+const ArrayHelper = require("./ArrayHelper");
+
+const RingConnection = require("./RingConnection");
+
+const Ring = require("./Ring");
+
+class BridgedRingHandler {
+  constructor(ringManager) {
+    this.ringManager = ringManager;
+  }
+
+  getBridgedRingRings(ringId) {
+    let involvedRings = Array();
+    let that = this;
+
+    let recurse = function (r) {
+      let ring = that.ringManager.getRing(r);
+      involvedRings.push(r);
+
+      for (var i = 0; i < ring.neighbours.length; i++) {
+        let n = ring.neighbours[i];
+
+        if (involvedRings.indexOf(n) === -1 && n !== r && RingConnection.isBridge(that.ringManager.ringConnections, that.ringManager.drawer.graph.vertices, r, n)) {
+          recurse(n);
+        }
+      }
+    };
+
+    recurse(ringId);
+    return ArrayHelper.unique(involvedRings);
+  }
+
+  isPartOfBridgedRing(ringId) {
+    for (var i = 0; i < this.ringManager.ringConnections.length; i++) {
+      if (this.ringManager.ringConnections[i].containsRing(ringId) && this.ringManager.ringConnections[i].isBridge(this.ringManager.drawer.graph.vertices)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  createBridgedRing(ringIds, sourceVertexId) {
+    let ringMembers = new Set();
+    let vertices = new Set();
+    let neighbours = new Set();
+
+    for (var i = 0; i < ringIds.length; i++) {
+      let ring = this.ringManager.getRing(ringIds[i]);
+      ring.isPartOfBridged = true;
+
+      for (var j = 0; j < ring.members.length; j++) {
+        vertices.add(ring.members[j]);
+      }
+
+      for (var j = 0; j < ring.neighbours.length; j++) {
+        let id = ring.neighbours[j];
+
+        if (ringIds.indexOf(id) === -1) {
+          neighbours.add(ring.neighbours[j]);
+        }
+      }
+    } // A vertex is part of the bridged ring if it only belongs to
+    // one of the rings (or to another ring
+    // which is not part of the bridged ring).
+
+
+    let leftovers = new Set();
+
+    for (let id of vertices) {
+      let vertex = this.ringManager.drawer.graph.vertices[id];
+      let intersection = ArrayHelper.intersection(ringIds, vertex.value.rings);
+
+      if (vertex.value.rings.length === 1 || intersection.length === 1) {
+        ringMembers.add(vertex.id);
+      } else {
+        leftovers.add(vertex.id);
+      }
+    } // Vertices can also be part of multiple rings and lay on the bridged ring,
+    // however, they have to have at least two neighbours that are not part of
+    // two rings
+
+
+    let tmp = Array();
+    let insideRing = Array();
+
+    for (let id of leftovers) {
+      let vertex = this.ringManager.drawer.graph.vertices[id];
+      let onRing = false;
+
+      for (let j = 0; j < vertex.edges.length; j++) {
+        if (this.ringManager.edgeRingCount(vertex.edges[j]) === 1) {
+          onRing = true;
+        }
+      }
+
+      if (onRing) {
+        vertex.value.isBridgeNode = true;
+        ringMembers.add(vertex.id);
+      } else {
+        vertex.value.isBridge = true;
+        ringMembers.add(vertex.id);
+      }
+    } // Create the ring
+
+
+    let ring = new Ring([...ringMembers]);
+    this.ringManager.addRing(ring);
+    ring.isBridged = true;
+    ring.neighbours = [...neighbours];
+
+    for (var i = 0; i < ringIds.length; i++) {
+      ring.rings.push(this.ringManager.getRing(ringIds[i]).clone());
+    }
+
+    for (var i = 0; i < ring.members.length; i++) {
+      this.ringManager.drawer.graph.vertices[ring.members[i]].value.bridgedRing = ring.id;
+    } // Atoms inside the ring are no longer part of a ring but are now
+    // associated with the bridged ring
+
+
+    for (var i = 0; i < insideRing.length; i++) {
+      let vertex = this.ringManager.drawer.graph.vertices[insideRing[i]];
+      vertex.value.rings = Array();
+    } // Remove former rings from members of the bridged ring and add the bridged ring
+
+
+    for (let id of ringMembers) {
+      let vertex = this.ringManager.drawer.graph.vertices[id];
+      vertex.value.rings = ArrayHelper.removeAll(vertex.value.rings, ringIds);
+      vertex.value.rings.push(ring.id);
+    } // Remove all the ring connections no longer used
+
+
+    for (var i = 0; i < ringIds.length; i++) {
+      for (var j = i + 1; j < ringIds.length; j++) {
+        this.ringManager.removeRingConnectionsBetween(ringIds[i], ringIds[j]);
+      }
+    } // Update the ring connections and add this ring to the neighbours neighbours
+
+
+    for (let id of neighbours) {
+      let connections = this.ringManager.getRingConnections(id, ringIds);
+
+      for (var j = 0; j < connections.length; j++) {
+        this.ringManager.getRingConnection(connections[j]).updateOther(ring.id, id);
+      }
+
+      this.ringManager.getRing(id).neighbours.push(ring.id);
+    }
+
+    return ring;
+  }
+
+  processBridgedRingsInInitRings() {
+    while (this.ringManager.rings.length > 0) {
+      let id = -1;
+
+      for (var i = 0; i < this.ringManager.rings.length; i++) {
+        let ring = this.ringManager.rings[i];
+
+        if (this.isPartOfBridgedRing(ring.id) && !ring.isBridged) {
+          id = ring.id;
+        }
+      }
+
+      if (id === -1) {
+        break;
+      }
+
+      let ring = this.ringManager.getRing(id);
+      let involvedRings = this.getBridgedRingRings(ring.id);
+      this.ringManager.bridgedRing = true;
+      this.createBridgedRing(involvedRings, ring.members[0]);
+      this.ringManager.bridgedRing = false;
+
+      for (var i = 0; i < involvedRings.length; i++) {
+        this.ringManager.removeRing(involvedRings[i]);
+      }
+    }
+  }
+
+}
+
+module.exports = BridgedRingHandler;
+
+},{"./ArrayHelper":3,"./Ring":30,"./RingConnection":31}],6:[function(require,module,exports){
 "use strict"; //@ts-check
 
 const MathHelper = require("./MathHelper");
@@ -5526,7 +5715,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":16,"./Vector2":38}],6:[function(require,module,exports){
+},{"./MathHelper":17,"./Vector2":39}],7:[function(require,module,exports){
 "use strict";
 
 function getDefaultOptions() {
@@ -5750,7 +5939,7 @@ function getDefaultOptions() {
 
 module.exports = getDefaultOptions;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5829,7 +6018,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":35}],8:[function(require,module,exports){
+},{"./SvgDrawer":36}],9:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -6162,7 +6351,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Line":15,"./ThemeManager":37,"./Vector2":38}],9:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":6,"./Line":16,"./ThemeManager":38,"./Vector2":39}],10:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -6228,7 +6417,7 @@ class Edge {
 
 module.exports = Edge;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -6266,7 +6455,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6450,7 +6639,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":23,"./Vector2":38,"chroma-js":2}],12:[function(require,module,exports){
+},{"./PixelsToSvg":24,"./Vector2":39,"chroma-js":2}],13:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -7408,7 +7597,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":9,"./MathHelper":16,"./Vertex":39}],13:[function(require,module,exports){
+},{"./Atom":4,"./Edge":10,"./MathHelper":17,"./Vertex":40}],14:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -7545,7 +7734,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"./MathHelper":16}],14:[function(require,module,exports){
+},{"./MathHelper":17}],15:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -7600,7 +7789,7 @@ class InitializationManager {
 
 module.exports = InitializationManager;
 
-},{"./Graph":12}],15:[function(require,module,exports){
+},{"./Graph":13}],16:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -7908,7 +8097,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":38}],16:[function(require,module,exports){
+},{"./Vector2":39}],17:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -8081,7 +8270,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -8173,7 +8362,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"./Atom":4,"./Graph":12}],18:[function(require,module,exports){
+},{"./Atom":4,"./Graph":13}],19:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -8405,7 +8594,7 @@ class MolecularPreprocessor {
 
 
   getBridgedRingRings(ringId) {
-    return this.ringManager.getBridgedRingRings(ringId);
+    return this.ringManager.bridgedRingHandler.getBridgedRingRings(ringId);
   }
   /**
    * Checks whether or not a ring is part of a bridged ring.
@@ -8416,7 +8605,7 @@ class MolecularPreprocessor {
 
 
   isPartOfBridgedRing(ringId) {
-    return this.ringManager.isPartOfBridgedRing(ringId);
+    return this.ringManager.bridgedRingHandler.isPartOfBridgedRing(ringId);
   }
   /**
    * Creates a bridged ring.
@@ -8428,7 +8617,7 @@ class MolecularPreprocessor {
 
 
   createBridgedRing(ringIds, sourceVertexId) {
-    return this.ringManager.createBridgedRing(ringIds, sourceVertexId);
+    return this.ringManager.bridgedRingHandler.createBridgedRing(ringIds, sourceVertexId);
   }
   /**
    * Checks whether or not two vertices are in the same ring.
@@ -8961,7 +9150,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"./DrawingManager":8,"./GraphProcessingManager":13,"./InitializationManager":14,"./MolecularInfoManager":17,"./OptionsManager":20,"./OverlapResolutionManager":21,"./PositioningManager":24,"./PseudoElementManager":25,"./RingManager":31,"./StereochemistryManager":34}],19:[function(require,module,exports){
+},{"./DrawingManager":9,"./GraphProcessingManager":14,"./InitializationManager":15,"./MolecularInfoManager":18,"./OptionsManager":21,"./OverlapResolutionManager":22,"./PositioningManager":25,"./PseudoElementManager":26,"./RingManager":32,"./StereochemistryManager":35}],20:[function(require,module,exports){
 "use strict";
 
 class Options {
@@ -9008,7 +9197,7 @@ class Options {
 
 module.exports = Options;
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -9038,7 +9227,7 @@ class OptionsManager {
 
 module.exports = OptionsManager;
 
-},{"./DefaultOptions":6,"./Options":19}],21:[function(require,module,exports){
+},{"./DefaultOptions":7,"./Options":20}],22:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9340,7 +9529,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"./ArrayHelper":3,"./MathHelper":16,"./Vector2":38}],22:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":17,"./Vector2":39}],23:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -11238,7 +11427,7 @@ module.exports = function () {
   };
 }();
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
@@ -11360,7 +11549,7 @@ function convertImage(img) {
 
 module.exports = convertImage;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -11825,7 +12014,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"./ArrayHelper":3,"./MathHelper":16,"./Vector2":38}],25:[function(require,module,exports){
+},{"./ArrayHelper":3,"./MathHelper":17,"./Vector2":39}],26:[function(require,module,exports){
 "use strict";
 
 const Atom = require("./Atom");
@@ -11954,7 +12143,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"./Atom":4}],26:[function(require,module,exports){
+},{"./Atom":4}],27:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -12010,7 +12199,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"./Parser":22}],27:[function(require,module,exports){
+},{"./Parser":23}],28:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -12382,7 +12571,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":10,"./Options":19,"./SvgDrawer":35,"./SvgWrapper":36,"./ThemeManager":37}],28:[function(require,module,exports){
+},{"./FormulaToCommonName":11,"./Options":20,"./SvgDrawer":36,"./SvgWrapper":37,"./ThemeManager":38}],29:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12403,7 +12592,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"./Reaction":26}],29:[function(require,module,exports){
+},{"./Reaction":27}],30:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("./ArrayHelper");
@@ -12622,7 +12811,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":30,"./Vector2":38}],30:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":31,"./Vector2":39}],31:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -12790,7 +12979,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -12807,6 +12996,8 @@ const RingConnection = require("./RingConnection");
 
 const SSSR = require("./SSSR");
 
+const BridgedRingHandler = require("./BridgedRingHandler");
+
 class RingManager {
   constructor(drawer) {
     this.ringIdCounter = 0;
@@ -12817,6 +13008,7 @@ class RingManager {
     this.originalRingConnections = [];
     this.bridgedRing = false;
     this.drawer = drawer;
+    this.bridgedRingHandler = new BridgedRingHandler(this);
   }
 
   edgeRingCount(edgeId) {
@@ -13001,174 +13193,7 @@ class RingManager {
 
     this.backupRingInformation(); // Replace rings contained by a larger bridged ring with a bridged ring
 
-    while (this.rings.length > 0) {
-      let id = -1;
-
-      for (var i = 0; i < this.rings.length; i++) {
-        let ring = this.rings[i];
-
-        if (this.isPartOfBridgedRing(ring.id) && !ring.isBridged) {
-          id = ring.id;
-        }
-      }
-
-      if (id === -1) {
-        break;
-      }
-
-      let ring = this.getRing(id);
-      let involvedRings = this.getBridgedRingRings(ring.id);
-      this.bridgedRing = true;
-      this.createBridgedRing(involvedRings, ring.members[0]);
-      this.bridgedRing = false; // Remove the rings
-
-      for (var i = 0; i < involvedRings.length; i++) {
-        this.removeRing(involvedRings[i]);
-      }
-    }
-  }
-
-  getBridgedRingRings(ringId) {
-    let involvedRings = Array();
-    let that = this;
-
-    let recurse = function (r) {
-      let ring = that.getRing(r);
-      involvedRings.push(r);
-
-      for (var i = 0; i < ring.neighbours.length; i++) {
-        let n = ring.neighbours[i];
-
-        if (involvedRings.indexOf(n) === -1 && n !== r && RingConnection.isBridge(that.ringConnections, that.drawer.graph.vertices, r, n)) {
-          recurse(n);
-        }
-      }
-    };
-
-    recurse(ringId);
-    return ArrayHelper.unique(involvedRings);
-  }
-
-  isPartOfBridgedRing(ringId) {
-    for (var i = 0; i < this.ringConnections.length; i++) {
-      if (this.ringConnections[i].containsRing(ringId) && this.ringConnections[i].isBridge(this.drawer.graph.vertices)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  createBridgedRing(ringIds, sourceVertexId) {
-    let ringMembers = new Set();
-    let vertices = new Set();
-    let neighbours = new Set();
-
-    for (var i = 0; i < ringIds.length; i++) {
-      let ring = this.getRing(ringIds[i]);
-      ring.isPartOfBridged = true;
-
-      for (var j = 0; j < ring.members.length; j++) {
-        vertices.add(ring.members[j]);
-      }
-
-      for (var j = 0; j < ring.neighbours.length; j++) {
-        let id = ring.neighbours[j];
-
-        if (ringIds.indexOf(id) === -1) {
-          neighbours.add(ring.neighbours[j]);
-        }
-      }
-    } // A vertex is part of the bridged ring if it only belongs to
-    // one of the rings (or to another ring
-    // which is not part of the bridged ring).
-
-
-    let leftovers = new Set();
-
-    for (let id of vertices) {
-      let vertex = this.drawer.graph.vertices[id];
-      let intersection = ArrayHelper.intersection(ringIds, vertex.value.rings);
-
-      if (vertex.value.rings.length === 1 || intersection.length === 1) {
-        ringMembers.add(vertex.id);
-      } else {
-        leftovers.add(vertex.id);
-      }
-    } // Vertices can also be part of multiple rings and lay on the bridged ring,
-    // however, they have to have at least two neighbours that are not part of
-    // two rings
-
-
-    let tmp = Array();
-    let insideRing = Array();
-
-    for (let id of leftovers) {
-      let vertex = this.drawer.graph.vertices[id];
-      let onRing = false;
-
-      for (let j = 0; j < vertex.edges.length; j++) {
-        if (this.edgeRingCount(vertex.edges[j]) === 1) {
-          onRing = true;
-        }
-      }
-
-      if (onRing) {
-        vertex.value.isBridgeNode = true;
-        ringMembers.add(vertex.id);
-      } else {
-        vertex.value.isBridge = true;
-        ringMembers.add(vertex.id);
-      }
-    } // Create the ring
-
-
-    let ring = new Ring([...ringMembers]);
-    this.addRing(ring);
-    ring.isBridged = true;
-    ring.neighbours = [...neighbours];
-
-    for (var i = 0; i < ringIds.length; i++) {
-      ring.rings.push(this.getRing(ringIds[i]).clone());
-    }
-
-    for (var i = 0; i < ring.members.length; i++) {
-      this.drawer.graph.vertices[ring.members[i]].value.bridgedRing = ring.id;
-    } // Atoms inside the ring are no longer part of a ring but are now
-    // associated with the bridged ring
-
-
-    for (var i = 0; i < insideRing.length; i++) {
-      let vertex = this.drawer.graph.vertices[insideRing[i]];
-      vertex.value.rings = Array();
-    } // Remove former rings from members of the bridged ring and add the bridged ring
-
-
-    for (let id of ringMembers) {
-      let vertex = this.drawer.graph.vertices[id];
-      vertex.value.rings = ArrayHelper.removeAll(vertex.value.rings, ringIds);
-      vertex.value.rings.push(ring.id);
-    } // Remove all the ring connections no longer used
-
-
-    for (var i = 0; i < ringIds.length; i++) {
-      for (var j = i + 1; j < ringIds.length; j++) {
-        this.removeRingConnectionsBetween(ringIds[i], ringIds[j]);
-      }
-    } // Update the ring connections and add this ring to the neighbours neighbours
-
-
-    for (let id of neighbours) {
-      let connections = this.getRingConnections(id, ringIds);
-
-      for (var j = 0; j < connections.length; j++) {
-        this.getRingConnection(connections[j]).updateOther(ring.id, id);
-      }
-
-      this.getRing(id).neighbours.push(ring.id);
-    }
-
-    return ring;
+    this.bridgedRingHandler.processBridgedRingsInInitRings();
   }
 
   areVerticesInSameRing(vertexA, vertexB) {
@@ -13575,7 +13600,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":9,"./MathHelper":16,"./Ring":29,"./RingConnection":30,"./SSSR":32,"./Vector2":38}],32:[function(require,module,exports){
+},{"./ArrayHelper":3,"./BridgedRingHandler":5,"./Edge":10,"./MathHelper":17,"./Ring":30,"./RingConnection":31,"./SSSR":33,"./Vector2":39}],33:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -14185,7 +14210,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":12}],33:[function(require,module,exports){
+},{"./Graph":13}],34:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14531,7 +14556,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":19,"./Parser":22,"./ReactionDrawer":27,"./ReactionParser":28,"./SvgDrawer":35,"./SvgWrapper":36}],34:[function(require,module,exports){
+},{"./Options":20,"./Parser":23,"./ReactionDrawer":28,"./ReactionParser":29,"./SvgDrawer":36,"./SvgWrapper":37}],35:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -14755,7 +14780,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"./MathHelper":16}],35:[function(require,module,exports){
+},{"./MathHelper":17}],36:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -15223,7 +15248,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./GaussDrawer":11,"./Line":15,"./MolecularPreprocessor":18,"./SvgWrapper":36,"./ThemeManager":37,"./Vector2":38}],36:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./GaussDrawer":12,"./Line":16,"./MolecularPreprocessor":19,"./SvgWrapper":37,"./ThemeManager":38,"./Vector2":39}],37:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -16200,7 +16225,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":15,"./MathHelper":16,"./Vector2":38}],37:[function(require,module,exports){
+},{"./Line":16,"./MathHelper":17,"./Vector2":39}],38:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -16248,7 +16273,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16868,7 +16893,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -17245,5 +17270,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":16,"./Vector2":38}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":17,"./Vector2":39}]},{},[1])
 

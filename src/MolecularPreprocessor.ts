@@ -224,7 +224,7 @@ class MolecularPreprocessor {
    * @returns {Number[]} An array containing all ring ids of rings part of a bridged ring system.
    */
   getBridgedRingRings(ringId: number): number[] {
-      return this.ringManager.getBridgedRingRings(ringId);
+      return this.ringManager.bridgedRingHandler.getBridgedRingRings(ringId);
   }
 
   /**
@@ -234,7 +234,7 @@ class MolecularPreprocessor {
    * @returns {Boolean} A boolean indicating whether or not the supplied ring (by id) is part of a bridged ring system.
    */
   isPartOfBridgedRing(ringId: number): boolean {
-      return this.ringManager.isPartOfBridgedRing(ringId);
+      return this.ringManager.bridgedRingHandler.isPartOfBridgedRing(ringId);
   }
 
   /**
@@ -245,7 +245,7 @@ class MolecularPreprocessor {
    * @returns {Ring} The bridged ring.
    */
   createBridgedRing(ringIds: number[], sourceVertexId: number): any {
-      return this.ringManager.createBridgedRing(ringIds, sourceVertexId);
+      return this.ringManager.bridgedRingHandler.createBridgedRing(ringIds, sourceVertexId);
   }
 
   /**
