@@ -227,24 +227,9 @@ class PositioningManager {
 
               this.createNextBond(nextVertex, vertex, previousAngle + nextVertex.angle);
             } else {
-              let a = vertex.angle;
-              // Take the min and max if the previous angle was in a 4-neighbourhood (90° angles)
-              // TODO: If a is null or zero, it should be checked whether or not this one should go cis or trans, that is,
-              //       it should go into the oposite direction of the last non-null or 0 previous vertex / angle.
-              if (previousVertex && previousVertex.neighbours.length > 3) {
-                if (a > 0) {
-                  a = Math.min(1.0472, a);
-                } else if (a < 0) {
-                  a = Math.max(-1.0472, a);
-                } else {
-                  a = 1.0472;
-                }
-              } else if (!a) {
-                a = this.getLastAngle(vertex.id);
-                if (!a) {
-                  a = 1.0472;
-                }
-              }
+              // Always use 120° angles (1.0472 rad), choosing sign based on last angle direction
+              let a = this.getLastAngle(vertex.id);
+              a = (a >= 0) ? 1.0472 : -1.0472;
 
               // Handle configuration around double bonds
               if (previousVertex && !doubleBondConfigSet) {
