@@ -1,6 +1,7 @@
 import StereochemistryManager from "./StereochemistryManager";
 import OverlapResolutionManager from "./OverlapResolutionManager";
 import PositioningManager from "./PositioningManager";
+import DrawingManager from "./DrawingManager";
 
 import RingManager = require("./RingManager");
 
@@ -55,6 +56,7 @@ class DrawerBase {
       this.stereochemistryManager = new StereochemistryManager(this);
       this.overlapResolver = new OverlapResolutionManager(this);
       this.positioningManager = new PositioningManager(this);
+      this.drawingManager = new DrawingManager(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -300,30 +302,7 @@ class DrawerBase {
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
    */
   draw(data: any, target: any, themeName: string = 'light', infoOnly: boolean = false): void {
-    this.initDraw(data, themeName, infoOnly, null);
-
-    if (!this.infoOnly) {
-      this.themeManager = new ThemeManager(this.opts.themes, themeName);
-      this.canvasWrapper = new CanvasWrapper(target, this.themeManager, this.opts);
-    }
-
-    if (!infoOnly) {
-      this.processGraph();
-
-      // Set the canvas to the appropriate size
-      this.canvasWrapper.scale(this.graph.vertices);
-
-      // Do the actual drawing
-      this.drawEdges(this.opts.debug);
-      this.drawVertices(this.opts.debug);
-      this.canvasWrapper.reset();
-
-      if (this.opts.debug) {
-        console.log(this.graph);
-        console.log(this.rings);
-        console.log(this.ringConnections);
-      }
-    }
+      this.drawingManager.draw(data, target, themeName, infoOnly);
   }
 
   /**
@@ -376,61 +355,7 @@ class DrawerBase {
    * Rotates the drawing to make the widest dimension horizontal.
    */
   rotateDrawing(): void {
-    // Rotate the vertices to make the molecule align horizontally
-    // Find the longest distance
-    let a = 0;
-    let b = 0;
-    let maxDist = 0;
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertexA = this.graph.vertices[i];
-
-      if (!vertexA.value.isDrawn) {
-        continue;
-      }
-
-      for (var j = i + 1; j < this.graph.vertices.length; j++) {
-        let vertexB = this.graph.vertices[j];
-
-        if (!vertexB.value.isDrawn) {
-          continue;
-        }
-
-        let dist = vertexA.position.distanceSq(vertexB.position);
-
-        if (dist > maxDist) {
-          maxDist = dist;
-          a = i;
-          b = j;
-        }
-      }
-    }
-
-    let angle = -Vector2.subtract(this.graph.vertices[a].position, this.graph.vertices[b].position).angle();
-
-    if (!isNaN(angle)) {
-      // Round to 30 degrees
-      let remainder = angle % 0.523599;
-
-      // Round either up or down in 30 degree steps
-      if (remainder < 0.2617995) {
-        angle = angle - remainder;
-      } else {
-        angle += 0.523599 - remainder;
-      }
-
-      // Finally, rotate everything
-      for (var i = 0; i < this.graph.vertices.length; i++) {
-        if (i === b) {
-          continue;
-        }
-
-        this.graph.vertices[i].position.rotateAround(angle, this.graph.vertices[b].position);
-      }
-
-      for (var i = 0; i < this.rings.length; i++) {
-        this.rings[i].center.rotateAround(angle, this.graph.vertices[b].position);
-      }
-    }
+      this.drawingManager.rotateDrawing();
   }
 
   /**
@@ -940,31 +865,7 @@ class DrawerBase {
    * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
    */
   drawEdges(debug: boolean): void {
-    let that = this;
-    let drawn = Array(this.graph.edges.length);
-    drawn.fill(false);
-
-    this.graph.traverseBF(0, function (vertex) {
-      let edges = that.graph.getEdges(vertex.id);
-      for (var i = 0; i < edges.length; i++) {
-        let edgeId = edges[i];
-        if (!drawn[edgeId]) {
-          drawn[edgeId] = true;
-          that.drawEdge(edgeId, debug);
-        }
-      }
-    });
-
-    // Draw ring for implicitly defined aromatic rings
-    if (!this.bridgedRing) {
-      for (var i = 0; i < this.rings.length; i++) {
-        let ring = this.rings[i];
-
-        if (this.isRingAromatic(ring)) {
-          this.canvasWrapper.drawAromaticityRing(ring);
-        }
-      }
-    }
+      this.drawingManager.drawEdges(debug);
   }
 
   /**
@@ -974,152 +875,7 @@ class DrawerBase {
    * @param {Boolean} debug A boolean indicating whether or not to draw debug helpers.
    */
   drawEdge(edgeId: number, debug: boolean): void {
-    let that = this;
-    let edge = this.graph.edges[edgeId];
-    let vertexA = this.graph.vertices[edge.sourceId];
-    let vertexB = this.graph.vertices[edge.targetId];
-    let elementA = vertexA.value.element;
-    let elementB = vertexB.value.element;
-
-    if ((!vertexA.value.isDrawn || !vertexB.value.isDrawn) && this.opts.atomVisualization === 'default') {
-      return;
-    }
-
-    let a = vertexA.position;
-    let b = vertexB.position;
-    let normals = this.getEdgeNormals(edge);
-
-    // Create a point on each side of the line
-    let sides = ArrayHelper.clone(normals) as any[];
-
-    sides[0].multiplyScalar(10).add(a);
-    sides[1].multiplyScalar(10).add(a);
-
-    if (edge.bondType === '=' || this.getRingbondType(vertexA, vertexB) === '=' ||
-      (edge.isPartOfAromaticRing && this.bridgedRing)) {
-      // Always draw double bonds inside the ring
-      let inRing = this.areVerticesInSameRing(vertexA, vertexB);
-      let s = this.chooseSide(vertexA, vertexB, sides);
-
-      if (inRing) {
-        // Always draw double bonds inside a ring
-        // if the bond is shared by two rings, it is drawn in the larger
-        // problem: smaller ring is aromatic, bond is still drawn in larger -> fix this
-        let lcr = this.getLargestOrAromaticCommonRing(vertexA, vertexB);
-        let center = lcr.center;
-
-        normals[0].multiplyScalar(that.opts.bondSpacing);
-        normals[1].multiplyScalar(that.opts.bondSpacing);
-
-        // Choose the normal that is on the same side as the center
-        let line = null;
-
-        if (center.sameSideAs(vertexA.position, vertexB.position, Vector2.add(a, normals[0]))) {
-          line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-        } else {
-          line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-        }
-
-        line.shorten(this.opts.bondLength - this.opts.shortBondLength * this.opts.bondLength);
-
-        // The shortened edge
-        if (edge.isPartOfAromaticRing) {
-          this.canvasWrapper.drawLine(line, true);
-        } else {
-          this.canvasWrapper.drawLine(line);
-        }
-
-        // The normal edge
-        this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else if (edge.center || vertexA.isTerminal() && vertexB.isTerminal()) {
-        normals[0].multiplyScalar(that.opts.halfBondSpacing);
-        normals[1].multiplyScalar(that.opts.halfBondSpacing);
-
-        let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-        let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-
-        this.canvasWrapper.drawLine(lineA);
-        this.canvasWrapper.drawLine(lineB);
-      } else if (s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
-        // Both lines are the same length here
-        // Add the spacing to the edges (which are of unit length)
-        normals[0].multiplyScalar(that.opts.halfBondSpacing);
-        normals[1].multiplyScalar(that.opts.halfBondSpacing);
-
-        let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-        let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-
-        this.canvasWrapper.drawLine(lineA);
-        this.canvasWrapper.drawLine(lineB);
-      } else if (s.sideCount[0] > s.sideCount[1]) {
-        normals[0].multiplyScalar(that.opts.bondSpacing);
-        normals[1].multiplyScalar(that.opts.bondSpacing);
-
-        let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-
-        line.shorten(this.opts.bondLength - this.opts.shortBondLength * this.opts.bondLength);
-        this.canvasWrapper.drawLine(line);
-        this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else if (s.sideCount[0] < s.sideCount[1]) {
-        normals[0].multiplyScalar(that.opts.bondSpacing);
-        normals[1].multiplyScalar(that.opts.bondSpacing);
-
-        let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-
-        line.shorten(this.opts.bondLength - this.opts.shortBondLength * this.opts.bondLength);
-        this.canvasWrapper.drawLine(line);
-        this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else if (s.totalSideCount[0] > s.totalSideCount[1]) {
-        normals[0].multiplyScalar(that.opts.bondSpacing);
-        normals[1].multiplyScalar(that.opts.bondSpacing);
-
-        let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-
-        line.shorten(this.opts.bondLength - this.opts.shortBondLength * this.opts.bondLength);
-        this.canvasWrapper.drawLine(line);
-        this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else if (s.totalSideCount[0] <= s.totalSideCount[1]) {
-        normals[0].multiplyScalar(that.opts.bondSpacing);
-        normals[1].multiplyScalar(that.opts.bondSpacing);
-
-        let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-
-        line.shorten(this.opts.bondLength - this.opts.shortBondLength * this.opts.bondLength);
-        this.canvasWrapper.drawLine(line);
-        this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
-      } else {
-
-      }
-    } else if (edge.bondType === '#') {
-      normals[0].multiplyScalar(that.opts.bondSpacing / 1.5);
-      normals[1].multiplyScalar(that.opts.bondSpacing / 1.5);
-
-      let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
-      let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
-
-      this.canvasWrapper.drawLine(lineA);
-      this.canvasWrapper.drawLine(lineB);
-
-      this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
-    } else if (edge.bondType === '.') {
-      // TODO: Something... maybe... version 2?
-    } else {
-      let isChiralCenterA = vertexA.value.isStereoCenter;
-      let isChiralCenterB = vertexB.value.isStereoCenter;
-
-      if (edge.wedge === 'up') {
-        this.canvasWrapper.drawWedge(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
-      } else if (edge.wedge === 'down') {
-        this.canvasWrapper.drawDashedWedge(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
-      } else {
-        this.canvasWrapper.drawLine(new Line(a, b, elementA, elementB, isChiralCenterA, isChiralCenterB));
-      }
-    }
-
-    if (debug) {
-      let midpoint = Vector2.midpoint(a, b);
-      this.canvasWrapper.drawDebugText(midpoint.x, midpoint.y, 'e: ' + edgeId);
-    }
+      this.drawingManager.drawEdge(edgeId, debug);
   }
 
   /**
@@ -1128,70 +884,7 @@ class DrawerBase {
    * @param {Boolean} debug A boolean indicating whether or not to draw debug messages to the canvas.
    */
   drawVertices(debug: boolean): void {
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertex = this.graph.vertices[i];
-      let atom = vertex.value;
-      let charge = 0;
-      let isotope = 0;
-      let bondCount = vertex.value.bondCount;
-      let element = atom.element;
-      let hydrogens = Atom.maxBonds[element] - bondCount;
-      let dir = vertex.getTextDirection(this.graph.vertices);
-      let isTerminal = this.opts.terminalCarbons || element !== 'C' || atom.hasAttachedPseudoElements ? vertex.isTerminal() : false;
-      let isCarbon = atom.element === 'C';
-      // This is a HACK to remove all hydrogens from nitrogens in aromatic rings, as this
-      // should be the most common state. This has to be fixed by kekulization
-      if (atom.element === 'N' && atom.isPartOfAromaticRing) {
-        hydrogens = 0;
-      }
-
-      if (atom.bracket) {
-        hydrogens = atom.bracket.hcount;
-        charge = atom.bracket.charge;
-        isotope = atom.bracket.isotope;
-      }
-
-      // If the molecule has less than 3 elements, always write the "C" for carbon
-      // Likewise, if the carbon has a charge or an isotope, always draw it
-      if (charge || isotope || this.graph.vertices.length < 3) {
-        isCarbon = false;
-      }
-
-      if (this.opts.atomVisualization === 'allballs') {
-        this.canvasWrapper.drawBall(vertex.position.x, vertex.position.y, element);
-      } else if ((atom.isDrawn && (!isCarbon || atom.drawExplicit || isTerminal || atom.hasAttachedPseudoElements)) || this.graph.vertices.length === 1) {
-        if (this.opts.atomVisualization === 'default') {
-          this.canvasWrapper.drawText(vertex.position.x, vertex.position.y,
-            element, hydrogens, dir, isTerminal, charge, isotope, this.graph.vertices.length, atom.getAttachedPseudoElements());
-        } else if (this.opts.atomVisualization === 'balls') {
-          this.canvasWrapper.drawBall(vertex.position.x, vertex.position.y, element);
-        }
-      } else if (vertex.getNeighbourCount() === 2 && vertex.forcePositioned == true) {
-        // If there is a carbon which bonds are in a straight line, draw a dot
-        let a = this.graph.vertices[vertex.neighbours[0]].position;
-        let b = this.graph.vertices[vertex.neighbours[1]].position;
-        let angle = Vector2.threePointangle(vertex.position, a, b);
-
-        if (Math.abs(Math.PI - angle) < 0.1) {
-          this.canvasWrapper.drawPoint(vertex.position.x, vertex.position.y, element);
-        }
-      }
-
-      if (debug) {
-        let value = 'v: ' + vertex.id + ' ' + ArrayHelper.print(atom.ringbonds);
-        this.canvasWrapper.drawDebugText(vertex.position.x, vertex.position.y, value);
-      } else {
-        // this.canvasWrapper.drawDebugText(vertex.position.x, vertex.position.y, vertex.value.chirality);
-      }
-    }
-
-    // Draw the ring centers for debug purposes
-    if (this.opts.debug) {
-      for (var j = 0; j < this.rings.length; j++) {
-        let center = this.rings[j].center;
-        this.canvasWrapper.drawDebugPoint(center.x, center.y, 'r: ' + this.rings[j].id);
-      }
-    }
+      this.drawingManager.drawVertices(debug);
   }
 
   /**
@@ -1395,13 +1088,7 @@ class DrawerBase {
    * @returns {Vector2[]} An array containing two vectors, representing the normals.
    */
   getEdgeNormals(edge: any): any[] {
-    let v1 = this.graph.vertices[edge.sourceId].position;
-    let v2 = this.graph.vertices[edge.targetId].position;
-
-    // Get the normalized normals for the edge
-    let normals = Vector2.units(v1, v2);
-
-    return normals;
+      return this.drawingManager.getEdgeNormals(edge);
   }
 
   /**
@@ -1619,6 +1306,7 @@ class DrawerBase {
     private stereochemistryManager: StereochemistryManager;
     private overlapResolver: OverlapResolutionManager;
     private positioningManager: PositioningManager;
+    private drawingManager: DrawingManager;
 }
 
 export = DrawerBase;
