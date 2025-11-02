@@ -4,6 +4,7 @@ import ReactionParser = require('./parsing/ReactionParser');
 import SvgDrawer = require('./drawing/SvgDrawer');
 import ReactionDrawer = require('./reactions/ReactionDrawer');
 import SvgWrapper = require('./drawing/SvgWrapper');
+import SvgConversionHelper = require('./drawing/helpers/SvgConversionHelper');
 import Options = require('./config/Options');
 
 class SmilesDrawer {
@@ -269,7 +270,7 @@ class SmilesDrawer {
 
         let dims = this.getDimensions(canvas, svg);
 
-        SvgWrapper.svgToCanvas(svg, canvas, dims.w, dims.h);
+        SvgConversionHelper.svgToCanvas(svg, canvas, dims.w, dims.h);
         return canvas;
     }
 
@@ -280,7 +281,7 @@ class SmilesDrawer {
 
         let dims = this.getDimensions(img, svg);
 
-        SvgWrapper.svgToImg(svg, img, dims.w, dims.h);
+        SvgConversionHelper.svgToImg(svg, img, dims.w, dims.h);
         return img;
     }
 
