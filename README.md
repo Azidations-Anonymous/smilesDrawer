@@ -128,55 +128,51 @@ gulp
 
 ### Testing
 
-SmilesDrawer includes comprehensive regression testing to ensure changes don't break existing functionality.
+SmilesDrawer includes comprehensive regression testing to detect rendering differences between code versions.
 
 #### Regression Testing
 
-Run regression tests to compare molecular structure rendering between versions:
+Compare molecular structure rendering between code versions:
 
 ```bash
-npm run test:regression
-# or
-npm run test:visual  # alias for test:regression
+npm run test:regression [commit/branch] [-all] [-failearly] [-novisual]
 ```
 
-Compare against a specific commit or branch:
+**Flags:**
+- `-all` - Test all datasets (default: fastregression dataset only)
+- `-failearly` - Stop at first difference (default: collect all differences)
+- `-novisual` - Skip SVG generation, JSON only (default: generate HTML + JSON)
+
+**Common Usage:**
 
 ```bash
-npm run test:regression <commit/branch>
-```
-
-**Available flags:**
-- `-all` - Test all datasets (default: fastregression only)
-- `-failearly` - Stop at first difference (default: continue and collect all)
-- `-novisual` - Skip SVG generation (default: generate visual comparisons)
-
-**Examples:**
-
-```bash
-# Basic regression test (fast dataset, collects all differences, generates visuals)
+# Quick test against current HEAD (default)
 npm run test:regression
 
-# Test all datasets
+# Test against a specific commit or branch
+npm run test:regression master
+npm run test:regression HEAD~1
+
+# Test all datasets comprehensively
 npm run test:regression -all
 
-# Fail early mode (stop at first difference)
-npm run test:regression -failearly
+# Fast fail-early check (stops at first diff)
+npm run test:regression -failearly -novisual
 
-# Quick check without visual output
-npm run test:regression -novisual
-
-# Compare against master with all datasets, fail early
-npm run test:regression master -all -failearly
+# Full comparison against master
+npm run test:regression master -all
 ```
 
 **Output:**
 
-Regression tests generate reports in the `regression-results/` directory:
-- **HTML files** (`N.html`) - Side-by-side SVG comparisons for visual inspection (unless `-novisual`)
-- **JSON files** (`N.json`) - Structured data with `{old, new}` fields for programmatic comparison
+Results are saved to `regression-results/`:
+- **`N.html`** - Side-by-side SVG visual comparison (unless `-novisual`)
+- **`N.json`** - JSON data with `{old, new}` fields for detailed analysis
 
-This makes it easy to both visually spot rendering changes and programmatically analyze differences.
+The JSON format enables both visual inspection (HTML) and programmatic diff analysis (JSON).
+
+**Aliases:**
+- `npm run test:visual` is an alias for `test:regression`
 
 ### Getting Started
 
