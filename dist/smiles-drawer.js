@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/Drawer":6,"./src/GaussDrawer":10,"./src/Parser":15,"./src/ReactionDrawer":18,"./src/ReactionParser":19,"./src/SmilesDrawer":24,"./src/SvgDrawer":26}],2:[function(require,module,exports){
+},{"./src/Drawer":6,"./src/GaussDrawer":10,"./src/Parser":16,"./src/ReactionDrawer":19,"./src/ReactionParser":20,"./src/SmilesDrawer":25,"./src/SvgDrawer":27}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -5526,7 +5526,7 @@ class CanvasWrapper {
 
 module.exports = CanvasWrapper;
 
-},{"./MathHelper":13,"./Vector2":29}],6:[function(require,module,exports){
+},{"./MathHelper":13,"./Vector2":30}],6:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -5605,7 +5605,7 @@ class Drawer {
 
 module.exports = Drawer;
 
-},{"./SvgDrawer":26}],7:[function(require,module,exports){
+},{"./SvgDrawer":27}],7:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -5615,6 +5615,8 @@ var __importDefault = undefined && undefined.__importDefault || function (mod) {
 };
 
 const StereochemistryManager_1 = __importDefault(require("./StereochemistryManager"));
+
+const OverlapResolutionManager_1 = __importDefault(require("./OverlapResolutionManager"));
 
 const RingManager = require("./RingManager");
 
@@ -5658,6 +5660,7 @@ class DrawerBase {
   constructor(options) {
     this.ringManager = new RingManager(this);
     this.stereochemistryManager = new StereochemistryManager_1.default(this);
+    this.overlapResolver = new OverlapResolutionManager_1.default(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -6537,52 +6540,7 @@ class DrawerBase {
 
 
   getOverlapScore() {
-    let total = 0.0;
-    let overlapScores = new Float32Array(this.graph.vertices.length);
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      overlapScores[i] = 0;
-    }
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      var j = this.graph.vertices.length;
-
-      while (--j > i) {
-        let a = this.graph.vertices[i];
-        let b = this.graph.vertices[j];
-
-        if (!a.value.isDrawn || !b.value.isDrawn) {
-          continue;
-        }
-
-        let dist = Vector2.subtract(a.position, b.position).lengthSq();
-
-        if (dist < this.opts.bondLengthSq) {
-          let weighted = (this.opts.bondLength - Math.sqrt(dist)) / this.opts.bondLength;
-          total += weighted;
-          overlapScores[i] += weighted;
-          overlapScores[j] += weighted;
-        }
-      }
-    }
-
-    let sortable = Array();
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      sortable.push({
-        id: i,
-        score: overlapScores[i]
-      });
-    }
-
-    sortable.sort(function (a, b) {
-      return b.score - a.score;
-    });
-    return {
-      total: total,
-      scores: sortable,
-      vertexScores: overlapScores
-    };
+    return this.overlapResolver.getOverlapScore();
   }
   /**
    * When drawing a double bond, choose the side to place the double bond. E.g. a double bond should always been drawn inside a ring.
@@ -6602,49 +6560,7 @@ class DrawerBase {
 
 
   chooseSide(vertexA, vertexB, sides) {
-    // Check which side has more vertices
-    // Get all the vertices connected to the both ends
-    let an = vertexA.getNeighbours(vertexB.id);
-    let bn = vertexB.getNeighbours(vertexA.id);
-    let anCount = an.length;
-    let bnCount = bn.length; // All vertices connected to the edge vertexA to vertexB
-
-    let tn = ArrayHelper.merge(an, bn); // Only considering the connected vertices
-
-    let sideCount = [0, 0];
-
-    for (var i = 0; i < tn.length; i++) {
-      let v = this.graph.vertices[tn[i]].position;
-
-      if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
-        sideCount[0]++;
-      } else {
-        sideCount[1]++;
-      }
-    } // Considering all vertices in the graph, this is to resolve ties
-    // from the above side counts
-
-
-    let totalSideCount = [0, 0];
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let v = this.graph.vertices[i].position;
-
-      if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
-        totalSideCount[0]++;
-      } else {
-        totalSideCount[1]++;
-      }
-    }
-
-    return {
-      totalSideCount: totalSideCount,
-      totalPosition: totalSideCount[0] > totalSideCount[1] ? 0 : 1,
-      sideCount: sideCount,
-      position: sideCount[0] > sideCount[1] ? 0 : 1,
-      anCount: anCount,
-      bnCount: bnCount
-    };
+    return this.overlapResolver.chooseSide(vertexA, vertexB, sides);
   }
   /**
    * Sets the center for a ring.
@@ -6980,18 +6896,7 @@ class DrawerBase {
 
 
   rotateSubtree(vertexId, parentVertexId, angle, center) {
-    let that = this;
-    this.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
-      vertex.position.rotateAround(angle, center);
-
-      for (var i = 0; i < vertex.value.anchoredRings.length; i++) {
-        let ring = that.rings[vertex.value.anchoredRings[i]];
-
-        if (ring) {
-          ring.center.rotateAround(angle, center);
-        }
-      }
-    });
+    this.overlapResolver.rotateSubtree(vertexId, parentVertexId, angle, center);
   }
   /**
    * Gets the overlap score of a subtree.
@@ -7004,31 +6909,7 @@ class DrawerBase {
 
 
   getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores) {
-    let that = this;
-    let score = 0;
-    let center = new Vector2(0, 0);
-    let count = 0;
-    this.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
-      if (!vertex.value.isDrawn) {
-        return;
-      }
-
-      let s = vertexOverlapScores[vertex.id];
-
-      if (s > that.opts.overlapSensitivity) {
-        score += s;
-        count++;
-      }
-
-      let position = that.graph.vertices[vertex.id].position.clone();
-      position.multiplyScalar(s);
-      center.add(position);
-    });
-    center.divide(score);
-    return {
-      value: score / count,
-      center: center
-    };
+    return this.overlapResolver.getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores);
   }
   /**
    * Returns the current (positioned vertices so far) center of mass.
@@ -7038,19 +6919,7 @@ class DrawerBase {
 
 
   getCurrentCenterOfMass() {
-    let total = new Vector2(0, 0);
-    let count = 0;
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertex = this.graph.vertices[i];
-
-      if (vertex.positioned) {
-        total.add(vertex.position);
-        count++;
-      }
-    }
-
-    return total.divide(count);
+    return this.overlapResolver.getCurrentCenterOfMass();
   }
   /**
    * Returns the current (positioned vertices so far) center of mass in the neighbourhood of a given position.
@@ -7062,20 +6931,7 @@ class DrawerBase {
 
 
   getCurrentCenterOfMassInNeigbourhood(vec, r = this.opts.bondLength * 2.0) {
-    let total = new Vector2(0, 0);
-    let count = 0;
-    let rSq = r * r;
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertex = this.graph.vertices[i];
-
-      if (vertex.positioned && vec.distanceSq(vertex.position) < rSq) {
-        total.add(vertex.position);
-        count++;
-      }
-    }
-
-    return total.divide(count);
+    return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
   }
   /**
    * Resolve primary (exact) overlaps, such as two vertices that are connected to the same ring vertex.
@@ -7083,89 +6939,7 @@ class DrawerBase {
 
 
   resolvePrimaryOverlaps() {
-    let overlaps = Array();
-    let done = Array(this.graph.vertices.length); // Looking for overlaps created by two bonds coming out of a ring atom, which both point straight
-    // away from the ring and are thus perfectly overlapping.
-
-    for (var i = 0; i < this.rings.length; i++) {
-      let ring = this.rings[i];
-
-      for (var j = 0; j < ring.members.length; j++) {
-        let vertex = this.graph.vertices[ring.members[j]];
-
-        if (done[vertex.id]) {
-          continue;
-        }
-
-        done[vertex.id] = true;
-        let nonRingNeighbours = this.getNonRingNeighbours(vertex.id);
-
-        if (nonRingNeighbours.length > 1) {
-          // Look for rings where there are atoms with two bonds outside the ring (overlaps)
-          let rings = Array();
-
-          for (var k = 0; k < vertex.value.rings.length; k++) {
-            rings.push(vertex.value.rings[k]);
-          }
-
-          overlaps.push({
-            common: vertex,
-            rings: rings,
-            vertices: nonRingNeighbours
-          });
-        } else if (nonRingNeighbours.length === 1 && vertex.value.rings.length === 2) {
-          // Look for bonds coming out of joined rings to adjust the angle, an example is: C1=CC(=CC=C1)[C@]12SCCN1CC1=CC=CC=C21
-          // where the angle has to be adjusted to account for fused ring
-          let rings = Array();
-
-          for (var k = 0; k < vertex.value.rings.length; k++) {
-            rings.push(vertex.value.rings[k]);
-          }
-
-          overlaps.push({
-            common: vertex,
-            rings: rings,
-            vertices: nonRingNeighbours
-          });
-        }
-      }
-    }
-
-    for (var i = 0; i < overlaps.length; i++) {
-      let overlap = overlaps[i];
-
-      if (overlap.vertices.length === 2) {
-        let a = overlap.vertices[0];
-        let b = overlap.vertices[1];
-
-        if (!a.value.isDrawn || !b.value.isDrawn) {
-          continue;
-        }
-
-        let angle = (2 * Math.PI - this.getRing(overlap.rings[0]).getAngle()) / 6.0;
-        this.rotateSubtree(a.id, overlap.common.id, angle, overlap.common.position);
-        this.rotateSubtree(b.id, overlap.common.id, -angle, overlap.common.position); // Decide which way to rotate the vertices depending on the effect it has on the overlap score
-
-        let overlapScore = this.getOverlapScore();
-        let subTreeOverlapA = this.getSubtreeOverlapScore(a.id, overlap.common.id, overlapScore.vertexScores);
-        let subTreeOverlapB = this.getSubtreeOverlapScore(b.id, overlap.common.id, overlapScore.vertexScores);
-        let total = subTreeOverlapA.value + subTreeOverlapB.value;
-        this.rotateSubtree(a.id, overlap.common.id, -2.0 * angle, overlap.common.position);
-        this.rotateSubtree(b.id, overlap.common.id, 2.0 * angle, overlap.common.position);
-        overlapScore = this.getOverlapScore();
-        subTreeOverlapA = this.getSubtreeOverlapScore(a.id, overlap.common.id, overlapScore.vertexScores);
-        subTreeOverlapB = this.getSubtreeOverlapScore(b.id, overlap.common.id, overlapScore.vertexScores);
-
-        if (subTreeOverlapA.value + subTreeOverlapB.value > total) {
-          this.rotateSubtree(a.id, overlap.common.id, 2.0 * angle, overlap.common.position);
-          this.rotateSubtree(b.id, overlap.common.id, -2.0 * angle, overlap.common.position);
-        }
-      } else if (overlap.vertices.length === 1) {
-        if (overlap.rings.length === 2) {// TODO: Implement for more overlap resolution
-          // console.log(overlap);
-        }
-      }
-    }
+    this.overlapResolver.resolvePrimaryOverlaps();
   }
   /**
    * Resolve secondary overlaps. Those overlaps are due to the structure turning back on itself.
@@ -7177,30 +6951,7 @@ class DrawerBase {
 
 
   resolveSecondaryOverlaps(scores) {
-    for (var i = 0; i < scores.length; i++) {
-      if (scores[i].score > this.opts.overlapSensitivity) {
-        let vertex = this.graph.vertices[scores[i].id];
-
-        if (vertex.isTerminal()) {
-          let closest = this.getClosestVertex(vertex);
-
-          if (closest) {
-            // If one of the vertices is the first one, the previous vertex is not the central vertex but the dummy
-            // so take the next rather than the previous, which is vertex 1
-            let closestPosition = null;
-
-            if (closest.isTerminal()) {
-              closestPosition = closest.id === 0 ? this.graph.vertices[1].position : closest.previousPosition;
-            } else {
-              closestPosition = closest.id === 0 ? this.graph.vertices[1].position : closest.position;
-            }
-
-            let vertexPreviousPosition = vertex.id === 0 ? this.graph.vertices[1].position : vertex.previousPosition;
-            vertex.position.rotateAwayFrom(closestPosition, vertexPreviousPosition, MathHelper.toRad(20));
-          }
-        }
-      }
-    }
+    this.overlapResolver.resolveSecondaryOverlaps(scores);
   }
   /**
    * Get the last non-null or 0 angle.
@@ -7896,7 +7647,7 @@ class DrawerBase {
 
 module.exports = DrawerBase;
 
-},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./RingManager":22,"./StereochemistryManager":25,"./ThemeManager":28,"./Vector2":29}],8:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./CanvasWrapper":5,"./Graph":11,"./Line":12,"./MathHelper":13,"./Options":14,"./OverlapResolutionManager":15,"./RingManager":23,"./StereochemistryManager":26,"./ThemeManager":29,"./Vector2":30}],8:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -8184,7 +7935,7 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"./PixelsToSvg":16,"./Vector2":29,"chroma-js":2}],11:[function(require,module,exports){
+},{"./PixelsToSvg":17,"./Vector2":30,"chroma-js":2}],11:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -9142,7 +8893,7 @@ class Graph {
 
 module.exports = Graph;
 
-},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":30}],12:[function(require,module,exports){
+},{"./Atom":4,"./Edge":8,"./MathHelper":13,"./Vertex":31}],12:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("./Vector2");
@@ -9450,7 +9201,7 @@ class Line {
 
 module.exports = Line;
 
-},{"./Vector2":29}],13:[function(require,module,exports){
+},{"./Vector2":30}],13:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -9671,6 +9422,308 @@ class Options {
 module.exports = Options;
 
 },{}],15:[function(require,module,exports){
+"use strict";
+
+const Vector2 = require("./Vector2");
+
+const ArrayHelper = require("./ArrayHelper");
+
+const MathHelper = require("./MathHelper");
+
+class OverlapResolutionManager {
+  constructor(drawer) {
+    this.drawer = drawer;
+  }
+
+  getOverlapScore() {
+    let total = 0.0;
+    let overlapScores = new Float32Array(this.drawer.graph.vertices.length);
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      overlapScores[i] = 0;
+    }
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      var j = this.drawer.graph.vertices.length;
+
+      while (--j > i) {
+        let a = this.drawer.graph.vertices[i];
+        let b = this.drawer.graph.vertices[j];
+
+        if (!a.value.isDrawn || !b.value.isDrawn) {
+          continue;
+        }
+
+        let dist = Vector2.subtract(a.position, b.position).lengthSq();
+
+        if (dist < this.drawer.opts.bondLengthSq) {
+          let weighted = (this.drawer.opts.bondLength - Math.sqrt(dist)) / this.drawer.opts.bondLength;
+          total += weighted;
+          overlapScores[i] += weighted;
+          overlapScores[j] += weighted;
+        }
+      }
+    }
+
+    let sortable = Array();
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      sortable.push({
+        id: i,
+        score: overlapScores[i]
+      });
+    }
+
+    sortable.sort(function (a, b) {
+      return b.score - a.score;
+    });
+    return {
+      total: total,
+      scores: sortable,
+      vertexScores: overlapScores
+    };
+  }
+
+  chooseSide(vertexA, vertexB, sides) {
+    // Check which side has more vertices
+    // Get all the vertices connected to the both ends
+    let an = vertexA.getNeighbours(vertexB.id);
+    let bn = vertexB.getNeighbours(vertexA.id);
+    let anCount = an.length;
+    let bnCount = bn.length; // All vertices connected to the edge vertexA to vertexB
+
+    let tn = ArrayHelper.merge(an, bn); // Only considering the connected vertices
+
+    let sideCount = [0, 0];
+
+    for (var i = 0; i < tn.length; i++) {
+      let v = this.drawer.graph.vertices[tn[i]].position;
+
+      if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
+        sideCount[0]++;
+      } else {
+        sideCount[1]++;
+      }
+    } // Considering all vertices in the graph, this is to resolve ties
+    // from the above side counts
+
+
+    let totalSideCount = [0, 0];
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      let v = this.drawer.graph.vertices[i].position;
+
+      if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
+        totalSideCount[0]++;
+      } else {
+        totalSideCount[1]++;
+      }
+    }
+
+    return {
+      totalSideCount: totalSideCount,
+      totalPosition: totalSideCount[0] > totalSideCount[1] ? 0 : 1,
+      sideCount: sideCount,
+      position: sideCount[0] > sideCount[1] ? 0 : 1,
+      anCount: anCount,
+      bnCount: bnCount
+    };
+  }
+
+  resolvePrimaryOverlaps() {
+    let overlaps = Array();
+    let done = Array(this.drawer.graph.vertices.length); // Looking for overlaps created by two bonds coming out of a ring atom, which both point straight
+    // away from the ring and are thus perfectly overlapping.
+
+    for (var i = 0; i < this.drawer.rings.length; i++) {
+      let ring = this.drawer.rings[i];
+
+      for (var j = 0; j < ring.members.length; j++) {
+        let vertex = this.drawer.graph.vertices[ring.members[j]];
+
+        if (done[vertex.id]) {
+          continue;
+        }
+
+        done[vertex.id] = true;
+        let nonRingNeighbours = this.drawer.getNonRingNeighbours(vertex.id);
+
+        if (nonRingNeighbours.length > 1) {
+          // Look for rings where there are atoms with two bonds outside the ring (overlaps)
+          let rings = Array();
+
+          for (var k = 0; k < vertex.value.rings.length; k++) {
+            rings.push(vertex.value.rings[k]);
+          }
+
+          overlaps.push({
+            common: vertex,
+            rings: rings,
+            vertices: nonRingNeighbours
+          });
+        } else if (nonRingNeighbours.length === 1 && vertex.value.rings.length === 2) {
+          // Look for bonds coming out of joined rings to adjust the angle, an example is: C1=CC(=CC=C1)[C@]12SCCN1CC1=CC=CC=C21
+          // where the angle has to be adjusted to account for fused ring
+          let rings = Array();
+
+          for (var k = 0; k < vertex.value.rings.length; k++) {
+            rings.push(vertex.value.rings[k]);
+          }
+
+          overlaps.push({
+            common: vertex,
+            rings: rings,
+            vertices: nonRingNeighbours
+          });
+        }
+      }
+    }
+
+    for (var i = 0; i < overlaps.length; i++) {
+      let overlap = overlaps[i];
+
+      if (overlap.vertices.length === 2) {
+        let a = overlap.vertices[0];
+        let b = overlap.vertices[1];
+
+        if (!a.value.isDrawn || !b.value.isDrawn) {
+          continue;
+        }
+
+        let angle = (2 * Math.PI - this.drawer.getRing(overlap.rings[0]).getAngle()) / 6.0;
+        this.rotateSubtree(a.id, overlap.common.id, angle, overlap.common.position);
+        this.rotateSubtree(b.id, overlap.common.id, -angle, overlap.common.position); // Decide which way to rotate the vertices depending on the effect it has on the overlap score
+
+        let overlapScore = this.getOverlapScore();
+        let subTreeOverlapA = this.getSubtreeOverlapScore(a.id, overlap.common.id, overlapScore.vertexScores);
+        let subTreeOverlapB = this.getSubtreeOverlapScore(b.id, overlap.common.id, overlapScore.vertexScores);
+        let total = subTreeOverlapA.value + subTreeOverlapB.value;
+        this.rotateSubtree(a.id, overlap.common.id, -2.0 * angle, overlap.common.position);
+        this.rotateSubtree(b.id, overlap.common.id, 2.0 * angle, overlap.common.position);
+        overlapScore = this.getOverlapScore();
+        subTreeOverlapA = this.getSubtreeOverlapScore(a.id, overlap.common.id, overlapScore.vertexScores);
+        subTreeOverlapB = this.getSubtreeOverlapScore(b.id, overlap.common.id, overlapScore.vertexScores);
+
+        if (subTreeOverlapA.value + subTreeOverlapB.value > total) {
+          this.rotateSubtree(a.id, overlap.common.id, 2.0 * angle, overlap.common.position);
+          this.rotateSubtree(b.id, overlap.common.id, -2.0 * angle, overlap.common.position);
+        }
+      } else if (overlap.vertices.length === 1) {
+        if (overlap.rings.length === 2) {// TODO: Implement for more overlap resolution
+          // console.log(overlap);
+        }
+      }
+    }
+  }
+
+  resolveSecondaryOverlaps(scores) {
+    for (var i = 0; i < scores.length; i++) {
+      if (scores[i].score > this.drawer.opts.overlapSensitivity) {
+        let vertex = this.drawer.graph.vertices[scores[i].id];
+
+        if (vertex.isTerminal()) {
+          let closest = this.drawer.getClosestVertex(vertex);
+
+          if (closest) {
+            // If one of the vertices is the first one, the previous vertex is not the central vertex but the dummy
+            // so take the next rather than the previous, which is vertex 1
+            let closestPosition = null;
+
+            if (closest.isTerminal()) {
+              closestPosition = closest.id === 0 ? this.drawer.graph.vertices[1].position : closest.previousPosition;
+            } else {
+              closestPosition = closest.id === 0 ? this.drawer.graph.vertices[1].position : closest.position;
+            }
+
+            let vertexPreviousPosition = vertex.id === 0 ? this.drawer.graph.vertices[1].position : vertex.previousPosition;
+            vertex.position.rotateAwayFrom(closestPosition, vertexPreviousPosition, MathHelper.toRad(20));
+          }
+        }
+      }
+    }
+  }
+
+  rotateSubtree(vertexId, parentVertexId, angle, center) {
+    let that = this;
+    this.drawer.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
+      vertex.position.rotateAround(angle, center);
+
+      for (var i = 0; i < vertex.value.anchoredRings.length; i++) {
+        let ring = that.drawer.rings[vertex.value.anchoredRings[i]];
+
+        if (ring) {
+          ring.center.rotateAround(angle, center);
+        }
+      }
+    });
+  }
+
+  getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores) {
+    let that = this;
+    let score = 0;
+    let center = new Vector2(0, 0);
+    let count = 0;
+    this.drawer.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
+      if (!vertex.value.isDrawn) {
+        return;
+      }
+
+      let s = vertexOverlapScores[vertex.id];
+
+      if (s > that.drawer.opts.overlapSensitivity) {
+        score += s;
+        count++;
+      }
+
+      let position = that.drawer.graph.vertices[vertex.id].position.clone();
+      position.multiplyScalar(s);
+      center.add(position);
+    });
+    center.divide(score);
+    return {
+      value: score / count,
+      center: center
+    };
+  }
+
+  getCurrentCenterOfMass() {
+    let total = new Vector2(0, 0);
+    let count = 0;
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      let vertex = this.drawer.graph.vertices[i];
+
+      if (vertex.positioned) {
+        total.add(vertex.position);
+        count++;
+      }
+    }
+
+    return total.divide(count);
+  }
+
+  getCurrentCenterOfMassInNeigbourhood(vec, r = this.drawer.opts.bondLength * 2.0) {
+    let total = new Vector2(0, 0);
+    let count = 0;
+    let rSq = r * r;
+
+    for (var i = 0; i < this.drawer.graph.vertices.length; i++) {
+      let vertex = this.drawer.graph.vertices[i];
+
+      if (vertex.positioned && vec.distanceSq(vertex.position) < rSq) {
+        total.add(vertex.position);
+        count++;
+      }
+    }
+
+    return total.divide(count);
+  }
+
+}
+
+module.exports = OverlapResolutionManager;
+
+},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":30}],16:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -11568,7 +11621,7 @@ module.exports = function () {
   };
 }();
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {
@@ -11690,7 +11743,7 @@ function convertImage(img) {
 
 module.exports = convertImage;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -11746,7 +11799,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"./Parser":15}],18:[function(require,module,exports){
+},{"./Parser":16}],19:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("./SvgDrawer");
@@ -12118,7 +12171,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":26,"./SvgWrapper":27,"./ThemeManager":28}],19:[function(require,module,exports){
+},{"./FormulaToCommonName":9,"./Options":14,"./SvgDrawer":27,"./SvgWrapper":28,"./ThemeManager":29}],20:[function(require,module,exports){
 "use strict";
 
 const Reaction = require("./Reaction");
@@ -12139,7 +12192,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"./Reaction":17}],20:[function(require,module,exports){
+},{"./Reaction":18}],21:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("./ArrayHelper");
@@ -12358,7 +12411,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"./ArrayHelper":3,"./RingConnection":21,"./Vector2":29}],21:[function(require,module,exports){
+},{"./ArrayHelper":3,"./RingConnection":22,"./Vector2":30}],22:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -12526,7 +12579,7 @@ class RingConnection {
 
 module.exports = RingConnection;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -13311,7 +13364,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"./ArrayHelper":3,"./Edge":8,"./MathHelper":13,"./Ring":20,"./RingConnection":21,"./SSSR":23,"./Vector2":29}],23:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Edge":8,"./MathHelper":13,"./Ring":21,"./RingConnection":22,"./SSSR":24,"./Vector2":30}],24:[function(require,module,exports){
 "use strict";
 
 const Graph = require("./Graph");
@@ -13921,7 +13974,7 @@ class SSSR {
 
 module.exports = SSSR;
 
-},{"./Graph":11}],24:[function(require,module,exports){
+},{"./Graph":11}],25:[function(require,module,exports){
 "use strict";
 
 const Parser = require("./Parser");
@@ -14267,7 +14320,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./Options":14,"./Parser":15,"./ReactionDrawer":18,"./ReactionParser":19,"./SvgDrawer":26,"./SvgWrapper":27}],25:[function(require,module,exports){
+},{"./Options":14,"./Parser":16,"./ReactionDrawer":19,"./ReactionParser":20,"./SvgDrawer":27,"./SvgWrapper":28}],26:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -14491,7 +14544,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"./MathHelper":13}],26:[function(require,module,exports){
+},{"./MathHelper":13}],27:[function(require,module,exports){
 "use strict"; // we use the drawer to do all the preprocessing. then we take over the drawing
 // portion to output to svg
 
@@ -14959,7 +15012,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":27,"./ThemeManager":28,"./Vector2":29}],27:[function(require,module,exports){
+},{"./ArrayHelper":3,"./Atom":4,"./DrawerBase":7,"./GaussDrawer":10,"./Line":12,"./SvgWrapper":28,"./ThemeManager":29,"./Vector2":30}],28:[function(require,module,exports){
 "use strict";
 
 const Line = require("./Line");
@@ -15936,7 +15989,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"./Line":12,"./MathHelper":13,"./Vector2":29}],28:[function(require,module,exports){
+},{"./Line":12,"./MathHelper":13,"./Vector2":30}],29:[function(require,module,exports){
 "use strict";
 
 class ThemeManager {
@@ -15984,7 +16037,7 @@ class ThemeManager {
 
 module.exports = ThemeManager;
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a 2D vector.
@@ -16604,7 +16657,7 @@ class Vector2 {
 
 module.exports = Vector2;
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("./MathHelper");
@@ -16981,5 +17034,5 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":29}]},{},[1])
+},{"./ArrayHelper":3,"./MathHelper":13,"./Vector2":30}]},{},[1])
 

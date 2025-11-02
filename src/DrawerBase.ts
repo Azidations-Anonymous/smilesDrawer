@@ -1,4 +1,5 @@
 import StereochemistryManager from "./StereochemistryManager";
+import OverlapResolutionManager from "./OverlapResolutionManager";
 
 import RingManager = require("./RingManager");
 
@@ -51,6 +52,7 @@ class DrawerBase {
   constructor(options: any) {
     this.ringManager = new RingManager(this);
       this.stereochemistryManager = new StereochemistryManager(this);
+      this.overlapResolver = new OverlapResolutionManager(this);
     this.graph = null;
     this.doubleBondConfigCount = 0;
     this.doubleBondConfig = null;
@@ -922,52 +924,7 @@ class DrawerBase {
    * @returns {Object} Returns the total overlap score and the overlap score of each vertex sorted by score (higher to lower). Example: { total: 99, scores: [ { id: 0, score: 22 }, ... ]  }
    */
   getOverlapScore(): any {
-    let total = 0.0;
-    let overlapScores = new Float32Array(this.graph.vertices.length);
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      overlapScores[i] = 0;
-    }
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      var j = this.graph.vertices.length;
-      while (--j > i) {
-        let a = this.graph.vertices[i];
-        let b = this.graph.vertices[j];
-
-        if (!a.value.isDrawn || !b.value.isDrawn) {
-          continue;
-        }
-
-        let dist = Vector2.subtract(a.position, b.position).lengthSq();
-
-        if (dist < this.opts.bondLengthSq) {
-          let weighted = (this.opts.bondLength - Math.sqrt(dist)) / this.opts.bondLength;
-          total += weighted;
-          overlapScores[i] += weighted;
-          overlapScores[j] += weighted;
-        }
-      }
-    }
-
-    let sortable = Array();
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      sortable.push({
-        id: i,
-        score: overlapScores[i]
-      });
-    }
-
-    sortable.sort(function (a, b) {
-      return b.score - a.score;
-    });
-
-    return {
-      total: total,
-      scores: sortable,
-      vertexScores: overlapScores
-    };
+      return this.overlapResolver.getOverlapScore();
   }
 
   /**
@@ -986,51 +943,7 @@ class DrawerBase {
       }
    */
   chooseSide(vertexA: any, vertexB: any, sides: any[]): any {
-    // Check which side has more vertices
-    // Get all the vertices connected to the both ends
-    let an = vertexA.getNeighbours(vertexB.id);
-    let bn = vertexB.getNeighbours(vertexA.id);
-    let anCount = an.length;
-    let bnCount = bn.length;
-
-    // All vertices connected to the edge vertexA to vertexB
-    let tn = ArrayHelper.merge(an, bn);
-
-    // Only considering the connected vertices
-    let sideCount = [0, 0];
-
-    for (var i = 0; i < tn.length; i++) {
-      let v = this.graph.vertices[tn[i] as number].position;
-
-      if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
-        sideCount[0]++;
-      } else {
-        sideCount[1]++;
-      }
-    }
-
-    // Considering all vertices in the graph, this is to resolve ties
-    // from the above side counts
-    let totalSideCount = [0, 0];
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let v = this.graph.vertices[i].position;
-
-      if (v.sameSideAs(vertexA.position, vertexB.position, sides[0])) {
-        totalSideCount[0]++;
-      } else {
-        totalSideCount[1]++;
-      }
-    }
-
-    return {
-      totalSideCount: totalSideCount,
-      totalPosition: totalSideCount[0] > totalSideCount[1] ? 0 : 1,
-      sideCount: sideCount,
-      position: sideCount[0] > sideCount[1] ? 0 : 1,
-      anCount: anCount,
-      bnCount: bnCount
-    };
+      return this.overlapResolver.chooseSide(vertexA, vertexB, sides);
   }
 
   /**
@@ -1384,19 +1297,7 @@ class DrawerBase {
    * @param {Vector2} center The rotational center.
    */
   rotateSubtree(vertexId: number, parentVertexId: number, angle: number, center: any): void {
-    let that = this;
-
-    this.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
-      vertex.position.rotateAround(angle, center);
-
-      for (var i = 0; i < vertex.value.anchoredRings.length; i++) {
-        let ring = that.rings[vertex.value.anchoredRings[i]];
-
-        if (ring) {
-          ring.center.rotateAround(angle, center);
-        }
-      }
-    });
+      this.overlapResolver.rotateSubtree(vertexId, parentVertexId, angle, center);
   }
 
   /**
@@ -1408,33 +1309,7 @@ class DrawerBase {
    * @returns {Object} An object containing the total overlap score and the center of mass of the subtree weighted by overlap score { value: 0.2, center: new Vector2() }.
    */
   getSubtreeOverlapScore(vertexId: number, parentVertexId: number, vertexOverlapScores: any): any {
-    let that = this;
-    let score = 0;
-    let center = new Vector2(0, 0);
-    let count = 0;
-
-    this.graph.traverseTree(vertexId, parentVertexId, function (vertex) {
-      if (!vertex.value.isDrawn) {
-        return;
-      }
-
-      let s = vertexOverlapScores[vertex.id];
-      if (s > that.opts.overlapSensitivity) {
-        score += s;
-        count++;
-      }
-
-      let position = that.graph.vertices[vertex.id].position.clone();
-      position.multiplyScalar(s)
-      center.add(position);
-    });
-
-    center.divide(score);
-
-    return {
-      value: score / count,
-      center: center
-    };
+      return this.overlapResolver.getSubtreeOverlapScore(vertexId, parentVertexId, vertexOverlapScores);
   }
 
   /**
@@ -1443,19 +1318,7 @@ class DrawerBase {
    * @returns {Vector2} The current center of mass.
    */
   getCurrentCenterOfMass(): any {
-    let total = new Vector2(0, 0);
-    let count = 0;
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertex = this.graph.vertices[i];
-
-      if (vertex.positioned) {
-        total.add(vertex.position);
-        count++;
-      }
-    }
-
-    return total.divide(count);
+      return this.overlapResolver.getCurrentCenterOfMass();
   }
 
   /**
@@ -1466,116 +1329,14 @@ class DrawerBase {
    * @returns {Vector2} The current center of mass.
    */
   getCurrentCenterOfMassInNeigbourhood(vec: any, r: number = this.opts.bondLength * 2.0): any {
-    let total = new Vector2(0, 0);
-    let count = 0;
-    let rSq = r * r;
-
-    for (var i = 0; i < this.graph.vertices.length; i++) {
-      let vertex = this.graph.vertices[i];
-
-      if (vertex.positioned && vec.distanceSq(vertex.position) < rSq) {
-        total.add(vertex.position);
-        count++;
-      }
-    }
-
-    return total.divide(count);
+      return this.overlapResolver.getCurrentCenterOfMassInNeigbourhood(vec, r);
   }
 
   /**
    * Resolve primary (exact) overlaps, such as two vertices that are connected to the same ring vertex.
    */
   resolvePrimaryOverlaps(): void {
-    let overlaps = Array();
-    let done = Array(this.graph.vertices.length);
-
-    // Looking for overlaps created by two bonds coming out of a ring atom, which both point straight
-    // away from the ring and are thus perfectly overlapping.
-    for (var i = 0; i < this.rings.length; i++) {
-      let ring = this.rings[i];
-
-      for (var j = 0; j < ring.members.length; j++) {
-        let vertex = this.graph.vertices[ring.members[j]];
-
-        if (done[vertex.id]) {
-          continue;
-        }
-
-        done[vertex.id] = true;
-
-        let nonRingNeighbours = this.getNonRingNeighbours(vertex.id);
-
-        if (nonRingNeighbours.length > 1) {
-          // Look for rings where there are atoms with two bonds outside the ring (overlaps)
-          let rings = Array();
-
-          for (var k = 0; k < vertex.value.rings.length; k++) {
-            rings.push(vertex.value.rings[k]);
-          }
-
-          overlaps.push({
-            common: vertex,
-            rings: rings,
-            vertices: nonRingNeighbours
-          });
-        } else if (nonRingNeighbours.length === 1 && vertex.value.rings.length === 2) {
-          // Look for bonds coming out of joined rings to adjust the angle, an example is: C1=CC(=CC=C1)[C@]12SCCN1CC1=CC=CC=C21
-          // where the angle has to be adjusted to account for fused ring
-          let rings = Array();
-
-          for (var k = 0; k < vertex.value.rings.length; k++) {
-            rings.push(vertex.value.rings[k]);
-          }
-
-          overlaps.push({
-            common: vertex,
-            rings: rings,
-            vertices: nonRingNeighbours
-          });
-        }
-      }
-    }
-
-    for (var i = 0; i < overlaps.length; i++) {
-      let overlap = overlaps[i];
-
-      if (overlap.vertices.length === 2) {
-        let a = overlap.vertices[0];
-        let b = overlap.vertices[1];
-
-        if (!a.value.isDrawn || !b.value.isDrawn) {
-          continue;
-        }
-
-        let angle = (2 * Math.PI - this.getRing(overlap.rings[0]).getAngle()) / 6.0;
-
-        this.rotateSubtree(a.id, overlap.common.id, angle, overlap.common.position);
-        this.rotateSubtree(b.id, overlap.common.id, -angle, overlap.common.position);
-
-        // Decide which way to rotate the vertices depending on the effect it has on the overlap score
-        let overlapScore = this.getOverlapScore();
-        let subTreeOverlapA = this.getSubtreeOverlapScore(a.id, overlap.common.id, overlapScore.vertexScores);
-        let subTreeOverlapB = this.getSubtreeOverlapScore(b.id, overlap.common.id, overlapScore.vertexScores);
-        let total = subTreeOverlapA.value + subTreeOverlapB.value;
-
-        this.rotateSubtree(a.id, overlap.common.id, -2.0 * angle, overlap.common.position);
-        this.rotateSubtree(b.id, overlap.common.id, 2.0 * angle, overlap.common.position);
-
-        overlapScore = this.getOverlapScore();
-        subTreeOverlapA = this.getSubtreeOverlapScore(a.id, overlap.common.id, overlapScore.vertexScores);
-        subTreeOverlapB = this.getSubtreeOverlapScore(b.id, overlap.common.id, overlapScore.vertexScores);
-
-        if (subTreeOverlapA.value + subTreeOverlapB.value > total) {
-          this.rotateSubtree(a.id, overlap.common.id, 2.0 * angle, overlap.common.position);
-          this.rotateSubtree(b.id, overlap.common.id, -2.0 * angle, overlap.common.position);
-        }
-      } else if (overlap.vertices.length === 1) {
-        if (overlap.rings.length === 2) {
-          // TODO: Implement for more overlap resolution
-          // console.log(overlap);
-        }
-      }
-    }
+      this.overlapResolver.resolvePrimaryOverlaps();
   }
 
   /**
@@ -1586,31 +1347,7 @@ class DrawerBase {
    * @param {Number} scores[].score The overlap score associated with the vertex id.
    */
   resolveSecondaryOverlaps(scores: any[]): void {
-    for (var i = 0; i < scores.length; i++) {
-      if (scores[i].score > this.opts.overlapSensitivity) {
-        let vertex = this.graph.vertices[scores[i].id];
-
-        if (vertex.isTerminal()) {
-          let closest = this.getClosestVertex(vertex);
-
-          if (closest) {
-            // If one of the vertices is the first one, the previous vertex is not the central vertex but the dummy
-            // so take the next rather than the previous, which is vertex 1
-            let closestPosition = null;
-
-            if (closest.isTerminal()) {
-              closestPosition = closest.id === 0 ? this.graph.vertices[1].position : closest.previousPosition
-            } else {
-              closestPosition = closest.id === 0 ? this.graph.vertices[1].position : closest.position
-            }
-
-            let vertexPreviousPosition = vertex.id === 0 ? this.graph.vertices[1].position : vertex.previousPosition;
-
-            vertex.position.rotateAwayFrom(closestPosition, vertexPreviousPosition, MathHelper.toRad(20));
-          }
-        }
-      }
-    }
+      this.overlapResolver.resolveSecondaryOverlaps(scores);
   }
 
   /**
@@ -2337,6 +2074,7 @@ class DrawerBase {
     }
 
     private stereochemistryManager: StereochemistryManager;
+    private overlapResolver: OverlapResolutionManager;
 }
 
 export = DrawerBase;
