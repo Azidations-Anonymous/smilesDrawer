@@ -18,6 +18,18 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Smart default: if no commit specified, choose based on working directory status
+if [ "${BASELINE_COMMIT}" = "HEAD" ]; then
+    if [ -z "$(git status --porcelain)" ]; then
+        # Working directory is clean - compare against previous commit
+        BASELINE_COMMIT="HEAD^"
+        echo "Working directory is clean - comparing against previous commit (HEAD^)"
+    else
+        # Working directory has changes - compare against current commit
+        echo "Working directory has uncommitted changes - comparing against HEAD"
+    fi
+fi
+
 echo "================================================================================"
 echo "SMILES DRAWER REGRESSION TEST"
 echo "================================================================================"
