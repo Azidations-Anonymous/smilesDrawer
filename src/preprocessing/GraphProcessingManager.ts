@@ -1,9 +1,11 @@
 import MathHelper = require('../utils/MathHelper');
+import MolecularPreprocessor from './MolecularPreprocessor';
+import Edge = require('../graph/Edge');
 
 class GraphProcessingManager {
-    private drawer: any;
+    private drawer: MolecularPreprocessor;
 
-    constructor(drawer: any) {
+    constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
     }
 
@@ -111,7 +113,7 @@ class GraphProcessingManager {
         this.drawer.rotateDrawing();
     }
 
-    isEdgeRotatable(edge: any): boolean {
+    isEdgeRotatable(edge: Edge): boolean {
         let vertexA = this.drawer.graph.vertices[edge.sourceId];
         let vertexB = this.drawer.graph.vertices[edge.targetId];
 
