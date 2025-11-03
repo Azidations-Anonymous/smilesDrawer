@@ -128,7 +128,40 @@ gulp
 
 ### Testing
 
-SmilesDrawer includes comprehensive regression testing to detect rendering differences between code versions.
+SmilesDrawer includes comprehensive regression testing to detect rendering differences between code versions, and smoke testing for quick sanity checks.
+
+#### Smoke Testing
+
+Generate SVG and JSON outputs for current codebase without comparison (fast sanity check):
+
+```bash
+npm run test:smoke [dataset] [-all]
+```
+
+**Flags:**
+- `-all` - Test all datasets (default: fastregression dataset only)
+- `[dataset]` - Specify dataset: `chembl`, `drugbank`, `fdb`, `force`, `gdb17`, `schembl`
+
+**Common Usage:**
+
+```bash
+# Quick test with fastregression dataset
+npm run test:smoke
+
+# Test specific dataset
+npm run test:smoke chembl
+
+# Test all datasets
+npm run test:smoke -all
+```
+
+**Output:**
+
+Results are saved to `test/smoketest/`:
+- **`N.html`** - SVG rendering with JSON position data
+- **`N.json`** - JSON position data only
+
+Each HTML file includes commit hash and git diff of uncommitted src/ changes for debugging.
 
 #### Regression Testing
 
@@ -165,7 +198,7 @@ npm run test:regression master -all
 
 **Output:**
 
-Results are saved to `regression-results/`:
+Results are saved to `test/regression-results/`:
 - **`N.html`** - Side-by-side SVG visual comparison (unless `-novisual`)
 - **`N.json`** - JSON data with `{old, new}` fields for detailed analysis
 
