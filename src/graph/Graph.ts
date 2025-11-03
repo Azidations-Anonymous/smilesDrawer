@@ -1,5 +1,6 @@
 import MathHelper = require('../utils/MathHelper');
 import GraphMatrixOperations = require('./GraphMatrixOperations');
+import GraphAlgorithms = require('./GraphAlgorithms');
 import Vector2 = require('./Vector2');
 import Vertex = require('./Vertex');
 import Edge = require('./Edge');
@@ -23,6 +24,8 @@ class Graph {
   isomeric: boolean;
   _atomIdx: number;
   _time: number;
+  matrixOps: GraphMatrixOperations;
+  algorithms: GraphAlgorithms;
 
   /**
    * The constructor of the class Graph.
@@ -44,6 +47,7 @@ class Graph {
     this._time = 0;
     this._init(parseTree);
       this.matrixOps = new GraphMatrixOperations(this);
+      this.algorithms = new GraphAlgorithms(this);
   }
 
   /**
@@ -331,25 +335,7 @@ class Graph {
    * @returns {Number[]} An array containing the edge ids of the bridges.
    */
   getBridges(): number[][] {
-    let length = this.vertices.length;
-    let visited = new Array(length);
-    let disc = new Array(length);
-    let low = new Array(length);
-    let parent = new Array(length);
-    let adj = this.getAdjacencyList();
-    let outBridges = Array();
-
-    visited.fill(false);
-    parent.fill(null);
-    this._time = 0;
-
-    for (var i = 0; i < length; i++) {
-      if (!visited[i]) {
-        this._bridgeDfs(i, visited, disc, low, parent, adj, outBridges);
-      }
-    }
-
-    return outBridges;
+      return this.algorithms.getBridges();
   }
 
   /**
@@ -359,28 +345,7 @@ class Graph {
    * @param {Function} callback The callback function to be called on every vertex.
    */
   traverseBF(startVertexId: number, callback: (vertex: Vertex) => void): void {
-    let length = this.vertices.length;
-    let visited = new Array(length);
-
-    visited.fill(false);
-
-    var queue = [startVertexId];
-
-    while (queue.length > 0) {
-      // JavaScripts shift() is O(n) ... bad JavaScript, bad!
-      let u = queue.shift();
-      let vertex = this.vertices[u];
-
-      callback(vertex);
-
-      for (var i = 0; i < vertex.neighbours.length; i++) {
-        let v = vertex.neighbours[i]
-        if (!visited[v]) {
-          visited[v] = true;
-          queue.push(v);
-        }
-      }
-    }
+      return this.algorithms.traverseBF(startVertexId, callback);
   }
 
   /**
@@ -391,23 +356,7 @@ class Graph {
    * @returns {Number} The depth of the sub-tree.
    */
   getTreeDepth(vertexId: number | null, parentVertexId: number | null): number {
-    if (vertexId === null || parentVertexId === null) {
-      return 0;
-    }
-
-    let neighbours = this.vertices[vertexId].getSpanningTreeNeighbours(parentVertexId);
-    let max = 0;
-
-    for (var i = 0; i < neighbours.length; i++) {
-      let childId = neighbours[i];
-      let d = this.getTreeDepth(childId, vertexId);
-
-      if (d > max) {
-        max = d;
-      }
-    }
-
-    return max + 1;
+      return this.algorithms.getTreeDepth(vertexId, parentVertexId);
   }
 
   /**
@@ -422,26 +371,7 @@ class Graph {
    * @param {Uint8Array} [visited=null] An array holding a flag on whether or not a node has been visited.
    */
   traverseTree(vertexId: number, parentVertexId: number, callback: (vertex: Vertex) => void, maxDepth: number = 999999, ignoreFirst: boolean = false, depth: number = 1, visited: Uint8Array | null = null): void {
-    if (visited === null) {
-      visited = new Uint8Array(this.vertices.length);
-    }
-
-    if (depth > maxDepth + 1 || visited[vertexId] === 1) {
-      return;
-    }
-
-    visited[vertexId] = 1;
-
-    let vertex = this.vertices[vertexId];
-    let neighbours = vertex.getNeighbours(parentVertexId);
-
-    if (!ignoreFirst || depth > 1) {
-      callback(vertex);
-    }
-
-    for (var i = 0; i < neighbours.length; i++) {
-      this.traverseTree(neighbours[i], vertexId, callback, maxDepth, ignoreFirst, depth + 1, visited);
-    }
+      return this.algorithms.traverseTree(vertexId, parentVertexId, callback, maxDepth, ignoreFirst, depth, visited);
   }
 
   /**
@@ -689,60 +619,13 @@ class Graph {
   }
 
   /**
-   * PRIVATE FUNCTION used by getBridges().
-   */
-  _bridgeDfs(u: number, visited: boolean[], disc: number[], low: number[], parent: number[], adj: number[][], outBridges: number[][]): void {
-    visited[u] = true;
-    disc[u] = low[u] = ++this._time;
-
-    for (var i = 0; i < adj[u].length; i++) {
-      let v = adj[u][i];
-
-      if (!visited[v]) {
-        parent[v] = u;
-
-        this._bridgeDfs(v, visited, disc, low, parent, adj, outBridges);
-
-        low[u] = Math.min(low[u], low[v]);
-
-        // If low > disc, we have a bridge
-        if (low[v] > disc[u]) {
-          outBridges.push([u, v]);
-        }
-      } else if (v !== parent[u]) {
-        low[u] = Math.min(low[u], disc[v]);
-      }
-    }
-  }
-
-  /**
    * Returns the connected components of the graph.
    * 
    * @param {Array[]} adjacencyMatrix An adjacency matrix.
    * @returns {Set[]} Connected components as sets.
    */
   static getConnectedComponents(adjacencyMatrix) {
-    let length = adjacencyMatrix.length;
-    let visited = new Array(length);
-    let components = new Array();
-    let count = 0;
-
-    visited.fill(false);
-
-    for (var u = 0; u < length; u++) {
-      if (!visited[u]) {
-        let component = Array();
-        visited[u] = true;
-        component.push(u);
-        count++;
-        Graph._ccGetDfs(u, visited, adjacencyMatrix, component);
-        if (component.length > 1) {
-          components.push(component);
-        }
-      }
-    }
-
-    return components;
+      return GraphAlgorithms.getConnectedComponents(adjacencyMatrix);
   }
 
   /**
@@ -752,57 +635,9 @@ class Graph {
    * @returns {Number} The number of connected components of the supplied graph.
    */
   static getConnectedComponentCount(adjacencyMatrix) {
-    let length = adjacencyMatrix.length;
-    let visited = new Array(length);
-    let count = 0;
-
-    visited.fill(false);
-
-    for (var u = 0; u < length; u++) {
-      if (!visited[u]) {
-        visited[u] = true;
-        count++;
-        Graph._ccCountDfs(u, visited, adjacencyMatrix);
-      }
-    }
-
-    return count;
+      return GraphAlgorithms.getConnectedComponentCount(adjacencyMatrix);
   }
 
-  /**
-   * PRIVATE FUNCTION used by getConnectedComponentCount().
-   */
-  static _ccCountDfs(u, visited, adjacencyMatrix) {
-    for (var v = 0; v < adjacencyMatrix[u].length; v++) {
-      let c = adjacencyMatrix[u][v];
-
-      if (!c || visited[v] || u === v) {
-        continue;
-      }
-
-      visited[v] = true;
-      Graph._ccCountDfs(v, visited, adjacencyMatrix);
-    }
-  }
-
-  /**
-   * PRIVATE FUNCTION used by getConnectedComponents().
-   */
-  static _ccGetDfs(u, visited, adjacencyMatrix, component) {
-    for (var v = 0; v < adjacencyMatrix[u].length; v++) {
-      let c = adjacencyMatrix[u][v];
-
-      if (!c || visited[v] || u === v) {
-        continue;
-      }
-
-      visited[v] = true;
-      component.push(v);
-      Graph._ccGetDfs(v, visited, adjacencyMatrix, component);
-    }
-  }
-
-    matrixOps: GraphMatrixOperations;
 }
 
 export = Graph
