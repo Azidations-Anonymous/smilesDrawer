@@ -1,3 +1,5 @@
+import { AtomVisualization } from '../types/CommonTypes';
+
 /**
  * Color theme for rendering molecular structures
  */
@@ -45,7 +47,7 @@ interface IMoleculeOptions {
   bondSpacing: number;
 
   // Atom rendering
-  atomVisualization: string;
+  atomVisualization: AtomVisualization;
   terminalCarbons: boolean;
   explicitHydrogens: boolean;
 

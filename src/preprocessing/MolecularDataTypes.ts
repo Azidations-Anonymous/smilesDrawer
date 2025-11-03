@@ -1,4 +1,5 @@
 import Atom = require('../graph/Atom');
+import { BondType, WedgeType, Chirality, HydrogenDirection } from '../types/CommonTypes';
 
 /**
  * Atom highlighting configuration: [atomClass, color]
@@ -60,8 +61,8 @@ export interface SerializedAtomValue {
   element: string;
   drawExplicit: boolean;
   isDrawn: boolean;
-  bondType: string | null;
-  branchBond: string | null;
+  bondType: BondType | null;
+  branchBond: BondType | null;
   ringbonds: Atom.RingbondType[];
   rings: number[];
   bondCount: number;
@@ -82,11 +83,11 @@ export interface SerializedAtomValue {
 
   // Stereochemistry
   plane: number;
-  chirality: string;
+  chirality: Chirality;
   isStereoCenter: boolean;
   priority: number;
   mainChain: boolean;
-  hydrogenDirection: string;
+  hydrogenDirection: HydrogenDirection;
   hasHydrogen: boolean;
   subtreeDepth: number;
 
@@ -128,10 +129,10 @@ export interface SerializedEdge {
   sourceId: number;
   targetId: number;
   weight: number;
-  bondType: string;
+  bondType: BondType;
   isPartOfAromaticRing: boolean;
   center: boolean;
-  wedge: string | null;
+  wedge: WedgeType | null;
 }
 
 /**

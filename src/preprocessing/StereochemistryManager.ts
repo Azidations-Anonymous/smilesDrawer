@@ -1,5 +1,6 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
 import MathHelper = require("../utils/MathHelper");
+import { WedgeType, Chirality } from '../types/CommonTypes';
 
 class StereochemistryManager {
     private drawer: MolecularPreprocessor;
@@ -108,11 +109,11 @@ class StereochemistryManager {
           let isCw = cwA === -1;
 
           let rotation = vertex.value.bracket.chirality === '@' ? -1 : 1;
-          let rs = MathHelper.parityOfPermutation(order) * rotation === 1 ? 'R' : 'S';
+          let rs: Chirality = MathHelper.parityOfPermutation(order) * rotation === 1 ? 'R' : 'S';
 
           // Flip the hydrogen direction when the drawing doesn't match the chirality.
-          let wedgeA = 'down';
-          let wedgeB = 'up';
+          let wedgeA: WedgeType = 'down';
+          let wedgeB: WedgeType = 'up';
           if (isCw && rs !== 'R' || !isCw && rs !== 'S') {
             vertex.value.hydrogenDirection = 'up';
             wedgeA = 'up';
@@ -164,7 +165,7 @@ class StereochemistryManager {
             if (vertex.value.hasHydrogen) {
               this.drawer.graph.getEdge(vertex.id, wedgeId).wedge = wedgeB;
             } else {
-              let wedge = wedgeB;
+              let wedge: WedgeType = wedgeB;
 
               for (var j = order.length - 1; j >= 0; j--) {
                 if (wedge === wedgeA) {

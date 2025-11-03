@@ -1,17 +1,18 @@
 import ArrayHelper = require('../utils/ArrayHelper');
 import Vertex = require('./Vertex');
 import Ring = require('./Ring');
+import { BondType, Chirality, SmilesChirality, HydrogenDirection } from '../types/CommonTypes';
 
 interface Ringbond {
   id: number;
-  bondType: string;
+  bondType: BondType;
 }
 
 interface BracketInfo {
   hcount: number | null;
   charge: number;
   isotope: number;
-  chirality?: string;
+  chirality?: SmilesChirality;
   class?: number;
 }
 
@@ -64,8 +65,8 @@ class Atom {
   drawExplicit: boolean;
   ringbonds: Ringbond[];
   rings: number[];
-  bondType: string;
-  branchBond: string | null;
+  bondType: BondType;
+  branchBond: BondType | null;
   isBridge: boolean;
   isBridgeNode: boolean;
   originalRings: number[];
@@ -80,11 +81,11 @@ class Atom {
   neighbouringElements: string[];
   isPartOfAromaticRing: boolean;
   bondCount: number;
-  chirality: string;
+  chirality: Chirality;
   isStereoCenter: boolean;
   priority: number;
   mainChain: boolean;
-  hydrogenDirection: string;
+  hydrogenDirection: HydrogenDirection;
   subtreeDepth: number;
   hasHydrogen: boolean;
   class: number | undefined;
@@ -95,7 +96,7 @@ class Atom {
    * @param {String} element The one-letter code of the element.
    * @param {String} [bondType='-'] The type of the bond associated with this atom.
    */
-  constructor(element: string, bondType: string = '-') {
+  constructor(element: string, bondType: BondType = '-') {
     this.idx = null;
     this.element = element.length === 1 ? element.toUpperCase() : element;
     this.drawExplicit = false;

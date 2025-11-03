@@ -1,3 +1,5 @@
+import { BondType, WedgeType } from '../types/CommonTypes';
+
 /**
  * A class representing an edge.
  *
@@ -15,10 +17,10 @@ class Edge {
     sourceId: number;
     targetId: number;
     weight: number;
-    bondType: string;
+    bondType: BondType;
     isPartOfAromaticRing: boolean;
     center: boolean;
-    wedge: string;
+    wedge: WedgeType;
 
     /**
      * The constructor for the class Edge.
@@ -42,7 +44,7 @@ class Edge {
      * Set the bond type of this edge. This also sets the edge weight.
      * @param {String} bondType
      */
-    setBondType(bondType: string): void {
+    setBondType(bondType: BondType): void {
       this.bondType = bondType;
       this.weight = Edge.bonds[bondType];
     }
