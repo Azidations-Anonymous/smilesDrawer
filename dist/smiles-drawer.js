@@ -8346,6 +8346,11 @@ module.exports = SvgTextHelper;
 
 class SvgUnicodeHelper {
   static createUnicodeCharge(n) {
+    // Handle string charge formats like '+', '++', '--'
+    if (typeof n === 'string') {
+      return n;
+    }
+
     if (n === 1) {
       return '⁺';
     }
