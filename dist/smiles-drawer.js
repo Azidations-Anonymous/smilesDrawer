@@ -155,7 +155,7 @@ if (!Array.prototype.fill) {
 
 module.exports = SmilesDrawer;
 
-},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":36,"./src/parsing/ReactionParser":37,"./src/reactions/ReactionDrawer":48}],2:[function(require,module,exports){
+},{"./src/SmilesDrawer":3,"./src/drawing/Drawer":11,"./src/drawing/GaussDrawer":13,"./src/drawing/SvgDrawer":14,"./src/parsing/Parser":36,"./src/parsing/ReactionParser":37,"./src/reactions/ReactionDrawer":49}],2:[function(require,module,exports){
 /**
  * chroma.js - JavaScript library for color conversions
  *
@@ -4086,7 +4086,7 @@ class SmilesDrawer {
 
 module.exports = SmilesDrawer;
 
-},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":22,"./parsing/Parser":36,"./parsing/ReactionParser":37,"./reactions/ReactionDrawer":48}],4:[function(require,module,exports){
+},{"./config/Options":7,"./drawing/SvgDrawer":14,"./drawing/helpers/SvgConversionHelper":22,"./parsing/Parser":36,"./parsing/ReactionParser":37,"./reactions/ReactionDrawer":49}],4:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -4344,7 +4344,7 @@ class KamadaKawaiLayout {
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/MathHelper":51}],5:[function(require,module,exports){
+},{"../utils/MathHelper":52}],5:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -5614,18 +5614,20 @@ class Drawer {
    * vertices (atoms) with positions and angles, edges (bonds) with types and stereochemistry,
    * and ring information.
    *
-   * The output format is versioned for stability. Current version: 1
+   * The returned object implements IMolecularData interface, providing access to both
+   * the raw data and helper methods used by the internal renderer (getEdgeNormals,
+   * isRingAromatic, areVerticesInSameRing, etc.).
    *
-   * @returns {Object} An object containing versioned positioning data.
-   *   See MolecularPreprocessor.getPositionData() for detailed structure.
+   * @returns {IMolecularData} An object implementing the molecular data interface.
    *
    * @example
    * const drawer = new SmilesDrawer.Drawer();
    * SmilesDrawer.parse('c1ccccc1', function(tree) {
    *     drawer.draw(tree, 'output-canvas', 'light');
-   *     const posData = drawer.getPositionData();
-   *     console.log(posData.vertices); // Array of positioned atoms
-   *     console.log(posData.edges);    // Array of bonds
+   *     const molData = drawer.getPositionData();
+   *     console.log(molData.graph.vertices); // Array of positioned atoms
+   *     console.log(molData.graph.edges);    // Array of bonds
+   *     const normals = molData.getEdgeNormals(edge); // Use helper methods
    * });
    */
 
@@ -5971,7 +5973,7 @@ class DrawingManager {
 
 module.exports = DrawingManager;
 
-},{"../config/ThemeManager":9,"../graph/Atom":25,"../graph/Line":30,"../graph/Vector2":33,"../utils/ArrayHelper":49,"./CanvasDrawer":10}],13:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../graph/Atom":25,"../graph/Line":30,"../graph/Vector2":33,"../utils/ArrayHelper":50,"./CanvasDrawer":10}],13:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -6155,10 +6157,12 @@ class GaussDrawer {
 
 module.exports = GaussDrawer;
 
-},{"../graph/Vector2":33,"../utils/PixelsToSvg":52,"chroma-js":2}],14:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/PixelsToSvg":53,"chroma-js":2}],14:[function(require,module,exports){
 "use strict";
 
 const MolecularPreprocessor = require("../preprocessing/MolecularPreprocessor");
+
+const MolecularDataSnapshot = require("../preprocessing/MolecularDataSnapshot");
 
 const SvgWrapper = require("./SvgWrapper");
 
@@ -6309,24 +6313,26 @@ class SvgDrawer {
    * vertices (atoms) with positions and angles, edges (bonds) with types and stereochemistry,
    * and ring information.
    *
-   * The output format is versioned for stability. Current version: 1
+   * The returned object implements IMolecularData interface, providing access to both
+   * the raw data and helper methods used by the internal renderer (getEdgeNormals,
+   * isRingAromatic, areVerticesInSameRing, etc.).
    *
-   * @returns {Object} An object containing versioned positioning data.
-   *   See MolecularPreprocessor.getPositionData() for detailed structure.
+   * @returns {IMolecularData} An object implementing the molecular data interface.
    *
    * @example
    * const drawer = new SmilesDrawer.SvgDrawer();
    * SmilesDrawer.parse('c1ccccc1', function(tree) {
    *     drawer.draw(tree, 'output-svg', 'light');
-   *     const posData = drawer.getPositionData();
-   *     console.log(posData.vertices); // Array of positioned atoms
-   *     console.log(posData.edges);    // Array of bonds
+   *     const molData = drawer.getPositionData();
+   *     console.log(molData.graph.vertices); // Array of positioned atoms
+   *     console.log(molData.graph.edges);    // Array of bonds
+   *     const normals = molData.getEdgeNormals(edge); // Use helper methods
    * });
    */
 
 
   getPositionData() {
-    return this.preprocessor.getPositionData();
+    return new MolecularDataSnapshot(this.preprocessor);
   }
 
   drawAromaticityRing(ring) {
@@ -6361,7 +6367,7 @@ class SvgDrawer {
 
 module.exports = SvgDrawer;
 
-},{"../config/ThemeManager":9,"../preprocessing/MolecularPreprocessor":41,"./SvgWrapper":15,"./draw/SvgEdgeDrawer":19,"./draw/SvgVertexDrawer":20,"./draw/SvgWeightsDrawer":21}],15:[function(require,module,exports){
+},{"../config/ThemeManager":9,"../preprocessing/MolecularDataSnapshot":40,"../preprocessing/MolecularPreprocessor":42,"./SvgWrapper":15,"./draw/SvgEdgeDrawer":19,"./draw/SvgVertexDrawer":20,"./draw/SvgWeightsDrawer":21}],15:[function(require,module,exports){
 "use strict";
 
 const SvgTextHelper = require("./helpers/SvgTextHelper");
@@ -7128,7 +7134,7 @@ class SvgWrapper {
 
 module.exports = SvgWrapper;
 
-},{"../graph/Line":30,"../graph/Vector2":33,"../utils/MathHelper":51,"./helpers/SvgTextHelper":23,"./helpers/SvgUnicodeHelper":24}],16:[function(require,module,exports){
+},{"../graph/Line":30,"../graph/Vector2":33,"../utils/MathHelper":52,"./helpers/SvgTextHelper":23,"./helpers/SvgUnicodeHelper":24}],16:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7333,7 +7339,7 @@ class CanvasPrimitiveDrawer {
 
 module.exports = CanvasPrimitiveDrawer;
 
-},{"../../utils/MathHelper":51}],17:[function(require,module,exports){
+},{"../../utils/MathHelper":52}],17:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../../utils/MathHelper");
@@ -7653,7 +7659,7 @@ class CanvasTextDrawer {
 
 module.exports = CanvasTextDrawer;
 
-},{"../../utils/MathHelper":51}],18:[function(require,module,exports){
+},{"../../utils/MathHelper":52}],18:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -7991,7 +7997,7 @@ class SvgEdgeDrawer {
 
 module.exports = SvgEdgeDrawer;
 
-},{"../../graph/Line":30,"../../graph/Vector2":33,"../../utils/ArrayHelper":49}],20:[function(require,module,exports){
+},{"../../graph/Line":30,"../../graph/Vector2":33,"../../utils/ArrayHelper":50}],20:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../../graph/Atom");
@@ -8121,7 +8127,7 @@ class SvgVertexDrawer {
 
 module.exports = SvgVertexDrawer;
 
-},{"../../graph/Atom":25,"../../graph/Vector2":33,"../../utils/ArrayHelper":49}],21:[function(require,module,exports){
+},{"../../graph/Atom":25,"../../graph/Vector2":33,"../../utils/ArrayHelper":50}],21:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../../graph/Vector2");
@@ -8965,7 +8971,7 @@ class Atom {
 
 module.exports = Atom;
 
-},{"../utils/ArrayHelper":49}],26:[function(require,module,exports){
+},{"../utils/ArrayHelper":50}],26:[function(require,module,exports){
 "use strict";
 /**
  * A class representing an edge.
@@ -10363,7 +10369,7 @@ class Ring {
 
 module.exports = Ring;
 
-},{"../utils/ArrayHelper":49,"./RingConnection":32,"./Vector2":33}],32:[function(require,module,exports){
+},{"../utils/ArrayHelper":50,"./RingConnection":32,"./Vector2":33}],32:[function(require,module,exports){
 "use strict";
 /**
  * A class representing a ring connection.
@@ -11528,7 +11534,7 @@ class Vertex {
 
 module.exports = Vertex;
 
-},{"../utils/ArrayHelper":49,"../utils/MathHelper":51,"./Vector2":33}],35:[function(require,module,exports){
+},{"../utils/ArrayHelper":50,"../utils/MathHelper":52,"./Vector2":33}],35:[function(require,module,exports){
 "use strict";
 
 const ArrayHelper = require("../utils/ArrayHelper");
@@ -11717,7 +11723,7 @@ class BridgedRingHandler {
 
 module.exports = BridgedRingHandler;
 
-},{"../graph/Ring":31,"../graph/RingConnection":32,"../utils/ArrayHelper":49}],36:[function(require,module,exports){
+},{"../graph/Ring":31,"../graph/RingConnection":32,"../utils/ArrayHelper":50}],36:[function(require,module,exports){
 "use strict"; // WHEN REPLACING, CHECK FOR:
 // KEEP THIS WHEN REGENERATING THE PARSER !!
 
@@ -13636,7 +13642,7 @@ class ReactionParser {
 
 module.exports = ReactionParser;
 
-},{"../reactions/Reaction":47}],38:[function(require,module,exports){
+},{"../reactions/Reaction":48}],38:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -13773,7 +13779,7 @@ class GraphProcessingManager {
 
 module.exports = GraphProcessingManager;
 
-},{"../utils/MathHelper":51}],39:[function(require,module,exports){
+},{"../utils/MathHelper":52}],39:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13829,6 +13835,72 @@ class InitializationManager {
 module.exports = InitializationManager;
 
 },{"../graph/Graph":27}],40:[function(require,module,exports){
+"use strict";
+
+class MolecularDataSnapshot {
+  constructor(source) {
+    this.source = source;
+    this.graph = source.graph;
+    this.rings = source.rings;
+    this.ringConnections = source.ringConnections;
+    this.opts = source.opts;
+    this.bridgedRing = source.bridgedRing;
+    this.highlight_atoms = source.highlight_atoms;
+  }
+
+  isRingAromatic(ring) {
+    return this.source.isRingAromatic(ring);
+  }
+
+  getEdgeNormals(edge) {
+    return this.source.getEdgeNormals(edge);
+  }
+
+  getRingbondType(vertexA, vertexB) {
+    return this.source.getRingbondType(vertexA, vertexB);
+  }
+
+  areVerticesInSameRing(vertexA, vertexB) {
+    return this.source.areVerticesInSameRing(vertexA, vertexB);
+  }
+
+  chooseSide(vertexA, vertexB, sides) {
+    return this.source.chooseSide(vertexA, vertexB, sides);
+  }
+
+  getLargestOrAromaticCommonRing(vertexA, vertexB) {
+    return this.source.getLargestOrAromaticCommonRing(vertexA, vertexB);
+  }
+
+  initDraw(data, themeName, infoOnly, highlight_atoms) {
+    throw new Error('MolecularDataSnapshot is read-only. initDraw() cannot be called.');
+  }
+
+  processGraph() {
+    throw new Error('MolecularDataSnapshot is read-only. processGraph() cannot be called.');
+  }
+
+  getTotalOverlapScore() {
+    return this.source.getTotalOverlapScore();
+  }
+
+  getMolecularFormula(data = null) {
+    return this.source.getMolecularFormula(data);
+  }
+
+  getPositionData() {
+    return this.source.getPositionData();
+  }
+
+  toJSON() {
+    return this.source.getPositionData();
+  }
+
+}
+
+module.exports = MolecularDataSnapshot;
+
+},{}],41:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
@@ -13920,7 +13992,7 @@ class MolecularInfoManager {
 
 module.exports = MolecularInfoManager;
 
-},{"../graph/Atom":25,"../graph/Graph":27}],41:[function(require,module,exports){
+},{"../graph/Atom":25,"../graph/Graph":27}],42:[function(require,module,exports){
 "use strict";
 
 var __importDefault = undefined && undefined.__importDefault || function (mod) {
@@ -14855,7 +14927,7 @@ class MolecularPreprocessor {
 
 module.exports = MolecularPreprocessor;
 
-},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":38,"./InitializationManager":39,"./MolecularInfoManager":40,"./OverlapResolutionManager":42,"./PositioningManager":43,"./PseudoElementManager":44,"./RingManager":45,"./StereochemistryManager":46}],42:[function(require,module,exports){
+},{"../config/OptionsManager":8,"../drawing/DrawingManager":12,"./GraphProcessingManager":38,"./InitializationManager":39,"./MolecularInfoManager":41,"./OverlapResolutionManager":43,"./PositioningManager":44,"./PseudoElementManager":45,"./RingManager":46,"./StereochemistryManager":47}],43:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15157,7 +15229,7 @@ class OverlapResolutionManager {
 
 module.exports = OverlapResolutionManager;
 
-},{"../graph/Vector2":33,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],43:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/ArrayHelper":50,"../utils/MathHelper":52}],44:[function(require,module,exports){
 "use strict";
 
 const Vector2 = require("../graph/Vector2");
@@ -15600,7 +15672,7 @@ class PositioningManager {
 
 module.exports = PositioningManager;
 
-},{"../graph/Vector2":33,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],44:[function(require,module,exports){
+},{"../graph/Vector2":33,"../utils/ArrayHelper":50,"../utils/MathHelper":52}],45:[function(require,module,exports){
 "use strict";
 
 const Atom = require("../graph/Atom");
@@ -15736,7 +15808,7 @@ class PseudoElementManager {
 
 module.exports = PseudoElementManager;
 
-},{"../graph/Atom":25}],45:[function(require,module,exports){
+},{"../graph/Atom":25}],46:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16357,7 +16429,7 @@ class RingManager {
 
 module.exports = RingManager;
 
-},{"../algorithms/SSSR":5,"../graph/Edge":26,"../graph/Ring":31,"../graph/RingConnection":32,"../graph/Vector2":33,"../handlers/BridgedRingHandler":35,"../utils/ArrayHelper":49,"../utils/MathHelper":51}],46:[function(require,module,exports){
+},{"../algorithms/SSSR":5,"../graph/Edge":26,"../graph/Ring":31,"../graph/RingConnection":32,"../graph/Vector2":33,"../handlers/BridgedRingHandler":35,"../utils/ArrayHelper":50,"../utils/MathHelper":52}],47:[function(require,module,exports){
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
@@ -16581,7 +16653,7 @@ class StereochemistryManager {
 
 module.exports = StereochemistryManager;
 
-},{"../utils/MathHelper":51}],47:[function(require,module,exports){
+},{"../utils/MathHelper":52}],48:[function(require,module,exports){
 "use strict";
 
 const Parser = require("../parsing/Parser");
@@ -16637,7 +16709,7 @@ class Reaction {
 
 module.exports = Reaction;
 
-},{"../parsing/Parser":36}],48:[function(require,module,exports){
+},{"../parsing/Parser":36}],49:[function(require,module,exports){
 "use strict";
 
 const SvgDrawer = require("../drawing/SvgDrawer");
@@ -17011,7 +17083,7 @@ class ReactionDrawer {
 
 module.exports = ReactionDrawer;
 
-},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":23,"../drawing/helpers/SvgUnicodeHelper":24,"../utils/FormulaToCommonName":50}],49:[function(require,module,exports){
+},{"../config/Options":7,"../config/ThemeManager":9,"../drawing/SvgDrawer":14,"../drawing/helpers/SvgTextHelper":23,"../drawing/helpers/SvgUnicodeHelper":24,"../utils/FormulaToCommonName":51}],50:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for array-related tasks.
@@ -17412,7 +17484,7 @@ class ArrayHelper {
 
 module.exports = ArrayHelper;
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 "use strict";
 
 const formulaToCommonName = {
@@ -17450,7 +17522,7 @@ const formulaToCommonName = {
 };
 module.exports = formulaToCommonName;
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 "use strict";
 /**
  * A static class containing helper functions for math-related tasks.
@@ -17623,7 +17695,7 @@ class MathHelper {
 
 module.exports = MathHelper;
 
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 "use strict"; // Adapted from https://codepen.io/shshaw/pen/XbxvNj by
 
 function convertImage(img) {

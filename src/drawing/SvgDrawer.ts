@@ -3,6 +3,8 @@
 import ArrayHelper = require('../utils/ArrayHelper');
 import Atom = require('../graph/Atom');
 import MolecularPreprocessor = require('../preprocessing/MolecularPreprocessor');
+import IMolecularData = require('../preprocessing/IMolecularData');
+import MolecularDataSnapshot = require('../preprocessing/MolecularDataSnapshot');
 import Graph = require('../graph/Graph');
 import Line = require('../graph/Line');
 import SvgWrapper = require('./SvgWrapper');
@@ -14,7 +16,7 @@ import SvgVertexDrawer = require('./draw/SvgVertexDrawer');
 import SvgWeightsDrawer = require('./draw/SvgWeightsDrawer');
 
 class SvgDrawer {
-  preprocessor: any;
+  preprocessor: IMolecularData;
   opts: any;
   clear: boolean;
   svgWrapper: any;
@@ -162,22 +164,24 @@ class SvgDrawer {
    * vertices (atoms) with positions and angles, edges (bonds) with types and stereochemistry,
    * and ring information.
    *
-   * The output format is versioned for stability. Current version: 1
+   * The returned object implements IMolecularData interface, providing access to both
+   * the raw data and helper methods used by the internal renderer (getEdgeNormals,
+   * isRingAromatic, areVerticesInSameRing, etc.).
    *
-   * @returns {Object} An object containing versioned positioning data.
-   *   See MolecularPreprocessor.getPositionData() for detailed structure.
+   * @returns {IMolecularData} An object implementing the molecular data interface.
    *
    * @example
    * const drawer = new SmilesDrawer.SvgDrawer();
    * SmilesDrawer.parse('c1ccccc1', function(tree) {
    *     drawer.draw(tree, 'output-svg', 'light');
-   *     const posData = drawer.getPositionData();
-   *     console.log(posData.vertices); // Array of positioned atoms
-   *     console.log(posData.edges);    // Array of bonds
+   *     const molData = drawer.getPositionData();
+   *     console.log(molData.graph.vertices); // Array of positioned atoms
+   *     console.log(molData.graph.edges);    // Array of bonds
+   *     const normals = molData.getEdgeNormals(edge); // Use helper methods
    * });
    */
-  getPositionData(): any {
-    return this.preprocessor.getPositionData();
+  getPositionData(): IMolecularData {
+    return new MolecularDataSnapshot(this.preprocessor);
   }
 
     drawAromaticityRing(ring: any): void {

@@ -8,6 +8,7 @@ import InitializationManager from "./InitializationManager";
 import GraphProcessingManager from "./GraphProcessingManager";
 import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
+import IMolecularData = require("./IMolecularData");
 
 import MathHelper = require('../utils/MathHelper');
 import ArrayHelper = require('../utils/ArrayHelper');
@@ -25,7 +26,7 @@ import ThemeManager = require('../config/ThemeManager');
 import Options = require('../config/Options');
 
 /**
- * The molecular structure preprocessor and coordinator 
+ * The molecular structure preprocessor and coordinator
  *
  * @property {Graph} graph The graph associated with this SmilesDrawer.Drawer instance.
  * @property {Number} ringIdCounter An internal counter to keep track of ring ids.
@@ -36,7 +37,7 @@ import Options = require('../config/Options');
  * @property {Object} opts The merged options.
  * @property {Object} theme The current theme.
  */
-class MolecularPreprocessor {
+class MolecularPreprocessor implements IMolecularData {
   graph: any;
   doubleBondConfigCount: number | null;
   doubleBondConfig: any;
