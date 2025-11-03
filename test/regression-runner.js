@@ -32,6 +32,63 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const jsondiffpatch = require('jsondiffpatch');
+const htmlFormatter = require('jsondiffpatch/formatters/html');
+
+/**
+ * Get the short commit hash for a git repository
+ * @param {string} repoPath - Path to the git repository
+ * @returns {string} Short commit hash or 'unknown' if error
+ */
+function getCommitHash(repoPath) {
+    const result = spawnSync('git', ['rev-parse', '--short', 'HEAD'], {
+        cwd: repoPath,
+        encoding: 'utf8'
+    });
+
+    if (result.error || result.status !== 0) {
+        return 'unknown';
+    }
+
+    return result.stdout.trim();
+}
+
+/**
+ * Check if there are uncommitted changes in the working directory
+ * @param {string} repoPath - Path to the git repository
+ * @returns {boolean} True if there are uncommitted changes
+ */
+function hasUncommittedChanges(repoPath) {
+    const result = spawnSync('git', ['status', '--porcelain'], {
+        cwd: repoPath,
+        encoding: 'utf8'
+    });
+
+    if (result.error || result.status !== 0) {
+        return false;
+    }
+
+    return result.stdout.trim().length > 0;
+}
+
+/**
+ * Get the git diff for the src/ directory
+ * @param {string} repoPath - Path to the git repository
+ * @returns {string} Git diff output or empty string if error
+ */
+function getSrcDiff(repoPath) {
+    const result = spawnSync('git', ['diff', 'HEAD', 'src/'], {
+        cwd: repoPath,
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
+    });
+
+    if (result.error || result.status !== 0) {
+        return '';
+    }
+
+    return result.stdout;
+}
 
 const fastDatasets = [
     { name: 'fastregression', file: './fastregression.js' }
@@ -76,6 +133,12 @@ if (fs.existsSync(outputDir)) {
 }
 fs.mkdirSync(outputDir, { recursive: true });
 
+// Get git information for both codebases
+const oldCommitHash = getCommitHash(oldCodePath);
+const newCommitHash = getCommitHash(newCodePath);
+const newHasChanges = hasUncommittedChanges(newCodePath);
+const newSrcDiff = newHasChanges ? getSrcDiff(newCodePath) : '';
+
 console.log('='.repeat(80));
 console.log('SMILES DRAWER REGRESSION TEST');
 console.log('='.repeat(80));
@@ -83,7 +146,9 @@ console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : 'FAST (fastregression 
 console.log('FAIL-EARLY: ' + (failEarly ? 'YES (stop at first difference)' : 'NO (collect all differences)'));
 console.log('VISUAL: ' + (noVisual ? 'NO (skip SVG generation)' : 'YES (generate side-by-side comparisons)'));
 console.log('OLD CODE PATH: ' + oldCodePath);
+console.log('OLD COMMIT: ' + oldCommitHash);
 console.log('NEW CODE PATH: ' + newCodePath);
+console.log('NEW COMMIT: ' + newCommitHash + (newHasChanges ? ' (+ uncommitted changes)' : ''));
 console.log('OUTPUT DIRECTORY: ' + outputDir);
 console.log('='.repeat(80));
 
@@ -200,11 +265,18 @@ for (const dataset of datasets) {
                     console.error('  WARNING: Failed to read SVG files');
                 }
 
-                // Save JSON to file
+                // Parse JSON and generate diff
+                const oldJsonObj = JSON.parse(oldJson);
+                const newJsonObj = JSON.parse(newJson);
+                const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
+                const jsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+
+                // Save JSON diff to file
                 const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
                 const jsonOutput = {
-                    old: JSON.parse(oldJson),
-                    new: JSON.parse(newJson)
+                    old: oldJsonObj,
+                    new: newJsonObj,
+                    delta: delta
                 };
                 fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
 
@@ -219,7 +291,12 @@ for (const dataset of datasets) {
                     newSvg: newSvg,
                     oldJsonLength: oldJson.length,
                     newJsonLength: newJson.length,
-                    diffNumber: totalDifferences
+                    jsonDiffHtml: jsonDiffHtml,
+                    diffNumber: totalDifferences,
+                    oldCommitHash: oldCommitHash,
+                    newCommitHash: newCommitHash,
+                    newHasChanges: newHasChanges,
+                    newSrcDiff: newSrcDiff
                 });
 
                 fs.writeFileSync(htmlFilePath, html, 'utf8');
@@ -313,12 +390,20 @@ function escapeHtml(text) {
 }
 
 function generateIndividualHTMLReport(diff) {
+    const diffSection = diff.newHasChanges && diff.newSrcDiff ? `
+        <div class="diff-section">
+            <h3>Uncommitted Changes in src/</h3>
+            <pre class="diff-content"><code>${escapeHtml(diff.newSrcDiff)}</code></pre>
+        </div>` : '';
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Difference #${diff.diffNumber} - SMILES Drawer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsondiffpatch@0.7.3/lib/formatters/styles/html.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsondiffpatch@0.7.3/lib/formatters/styles/annotated.css">
     <style>
         * {
             margin: 0;
@@ -343,6 +428,37 @@ function generateIndividualHTMLReport(diff) {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        .commit-info {
+            background: #ecf0f1;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            font-size: 0.9em;
+        }
+
+        .commit-info .commit-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .commit-info .commit-hash {
+            font-family: 'Courier New', monospace;
+            color: #34495e;
+        }
+
+        .commit-info .uncommitted-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+
         .smiles-display {
             background: #2c3e50;
             color: #ecf0f1;
@@ -361,6 +477,7 @@ function generateIndividualHTMLReport(diff) {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            margin-bottom: 30px;
         }
 
         .comparison-side {
@@ -397,8 +514,97 @@ function generateIndividualHTMLReport(diff) {
             font-size: 0.9em;
         }
 
+        .full-width-comparison {
+            margin-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+        }
+
+        .full-width-comparison h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .full-width-svg-section {
+            margin-bottom: 30px;
+        }
+
+        .full-width-svg-section h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .full-width-svg-container {
+            background: white;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .full-width-svg-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .json-diff-section {
+            margin-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+        }
+
+        .json-diff-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .json-diff-container {
+            background: #f8f8f8;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .diff-section {
+            margin-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+        }
+
+        .diff-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .diff-content {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
         @media (max-width: 768px) {
             .comparison-container {
+                grid-template-columns: 1fr;
+            }
+
+            .commit-info {
                 grid-template-columns: 1fr;
             }
         }
@@ -406,6 +612,17 @@ function generateIndividualHTMLReport(diff) {
 </head>
 <body>
     <div class="container">
+        <div class="commit-info">
+            <div>
+                <span class="commit-label">Baseline Commit:</span>
+                <span class="commit-hash">${escapeHtml(diff.oldCommitHash)}</span>
+            </div>
+            <div>
+                <span class="commit-label">Current Commit:</span>
+                <span class="commit-hash">${escapeHtml(diff.newCommitHash)}</span>${diff.newHasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+            </div>
+        </div>
+
         <div class="smiles-display">
             <code>${escapeHtml(diff.smiles)}</code>
         </div>
@@ -426,6 +643,33 @@ function generateIndividualHTMLReport(diff) {
                 <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
             </div>
         </div>
+
+        <div class="full-width-comparison">
+            <h3>Full-Width Comparison</h3>
+
+            <div class="full-width-svg-section">
+                <h4>Baseline (Old)</h4>
+                <div class="full-width-svg-container">
+                    ${diff.oldSvg}
+                </div>
+                <div class="meta">JSON: ${diff.oldJsonLength} bytes</div>
+            </div>
+
+            <div class="full-width-svg-section">
+                <h4>Current (New)</h4>
+                <div class="full-width-svg-container">
+                    ${diff.newSvg}
+                </div>
+                <div class="meta">JSON: ${diff.newJsonLength} bytes</div>
+            </div>
+        </div>
+
+        <div class="json-diff-section">
+            <h3>JSON Position Data Diff</h3>
+            <div class="json-diff-container">
+                ${diff.jsonDiffHtml}
+            </div>
+        </div>${diffSection}
     </div>
 </body>
 </html>`;

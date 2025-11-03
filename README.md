@@ -338,6 +338,49 @@ The SmilesDrawer object exposes methods that can be used for purposes other than
 | Method                  | Description                                                                       | Returns  |
 | ----------------------- | --------------------------------------------------------------------------------- | -------- |
 | `getMolecularFormula()` | Returns the molecular formula, eg. C22H30N6O4S, of the currently loaded molecule. | `String` |
+| `getPositionData()` | Returns complete positioning and structural data for the molecule, including vertices (atoms) with positions/angles, edges (bonds) with types/stereochemistry, rings, and metadata. Useful for implementing custom renderers or exporting molecular structure data. Output is versioned (current: v1) for API stability. | `Object` |
+
+#### Example: Using `getPositionData()` for Custom Rendering
+
+The `getPositionData()` method provides everything needed to implement custom rendering algorithms or export molecular structure data:
+
+```javascript
+let smilesDrawer = new SmilesDrawer.Drawer({ width: 500, height: 500 });
+
+SmilesDrawer.parse('c1ccccc1', function(tree) {
+    // Draw the molecule first (positions atoms)
+    smilesDrawer.draw(tree, 'output-canvas', 'light');
+
+    // Get the complete positioning data
+    const posData = smilesDrawer.getPositionData();
+
+    console.log('Version:', posData.version); // 1
+    console.log('Atoms:', posData.vertices.length);
+    console.log('Bonds:', posData.edges.length);
+
+    // Access atom positions
+    posData.vertices.forEach(v => {
+        console.log(`Atom ${v.id}: ${v.value.element} at (${v.position.x}, ${v.position.y})`);
+    });
+
+    // Access bond information
+    posData.edges.forEach(e => {
+        console.log(`Bond ${e.id}: ${e.bondType} from ${e.sourceId} to ${e.targetId}`);
+    });
+
+    // Access ring data
+    posData.rings.forEach(r => {
+        console.log(`Ring ${r.id} with ${r.members.length} members`);
+    });
+});
+```
+
+The returned object structure:
+- `version`: Format version (1)
+- `vertices`: Array of atoms with positions, angles, element data, stereochemistry
+- `edges`: Array of bonds with types, stereochemistry (wedges), aromatic flags
+- `rings`: Array of ring structures with member atoms
+- `metadata`: Counts, mappings, and graph-level flags
 
 ### Bridged Rings
 

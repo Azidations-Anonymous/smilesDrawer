@@ -30,6 +30,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "jsdoc": "^4.0.0",
     "jsdom": "^27.0.1",
+    "jsondiffpatch": "^0.7.3",
     "ts-morph": "^27.0.2",
     "typescript": "^5.9.3",
     "vinyl-buffer": ">=1.0.1",

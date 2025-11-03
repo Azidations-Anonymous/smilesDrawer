@@ -188,6 +188,146 @@ class MolecularPreprocessor {
   }
 
   /**
+   * Returns complete positioning and structural data for the loaded molecule.
+   * This data includes everything needed to implement custom rendering algorithms:
+   * vertices (atoms) with positions and angles, edges (bonds) with types and stereochemistry,
+   * and ring information.
+   *
+   * The output format is versioned for stability. Current version: 1
+   *
+   * @returns {Object} An object containing:
+   *   - version: Format version number (currently 1)
+   *   - vertices: Array of vertex objects with positions, angles, and atom data
+   *   - edges: Array of edge objects with bond types and stereochemistry
+   *   - rings: Array of ring member arrays
+   *   - metadata: Graph metadata (counts, mappings, flags)
+   *
+   * @example
+   * const posData = drawer.getPositionData();
+   * // posData.version === 1
+   * // posData.vertices[0].position === { x: 150.5, y: 200.3 }
+   * // posData.edges[0].bondType === '='
+   */
+  getPositionData(): any {
+      if (!this.graph) {
+          return {
+              version: 1,
+              vertices: [],
+              edges: [],
+              rings: [],
+              metadata: {
+                  vertexCount: 0,
+                  edgeCount: 0,
+                  ringCount: 0,
+                  isomeric: false
+              }
+          };
+      }
+
+      // Serialize vertices with comprehensive atom data
+      const vertices = this.graph.vertices.map((v: any) => ({
+          // Vertex topology
+          id: v.id,
+          parentVertexId: v.parentVertexId,
+          children: v.children ? [...v.children] : [],
+          spanningTreeChildren: v.spanningTreeChildren ? [...v.spanningTreeChildren] : [],
+          edges: v.edges ? [...v.edges] : [],
+          neighbours: v.neighbours ? [...v.neighbours] : [],
+          neighbourCount: v.neighbourCount,
+          neighbouringElements: v.neighbouringElements ? [...v.neighbouringElements] : [],
+
+          // Positioning data
+          position: v.position ? { x: v.position.x, y: v.position.y } : { x: 0, y: 0 },
+          previousPosition: v.previousPosition ? { x: v.previousPosition.x, y: v.previousPosition.y } : { x: 0, y: 0 },
+          positioned: v.positioned,
+          forcePositioned: v.forcePositioned,
+          angle: v.angle,
+          dir: v.dir,
+
+          // Atom data from v.value
+          value: v.value ? {
+              element: v.value.element,
+              drawExplicit: v.value.drawExplicit,
+              isDrawn: v.value.isDrawn,
+              bondType: v.value.bondType,
+              branchBond: v.value.branchBond,
+              ringbonds: v.value.ringbonds ? [...v.value.ringbonds] : [],
+              rings: v.value.rings ? [...v.value.rings] : [],
+              bondCount: v.value.bondCount,
+
+              // Ring membership
+              isBridge: v.value.isBridge,
+              isBridgeNode: v.value.isBridgeNode,
+              bridgedRing: v.value.bridgedRing,
+              originalRings: v.value.originalRings ? [...v.value.originalRings] : [],
+              anchoredRings: v.value.anchoredRings ? [...v.value.anchoredRings] : [],
+              isConnectedToRing: v.value.isConnectedToRing,
+              isPartOfAromaticRing: v.value.isPartOfAromaticRing,
+
+              // Bracket notation data
+              bracket: v.value.bracket ? {
+                  hcount: v.value.bracket.hcount,
+                  charge: v.value.bracket.charge,
+                  isotope: v.value.bracket.isotope,
+                  class: v.value.bracket.class
+              } : null,
+
+              // Stereochemistry
+              plane: v.value.plane,
+              chirality: v.value.chirality,
+              isStereoCenter: v.value.isStereoCenter,
+              priority: v.value.priority,
+              mainChain: v.value.mainChain,
+              hydrogenDirection: v.value.hydrogenDirection,
+              hasHydrogen: v.value.hasHydrogen,
+              subtreeDepth: v.value.subtreeDepth,
+
+              // Pseudo elements
+              attachedPseudoElements: v.value.attachedPseudoElements ? { ...v.value.attachedPseudoElements } : {},
+              hasAttachedPseudoElements: v.value.hasAttachedPseudoElements
+          } : null
+      }));
+
+      // Serialize edges with comprehensive bond data
+      const edges = this.graph.edges.map((e: any) => ({
+          id: e.id,
+          sourceId: e.sourceId,
+          targetId: e.targetId,
+          weight: e.weight,
+          bondType: e.bondType,
+          isPartOfAromaticRing: e.isPartOfAromaticRing,
+          center: e.center,
+          wedge: e.wedge
+      }));
+
+      // Serialize ring data
+      const rings = this.rings ? this.rings.map((ring: any) => ({
+          id: ring.id,
+          members: ring.members ? [...ring.members] : [],
+          isBridged: ring.isBridged,
+          isPartOfBridged: ring.isPartOfBridged,
+          isFused: ring.isFused,
+          isSpiro: ring.isSpiro,
+          neighbours: ring.neighbours ? [...ring.neighbours] : [],
+          center: ring.center ? { x: ring.center.x, y: ring.center.y } : null
+      })) : [];
+
+      return {
+          version: 1,
+          vertices: vertices,
+          edges: edges,
+          rings: rings,
+          metadata: {
+              vertexCount: this.graph.vertices.length,
+              edgeCount: this.graph.edges.length,
+              ringCount: this.rings ? this.rings.length : 0,
+              atomIdxToVertexId: this.graph.atomIdxToVertexId ? [...this.graph.atomIdxToVertexId] : [],
+              isomeric: this.graph.isomeric
+          }
+      };
+  }
+
+  /**
    * Returns the type of the ringbond (e.g. '=' for a double bond). The ringbond represents the break in a ring introduced when creating the MST. If the two vertices supplied as arguments are not part of a common ringbond, the method returns null.
    *
    * @param {Vertex} vertexA A vertex.

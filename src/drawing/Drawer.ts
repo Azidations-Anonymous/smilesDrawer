@@ -66,6 +66,30 @@ class Drawer {
   getMolecularFormula(): string {
     return this.svgDrawer.getMolecularFormula();
   }
+
+  /**
+   * Returns complete positioning and structural data for the loaded molecule.
+   * This data includes everything needed to implement custom rendering algorithms:
+   * vertices (atoms) with positions and angles, edges (bonds) with types and stereochemistry,
+   * and ring information.
+   *
+   * The output format is versioned for stability. Current version: 1
+   *
+   * @returns {Object} An object containing versioned positioning data.
+   *   See MolecularPreprocessor.getPositionData() for detailed structure.
+   *
+   * @example
+   * const drawer = new SmilesDrawer.Drawer();
+   * SmilesDrawer.parse('c1ccccc1', function(tree) {
+   *     drawer.draw(tree, 'output-canvas', 'light');
+   *     const posData = drawer.getPositionData();
+   *     console.log(posData.vertices); // Array of positioned atoms
+   *     console.log(posData.edges);    // Array of bonds
+   * });
+   */
+  getPositionData(): any {
+    return this.svgDrawer.getPositionData();
+  }
 }
 
 export = Drawer;

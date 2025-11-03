@@ -26,6 +26,32 @@ CURRENT_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
 BASELINE_DIR="${TEMP_DIR}/smiles-drawer-baseline"
 
+# Cleanup function to remove temporary directory
+cleanup() {
+    if [ -d "${TEMP_DIR}" ]; then
+        echo ""
+        echo "Cleaning up temporary directory..."
+        rm -rf "${TEMP_DIR}"
+        echo "✓ Cleanup complete"
+    fi
+}
+
+# Handle interrupt (Ctrl-C) and termination signals
+cleanup_and_exit() {
+    cleanup
+    echo ""
+    echo "================================================================================"
+    echo "INTERRUPTED: Test cancelled by user"
+    echo "================================================================================"
+    exit 130
+}
+
+# Set up traps:
+# - EXIT: cleanup only (preserve exit code)
+# - INT/TERM: cleanup and force exit
+trap cleanup EXIT
+trap cleanup_and_exit INT TERM
+
 echo "Current directory: ${CURRENT_DIR}"
 echo "Temporary directory: ${TEMP_DIR}"
 echo "Baseline clone directory: ${BASELINE_DIR}"
@@ -57,7 +83,6 @@ if ! npx gulp build; then
     echo "================================================================================"
     echo "ERROR: Baseline build failed - cannot proceed with regression testing"
     echo "================================================================================"
-    rm -rf "${TEMP_DIR}"
     exit 1
 fi
 echo "✓ Baseline build complete"
@@ -71,7 +96,6 @@ if ! npx gulp build; then
     echo "================================================================================"
     echo "ERROR: Current build failed - cannot proceed with regression testing"
     echo "================================================================================"
-    rm -rf "${TEMP_DIR}"
     exit 1
 fi
 echo "✓ Current build complete"
@@ -85,12 +109,6 @@ cd "${CURRENT_DIR}/test"
 node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
 
 REGRESSION_EXIT_CODE=$?
-
-echo ""
-echo "Step 6: Cleaning up temporary directory..."
-rm -rf "${TEMP_DIR}"
-echo "✓ Cleanup complete"
-echo ""
 
 if [ ${REGRESSION_EXIT_CODE} -eq 0 ]; then
     echo "================================================================================"

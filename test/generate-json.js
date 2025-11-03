@@ -5,12 +5,15 @@
  * @module test/generate-json
  * @description
  * This script parses a SMILES string using SmilesDrawer and extracts the molecular graph structure
- * (vertices and edges with all their properties) as JSON. The JSON output is deterministic and can
- * be compared between different versions of the code to detect regressions.
+ * using the public getPositionData() API. The JSON output is deterministic and versioned, allowing
+ * comparison between different versions of the code to detect regressions.
  *
  * The graph data includes:
- * - Vertices: atom positions, elements, angles, directions, and connectivity
+ * - Version: Format version number for compatibility
+ * - Vertices: comprehensive atom data with positions, elements, angles, stereochemistry
  * - Edges: bond types, aromatic ring membership, wedge stereochemistry
+ * - Rings: ring membership and properties
+ * - Metadata: graph-level information (counts, mappings, flags)
  *
  * @example
  * // Generate JSON to stdout
@@ -110,32 +113,12 @@ try {
         svg.setAttribute('width', String(options.width));
         svg.setAttribute('height', String(options.height));
 
-        const drawData = svgDrawer.draw(tree, svg, 'light', false);
+        svgDrawer.draw(tree, svg, 'light', false);
 
-        const graph = svgDrawer.preprocessor.graph;
-        const graphData = {
-            vertices: graph && graph.vertices ? graph.vertices.map(v => ({
-                id: v.id,
-                value: v.value,
-                position: v.position,
-                positioned: v.positioned,
-                angle: v.angle,
-                dir: v.dir,
-                neighbourCount: v.neighbours ? v.neighbours.length : 0,
-                edges: v.edges ? v.edges.map(e => e.id) : []
-            })) : [],
-            edges: graph && graph.edges ? graph.edges.map(e => ({
-                id: e.id,
-                sourceId: e.sourceId,
-                targetId: e.targetId,
-                bondType: e.bondType,
-                isPartOfAromaticRing: e.isPartOfAromaticRing,
-                center: e.center,
-                wedge: e.wedge
-            })) : []
-        };
+        // Use the new public API to get positioning data
+        const graphData = svgDrawer.getPositionData();
 
-        console.log('PROCESS_SUCCESS: Graph data extracted');
+        console.log('PROCESS_SUCCESS: Graph data extracted using getPositionData() API');
 
         const jsonOutput = JSON.stringify(graphData, null, 2);
 
