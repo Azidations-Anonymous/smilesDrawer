@@ -269,7 +269,8 @@ for (const dataset of datasets) {
                 const oldJsonObj = JSON.parse(oldJson);
                 const newJsonObj = JSON.parse(newJson);
                 const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
-                const jsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+                const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+                const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
 
                 // Save JSON diff to file
                 const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
@@ -387,6 +388,101 @@ function escapeHtml(text) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/**
+ * Collapse unchanged fields in jsondiffpatch HTML output
+ * @param {string} html - jsondiffpatch HTML output
+ * @returns {string} HTML with collapsed unchanged sections
+ */
+function collapseJsonDiff(html) {
+    if (!html) return '';
+
+    const MIN_COLLAPSE = 4;  // Minimum unchanged fields to collapse
+    const CONTEXT_FIELDS = 2; // Fields to show before/after changes
+
+    // Match <li> elements with their full content including nested <ul>
+    const liPattern = /<li class="jsondiffpatch-(unchanged|added|deleted|modified|node)"[^>]*>.*?<\/li>/gs;
+    const matches = [...html.matchAll(liPattern)];
+
+    if (matches.length === 0) return html;
+
+    let result = html.substring(0, matches[0].index);
+    let unchangedChunk = [];
+    let lastEnd = matches[0].index;
+
+    for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        const isUnchanged = match[1] === 'unchanged';
+        const nextIndex = matches[i + 1]?.index || html.length;
+
+        if (isUnchanged) {
+            unchangedChunk.push({
+                content: match[0],
+                start: match.index,
+                end: match.index + match[0].length
+            });
+        } else {
+            // Process accumulated unchanged chunk
+            if (unchangedChunk.length >= MIN_COLLAPSE) {
+                // Add text before first unchanged item
+                result += html.substring(lastEnd, unchangedChunk[0].start);
+
+                // Show first CONTEXT_FIELDS items
+                for (let j = 0; j < CONTEXT_FIELDS && j < unchangedChunk.length; j++) {
+                    result += unchangedChunk[j].content;
+                }
+
+                // Add collapse marker
+                const collapsedCount = unchangedChunk.length - (2 * CONTEXT_FIELDS);
+                if (collapsedCount > 0) {
+                    result += `<li class="jsondiffpatch-unchanged jsondiffpatch-collapsed"><div class="jsondiffpatch-property-name">...</div><div class="jsondiffpatch-value"><pre>(${collapsedCount} unchanged field${collapsedCount > 1 ? 's' : ''})</pre></div></li>`;
+                }
+
+                // Show last CONTEXT_FIELDS items
+                for (let j = Math.max(CONTEXT_FIELDS, unchangedChunk.length - CONTEXT_FIELDS); j < unchangedChunk.length; j++) {
+                    result += unchangedChunk[j].content;
+                }
+
+                lastEnd = unchangedChunk[unchangedChunk.length - 1].end;
+            } else {
+                // Chunk too small, include everything
+                if (unchangedChunk.length > 0) {
+                    result += html.substring(lastEnd, unchangedChunk[unchangedChunk.length - 1].end);
+                    lastEnd = unchangedChunk[unchangedChunk.length - 1].end;
+                }
+            }
+            unchangedChunk = [];
+
+            // Add the changed item
+            result += html.substring(lastEnd, match.index + match[0].length);
+            lastEnd = match.index + match[0].length;
+        }
+    }
+
+    // Handle remaining unchanged chunk at end
+    if (unchangedChunk.length >= MIN_COLLAPSE) {
+        result += html.substring(lastEnd, unchangedChunk[0].start);
+
+        for (let j = 0; j < CONTEXT_FIELDS && j < unchangedChunk.length; j++) {
+            result += unchangedChunk[j].content;
+        }
+
+        const collapsedCount = unchangedChunk.length - CONTEXT_FIELDS;
+        if (collapsedCount > 0) {
+            result += `<li class="jsondiffpatch-unchanged jsondiffpatch-collapsed"><div class="jsondiffpatch-property-name">...</div><div class="jsondiffpatch-value"><pre>(${collapsedCount} unchanged field${collapsedCount > 1 ? 's' : ''})</pre></div></li>`;
+        }
+
+        lastEnd = unchangedChunk[unchangedChunk.length - 1].end;
+    } else if (unchangedChunk.length > 0) {
+        result += html.substring(lastEnd, unchangedChunk[unchangedChunk.length - 1].end);
+        lastEnd = unchangedChunk[unchangedChunk.length - 1].end;
+    }
+
+    // Add remaining HTML
+    result += html.substring(lastEnd);
+
+    return result;
 }
 
 /**
@@ -637,6 +733,16 @@ function generateIndividualHTMLReport(diff) {
             overflow-x: auto;
             max-height: 600px;
             overflow-y: auto;
+        }
+
+        .jsondiffpatch-collapsed {
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        .jsondiffpatch-collapsed .jsondiffpatch-property-name,
+        .jsondiffpatch-collapsed .jsondiffpatch-value {
+            color: #999 !important;
         }
 
         .diff-section {
