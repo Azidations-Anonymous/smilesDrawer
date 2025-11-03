@@ -46,7 +46,7 @@ class BridgedRingHandler {
         return false;
     }
 
-    createBridgedRing(ringIds: number[], sourceVertexId: number): any {
+    createBridgedRing(ringIds: number[], sourceVertexId: number): Ring {
         let ringMembers = new Set();
         let vertices = new Set();
         let neighbours = new Set();

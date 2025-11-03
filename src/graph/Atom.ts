@@ -254,7 +254,7 @@ class Atom {
    * @param {Atom} atomB An atom.
    * @returns {Boolean} A boolean indicating whether or not two atoms share a common ringbond.
    */
-  haveCommonRingbond(atomA: any, atomB: any): boolean {
+  haveCommonRingbond(atomA: Atom, atomB: Atom): boolean {
     for (let i = 0; i < atomA.ringbonds.length; i++) {
       for (let j = 0; j < atomB.ringbonds.length; j++) {
         if (atomA.ringbonds[i].id == atomB.ringbonds[j].id) {

@@ -8,7 +8,9 @@ import Edge = require('./Edge');
 import Ring = require('./Ring');
 import Atom = require('./Atom');
 
-/** 
+type ParseTree = any;
+
+/**
  * A class representing the molecular graph. 
  * 
  * @property {Vertex[]} vertices The vertices of the graph.
@@ -35,7 +37,7 @@ class Graph {
    * @param {Object} parseTree A SMILES parse tree.
    * @param {Boolean} [isomeric=false] A boolean specifying whether or not the SMILES is isomeric.
    */
-  constructor(parseTree: any, isomeric: boolean = false) {
+  constructor(parseTree: ParseTree, isomeric: boolean = false) {
     this.vertices = Array();
     this.edges = Array();
     this.atomIdxToVertexId = Array();
@@ -60,7 +62,7 @@ class Graph {
    * @param {?Number} parentVertexId=null The id of the previous vertex.
    * @param {Boolean} isBranch=false Whether or not the bond leading to this vertex is a branch bond. Branches are represented by parentheses in smiles (e.g. CC(O)C).
    */
-  _init(node: any, order: number = 0, parentVertexId: number | null = null, isBranch: boolean = false): void {
+  _init(node: ParseTree, order: number = 0, parentVertexId: number | null = null, isBranch: boolean = false): void {
     // Create a new vertex object
     const element = node.atom.element ? node.atom.element : node.atom;
     let atom = new Atom(element, node.bond);

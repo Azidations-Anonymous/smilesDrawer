@@ -50,7 +50,7 @@ class MolecularPreprocessor implements IMolecularData {
   opts: IMoleculeOptions;
   theme: IThemeColors;
   themeManager: ThemeManager;
-  data: any;  // Parse tree data from SMILES parser
+  data: ParseTree;  // Parse tree data from SMILES parser
   infoOnly: boolean;
   highlight_atoms: AtomHighlight[];
 
@@ -90,7 +90,7 @@ class MolecularPreprocessor implements IMolecularData {
    * @param {String} themeName='dark' The name of the theme to use. Built-in themes are 'light' and 'dark'.
    * @param {Boolean} infoOnly=false Only output info on the molecule without drawing anything to the canvas.
    */
-  draw(data: any, target: string | HTMLCanvasElement | HTMLElement, themeName: string = 'light', infoOnly: boolean = false): void {
+  draw(data: ParseTree, target: string | HTMLCanvasElement | HTMLElement, themeName: string = 'light', infoOnly: boolean = false): void {
       this.drawingManager.draw(data, target, themeName, infoOnly);
   }
 

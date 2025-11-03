@@ -1,3 +1,5 @@
+import ThemeManager = require('../../config/ThemeManager');
+
 class SvgTextHelper {
 
 
@@ -23,7 +25,7 @@ class SvgTextHelper {
    * @param {*} options
    * @returns {{svg: SVGElement, width: Number, height: Number}} The SVG element containing the text and its dimensions.
    */
-  static writeText(text: string, themeManager: any, fontSize: number, fontFamily: string, maxWidth: number = Number.MAX_SAFE_INTEGER): {svg: SVGElement, width: number, height: number} {
+  static writeText(text: string, themeManager: ThemeManager, fontSize: number, fontFamily: string, maxWidth: number = Number.MAX_SAFE_INTEGER): {svg: SVGElement, width: number, height: number} {
     let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     let style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
     style.appendChild(document.createTextNode(`

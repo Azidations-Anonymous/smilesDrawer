@@ -7,6 +7,9 @@ import Edge = require("../graph/Edge");
 import ThemeManager = require("../config/ThemeManager");
 import CanvasDrawer = require("./CanvasDrawer");
 import Atom = require("../graph/Atom");
+
+type ParseTree = any;
+
 class DrawingManager {
     private drawer: MolecularPreprocessor;
 
@@ -14,12 +17,12 @@ class DrawingManager {
         this.drawer = drawer;
     }
 
-    draw(data: any, target: any, themeName: string = 'light', infoOnly: boolean = false): void {
+    draw(data: ParseTree, target: string | HTMLCanvasElement | HTMLElement, themeName: string = 'light', infoOnly: boolean = false): void {
         this.drawer.initDraw(data, themeName, infoOnly, null);
 
         if (!this.drawer.infoOnly) {
           this.drawer.themeManager = new ThemeManager(this.drawer.opts.themes, themeName);
-          this.drawer.canvasWrapper = new CanvasDrawer(target, this.drawer.themeManager, this.drawer.opts);
+          this.drawer.canvasWrapper = new CanvasDrawer(target as string | HTMLCanvasElement, this.drawer.themeManager, this.drawer.opts);
         }
 
         if (!infoOnly) {
@@ -343,7 +346,7 @@ class DrawingManager {
         }
     }
 
-    getEdgeNormals(edge: any): any[] {
+    getEdgeNormals(edge: Edge): Vector2[] {
         let v1 = this.drawer.graph.vertices[edge.sourceId].position;
         let v2 = this.drawer.graph.vertices[edge.targetId].position;
 
