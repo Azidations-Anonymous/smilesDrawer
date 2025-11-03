@@ -1,7 +1,9 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
 import Vector2 = require("../graph/Vector2");
+import Vertex = require('../graph/Vertex');
 import ArrayHelper = require("../utils/ArrayHelper");
 import MathHelper = require("../utils/MathHelper");
+import { SideChoice } from './MolecularDataTypes';
 
 class OverlapResolutionManager {
     private drawer: MolecularPreprocessor;
@@ -59,7 +61,7 @@ class OverlapResolutionManager {
         };
     }
 
-    chooseSide(vertexA: any, vertexB: any, sides: any[]): any {
+    chooseSide(vertexA: Vertex, vertexB: Vertex, sides: Vector2[]): SideChoice {
         // Check which side has more vertices
         // Get all the vertices connected to the both ends
         let an = vertexA.getNeighbours(vertexB.id);

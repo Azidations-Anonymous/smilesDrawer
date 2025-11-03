@@ -1,4 +1,7 @@
 import IMolecularData = require('./IMolecularData');
+import Vertex = require('../graph/Vertex');
+import Vector2 = require('../graph/Vector2');
+import { SideChoice } from './MolecularDataTypes';
 
 class MolecularDataSnapshot implements IMolecularData {
   private source: IMolecularData;
@@ -49,7 +52,7 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.areVerticesInSameRing(vertexA, vertexB);
   }
 
-  chooseSide(vertexA: any, vertexB: any, sides: any[] | Record<string, any>): any {
+  chooseSide(vertexA: Vertex, vertexB: Vertex, sides: Vector2[]): SideChoice {
     return this.source.chooseSide(vertexA, vertexB, sides);
   }
 

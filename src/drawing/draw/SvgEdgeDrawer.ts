@@ -83,7 +83,7 @@ class SvgEdgeDrawer {
       b = vertexB.position,
       normals = preprocessor.getEdgeNormals(edge),
       // Create a point on each side of the line
-      sides = ArrayHelper.clone(normals);
+      sides = ArrayHelper.clone(normals) as import('../../graph/Vector2')[];
 
     sides[0].multiplyScalar(10).add(a);
     sides[1].multiplyScalar(10).add(a);

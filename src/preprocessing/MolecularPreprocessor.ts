@@ -9,6 +9,7 @@ import GraphProcessingManager from "./GraphProcessingManager";
 import OptionsManager from "../config/OptionsManager";
 import RingManager = require("./RingManager");
 import IMolecularData = require("./IMolecularData");
+import { SideChoice } from "./MolecularDataTypes";
 
 import MathHelper = require('../utils/MathHelper');
 import ArrayHelper = require('../utils/ArrayHelper');
@@ -549,7 +550,7 @@ class MolecularPreprocessor implements IMolecularData {
           bnCount: the number of neighbours of vertexB
       }
    */
-  chooseSide(vertexA: any, vertexB: any, sides: any[]): any {
+  chooseSide(vertexA: Vertex, vertexB: Vertex, sides: Vector2[]): SideChoice {
       return this.overlapResolver.chooseSide(vertexA, vertexB, sides);
   }
 

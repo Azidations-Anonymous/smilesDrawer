@@ -50,7 +50,7 @@ class SvgVertexDrawer {
     for (var i = 0; i < graph.vertices.length; i++) {
       let vertex = graph.vertices[i];
       let atom = vertex.value;
-      let charge = 0;
+      let charge: number | string = 0;
       let isotope = 0;
       let bondCount = vertex.value.bondCount;
       let element = atom.element;
