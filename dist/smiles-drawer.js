@@ -17191,7 +17191,8 @@ class ArrayHelper {
     let s = '(';
 
     for (let i = 0; i < arr.length; i++) {
-      s += arr[i].id ? arr[i].id + ', ' : arr[i] + ', ';
+      let item = arr[i];
+      s += typeof item === 'object' && item !== null && 'id' in item && item.id !== undefined ? item.id + ', ' : item + ', ';
     }
 
     s = s.substring(0, s.length - 2);

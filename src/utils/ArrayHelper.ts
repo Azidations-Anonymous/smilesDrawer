@@ -13,13 +13,13 @@ class ArrayHelper {
         let out: T[] | Record<string, T> = Array.isArray(arr) ? [] : {};
 
         for (let key in arr) {
-            let value: any = arr[key];
+            let value: T = arr[key];
 
-            if (typeof value === 'object' && value !== null && typeof value.clone === 'function') {
-                (out as any)[key] = value.clone();
+            if (typeof value === 'object' && value !== null && typeof (value as any).clone === 'function') {
+                (out as any)[key] = (value as any).clone();
             }
             else {
-                (out as any)[key] = (typeof value === 'object' && value !== null) ? ArrayHelper.clone(value) : value;
+                (out as any)[key] = (typeof value === 'object' && value !== null) ? ArrayHelper.clone(value as any) : value;
             }
         }
 
@@ -35,7 +35,7 @@ class ArrayHelper {
      * @param {Array} arrB An array.
      * @returns {Boolean} A boolean indicating whether or not the two arrays contain the same elements.
      */
-    static equals(arrA: any[], arrB: any[]): boolean {
+    static equals<T>(arrA: T[], arrB: T[]): boolean {
         if (arrA.length !== arrB.length) {
             return false;
         }
@@ -60,7 +60,7 @@ class ArrayHelper {
      * @param {*} arr[].id If the array contains an object with the property 'id', the properties value is printed. Else, the array elements value is printend.
      * @returns {String} A string representation of the array.
      */
-    static print(arr: any[]): string {
+    static print<T extends { id?: number | string } | number | string>(arr: T[]): string {
         if (arr.length == 0) {
             return '';
         }
@@ -68,7 +68,10 @@ class ArrayHelper {
         let s = '(';
 
         for (let i = 0; i < arr.length; i++) {
-            s += arr[i].id ? arr[i].id + ', ' : arr[i] + ', ';
+            let item = arr[i];
+            s += (typeof item === 'object' && item !== null && 'id' in item && item.id !== undefined)
+                ? item.id + ', '
+                : item + ', ';
         }
 
         s = s.substring(0, s.length - 2);
@@ -98,7 +101,7 @@ class ArrayHelper {
      * @param {(String|Number)} value The value of the property.
      * @returns {*} The array element matching the value.
      */
-    static get(arr: any[], property: string | number, value: string | number): any {
+    static get<T extends Record<string | number, any>>(arr: T[], property: string | number, value: string | number): T | undefined {
         for (let i = 0; i < arr.length; i++) {
             if (arr[i][property] == value) {
                 return arr[i];
@@ -117,7 +120,7 @@ class ArrayHelper {
      * @param {Function} [options.func=undefined] A custom property function.
      * @returns {Boolean} A boolean whether or not the array contains a value.
      */
-    static contains(arr: any[], options: { value?: any; property?: string; func?: (element: any) => boolean }): boolean {
+    static contains<T>(arr: T[], options: { value?: unknown; property?: string; func?: (element: T) => boolean }): boolean {
         if (!options.property && !options.func) {
             for (let i = 0; i < arr.length; i++) {
                 if (arr[i] == options.value) {
