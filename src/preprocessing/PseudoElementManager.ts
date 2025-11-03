@@ -119,17 +119,9 @@ class PseudoElementManager {
 
             const pseudoElements = neighbour.getAttachedPseudoElements();
 
-            if (element === 'C' && pseudoElements.hasOwnProperty('0O') && pseudoElements.hasOwnProperty('3C')) {
-              if (pseudoElements['0O'].count === 1 && pseudoElements['3C'].count === 1) {
-                neighbour.isDrawn = false;
-                vertex.value.attachPseudoElement('Ac', '', 0);
-              }
-            }
-            else if (element === 'S' && pseudoElements.hasOwnProperty('0O') && pseudoElements.hasOwnProperty('3C')) {
-              if (pseudoElements['0O'].count === 2 && pseudoElements['3C'].count === 1) {
-                neighbour.isDrawn = false;
-                vertex.value.attachPseudoElement('Ms', '', 0);
-              }
+            if (pseudoElements.hasOwnProperty('0O') && pseudoElements.hasOwnProperty('3C')) {
+              neighbour.isDrawn = false;
+              vertex.value.attachPseudoElement('Ac', '', 0);
             }
           }
         }
