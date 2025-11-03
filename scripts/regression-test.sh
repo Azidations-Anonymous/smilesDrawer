@@ -52,14 +52,28 @@ echo ""
 
 echo "Step 3: Building baseline library..."
 npx tsc || true  # Allow TS errors during migration
-npx gulp build
+if ! npx gulp build; then
+    echo "✗ Baseline build failed!"
+    echo "================================================================================"
+    echo "ERROR: Baseline build failed - cannot proceed with regression testing"
+    echo "================================================================================"
+    rm -rf "${TEMP_DIR}"
+    exit 1
+fi
 echo "✓ Baseline build complete"
 echo ""
 
 echo "Step 4: Building current library..."
 cd "${CURRENT_DIR}"
 npx tsc || true  # Allow TS errors during migration
-npx gulp build
+if ! npx gulp build; then
+    echo "✗ Current build failed!"
+    echo "================================================================================"
+    echo "ERROR: Current build failed - cannot proceed with regression testing"
+    echo "================================================================================"
+    rm -rf "${TEMP_DIR}"
+    exit 1
+fi
 echo "✓ Current build complete"
 echo ""
 
