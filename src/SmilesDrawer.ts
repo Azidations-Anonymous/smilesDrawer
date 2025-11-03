@@ -6,24 +6,28 @@ import ReactionDrawer = require('./reactions/ReactionDrawer');
 import SvgWrapper = require('./drawing/SvgWrapper');
 import SvgConversionHelper = require('./drawing/helpers/SvgConversionHelper');
 import Options = require('./config/Options');
+import { IMoleculeOptions } from './config/IOptions';
+
+type DrawTarget = string | HTMLCanvasElement | HTMLImageElement | SVGElement | 'svg' | 'canvas' | 'img' | null;
+type Weights = number[] | { reactants: number[][], reagents: number[][], products: number[][] } | null;
 
 class SmilesDrawer {
-    drawer: any;
-    reactionDrawer: any;
+    drawer: SvgDrawer;
+    reactionDrawer: ReactionDrawer;
 
-    constructor(moleculeOptions: any = {}, reactionOptions: any = {}) {
+    constructor(moleculeOptions: Partial<IMoleculeOptions> = {}, reactionOptions: any = {}) {
         this.drawer = new SvgDrawer(moleculeOptions);
 
         // moleculeOptions gets edited in reactionOptions, so clone
         this.reactionDrawer = new ReactionDrawer(reactionOptions, JSON.parse(JSON.stringify(this.drawer.opts)));
     }
 
-    static apply(moleculeOptions: any = {}, reactionOptions: any = {}, attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: any) => void) | null = null, errorCallback: ((error: any) => void) | null = null): void {
+    static apply(moleculeOptions: Partial<IMoleculeOptions> = {}, reactionOptions: any = {}, attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null = null, errorCallback: ((error: Error) => void) | null = null): void {
         const drawer = new SmilesDrawer(moleculeOptions, reactionOptions);
         drawer.apply(attribute, theme, successCallback, errorCallback);
     }
 
-    apply(attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: any) => void) | null = null, errorCallback: ((error: any) => void) | null = null): void {
+    apply(attribute: string = 'data-smiles', theme: string = 'light', successCallback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null = null, errorCallback: ((error: Error) => void) | null = null): void {
         let elements = document.querySelectorAll(`[${attribute}]`);
         elements.forEach(element => {
             let smiles = element.getAttribute(attribute);
@@ -69,18 +73,18 @@ class SmilesDrawer {
             if (element.hasAttribute('data-smiles-options') || element.hasAttribute('data-smiles-reaction-options')) {
                 let moleculeOptions = {};
                 if (element.hasAttribute('data-smiles-options')) {
-                    moleculeOptions = JSON.parse(element.getAttribute('data-smiles-options').replaceAll('\'', '"'));
+                    moleculeOptions = JSON.parse(element.getAttribute('data-smiles-options')!.replaceAll('\'', '"'));
                 }
 
                 let reactionOptions = {};
                 if (element.hasAttribute('data-smiles-reaction-options')) {
-                    reactionOptions = JSON.parse(element.getAttribute('data-smiles-reaction-options').replaceAll('\'', '"'));
+                    reactionOptions = JSON.parse(element.getAttribute('data-smiles-reaction-options')!.replaceAll('\'', '"'));
                 }
 
                 let smilesDrawer = new SmilesDrawer(moleculeOptions, reactionOptions);
-                smilesDrawer.draw(smiles, element, currentTheme, successCallback, errorCallback, weights);
+                smilesDrawer.draw(smiles, element as DrawTarget, currentTheme, successCallback, errorCallback, weights);
             } else {
-                this.draw(smiles, element, currentTheme, successCallback, errorCallback, weights);
+                this.draw(smiles, element as DrawTarget, currentTheme, successCallback, errorCallback, weights);
             }
         });
     }
@@ -94,13 +98,13 @@ class SmilesDrawer {
      * @param {?CallableFunction} errorCallback The function called on error.
      * @param {?Number[]|Object} weights The weights for the gaussians.
      */
-    draw(smiles: string, target: any, theme: string = 'light', successCallback: ((result: any) => void) | null = null, errorCallback: ((error: any) => void) | null = null, weights: any = null): void {
+    draw(smiles: string, target: DrawTarget, theme: string = 'light', successCallback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null = null, errorCallback: ((error: Error) => void) | null = null, weights: Weights = null): void {
         // get the settings
         let rest = [];
         [smiles, ...rest] = smiles.split(' ');
         let info = rest.join(' ');
 
-        let settings = {};
+        let settingsOverride: any = {};
 
         if (info.includes('__')) {
             let settingsString = info.substring(
@@ -108,22 +112,22 @@ class SmilesDrawer {
                 info.lastIndexOf('__')
             );
 
-            settings = JSON.parse(settingsString.replaceAll('\'', '"'));
+            settingsOverride = JSON.parse(settingsString.replaceAll('\'', '"'));
         }
 
-        let defaultSettings = {
+        let defaultSettings: { textAboveArrow: string, textBelowArrow: string } = {
             textAboveArrow: '{reagents}',
             textBelowArrow: ''
         }
 
-        settings = Options.extend(true, defaultSettings, settings);
+        let settings = Options.extend(true, defaultSettings, settingsOverride) as { textAboveArrow: string, textBelowArrow: string };
 
         if (smiles.includes('>')) {
             try {
                 this.drawReaction(smiles, target, theme, settings, weights, successCallback);
             } catch (err) {
                 if (errorCallback) {
-                    errorCallback(err);
+                    errorCallback(err as Error);
                 } else {
                     console.error(err);
                 }
@@ -133,7 +137,7 @@ class SmilesDrawer {
                 this.drawMolecule(smiles, target, theme, weights, successCallback);
             } catch (err) {
                 if (errorCallback) {
-                    errorCallback(err);
+                    errorCallback(err as Error);
                 } else {
                     console.error(err);
                 }
@@ -141,7 +145,7 @@ class SmilesDrawer {
         }
     }
 
-    drawMolecule(smiles: string, target: any, theme: string, weights: any, callback: ((result: any) => void) | null): void {
+    drawMolecule(smiles: string, target: DrawTarget, theme: string, weights: Weights, callback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null): void {
         let parseTree = Parser.parse(smiles, {});
 
         if (target === null || target === 'svg') {
@@ -173,33 +177,33 @@ class SmilesDrawer {
                 callback(target);
             }
         } else {
-            let elements = document.querySelectorAll(target);
+            let elements = document.querySelectorAll(target as string);
             elements.forEach(element => {
                 let tag = element.nodeName.toLowerCase();
                 if (tag === 'svg') {
-                    this.drawer.draw(parseTree, element, theme, weights);
+                    this.drawer.draw(parseTree, element as SVGElement, theme, weights);
                     // let dims = this.getDimensions(element);
                     // element.setAttributeNS(null, 'width', '' + dims.w);
                     // element.setAttributeNS(null, 'height', '' + dims.h);
                     if (callback) {
-                        callback(element);
+                        callback(element as SVGElement);
                     }
                 } else if (tag === 'canvas') {
-                    this.svgToCanvas(this.drawer.draw(parseTree, null, theme, weights), element);
+                    this.svgToCanvas(this.drawer.draw(parseTree, null, theme, weights), element as HTMLCanvasElement);
                     if (callback) {
-                        callback(element);
+                        callback(element as HTMLCanvasElement);
                     }
                 } else if (tag === 'img') {
-                    this.svgToImg(this.drawer.draw(parseTree, null, theme, weights), element);
+                    this.svgToImg(this.drawer.draw(parseTree, null, theme, weights), element as HTMLImageElement);
                     if (callback) {
-                        callback(element);
+                        callback(element as HTMLImageElement);
                     }
                 }
             });
         }
     }
 
-    drawReaction(smiles: string, target: any, theme: string, settings: any, weights: any, callback: ((result: any) => void) | null): void {
+    drawReaction(smiles: string, target: DrawTarget, theme: string, settings: { textAboveArrow: string, textBelowArrow: string }, weights: Weights, callback: ((result: SVGElement | HTMLCanvasElement | HTMLImageElement) => void) | null): void {
         let reaction = ReactionParser.parse(smiles);
 
         if (target === null || target === 'svg') {
@@ -231,32 +235,32 @@ class SmilesDrawer {
                 callback(target);
             }
         } else {
-            let elements = document.querySelectorAll(target);
+            let elements = document.querySelectorAll(target as string);
             elements.forEach(element => {
                 let tag = element.nodeName.toLowerCase();
                 if (tag === 'svg') {
-                    this.reactionDrawer.draw(reaction, element, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
+                    this.reactionDrawer.draw(reaction, element as SVGElement, theme, weights, settings.textAboveArrow, settings.textBelowArrow);
                     // The svg has to have a css width and height set for the other
                     // tags, however, here it would overwrite the chosen width and height
                     if (this.reactionDrawer.opts.scale <= 0) {
-                        element.style.width = null;
-                        element.style.height = null;
+                        (element as HTMLElement).style.width = '';
+                        (element as HTMLElement).style.height = '';
                     }
                     // let dims = this.getDimensions(element);
                     // element.setAttributeNS(null, 'width', '' + dims.w);
                     // element.setAttributeNS(null, 'height', '' + dims.h);
                     if (callback) {
-                        callback(element);
+                        callback(element as SVGElement);
                     }
                 } else if (tag === 'canvas') {
-                    this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element);
+                    this.svgToCanvas(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element as HTMLCanvasElement);
                     if (callback) {
-                        callback(element);
+                        callback(element as HTMLCanvasElement);
                     }
                 } else if (tag === 'img') {
-                    this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element);
+                    this.svgToImg(this.reactionDrawer.draw(reaction, null, theme, weights, settings.textAboveArrow, settings.textBelowArrow), element as HTMLImageElement);
                     if (callback) {
-                        callback(element);
+                        callback(element as HTMLImageElement);
                     }
                 }
             });
@@ -291,16 +295,20 @@ class SmilesDrawer {
      * @param {SVGElement} svg 
      * @returns {{w: Number, h: Number}} The width and height.
      */
-    getDimensions(element: any, svg: SVGElement | null = null): {w: number, h: number} {
+    getDimensions(element: HTMLImageElement | HTMLCanvasElement | SVGElement, svg: SVGElement | null = null): {w: number, h: number} {
         let w = this.drawer.opts.width;
         let h = this.drawer.opts.height;
 
         if (this.drawer.opts.scale <= 0) {
-            if (w === null) {
+            if (w === null && element instanceof HTMLCanvasElement) {
+                w = element.width;
+            } else if (w === null && element instanceof HTMLImageElement) {
                 w = element.width;
             }
 
-            if (h === null) {
+            if (h === null && element instanceof HTMLCanvasElement) {
+                h = element.height;
+            } else if (h === null && element instanceof HTMLImageElement) {
                 h = element.height;
             }
 
