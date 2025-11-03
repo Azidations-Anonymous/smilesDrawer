@@ -11,8 +11,9 @@ src/**/*.d.ts
 src/**/*.js.map
 src/**/*.d.ts.map
 
-# Regression test results
-regression-results/
+# Test results
+test/regression-results/
+test/smoketest/
 
 # MacOS
 .DS_Store

@@ -1,0 +1,489 @@
+#!/usr/bin/env node
+
+/**
+ * @file Smoke test runner for SmilesDrawer
+ * @module test/smoke-test
+ * @description
+ * Generates SVG and JSON position data for SMILES strings without comparison.
+ * Useful for quick sanity checks, debugging, and generating reference outputs.
+ *
+ * ## Features
+ * - Generates SVG and JSON for current codebase
+ * - Supports multiple datasets (fastregression, chembl, etc.)
+ * - Saves outputs to smoketest/ directory
+ * - No baseline comparison (faster than regression tests)
+ *
+ * ## Output
+ * - smoketest/[N].svg - SVG rendering
+ * - smoketest/[N].json - JSON position data
+ *
+ * ## Usage
+ * npm run test:smoke              # Uses fastregression dataset
+ * npm run test:smoke chembl       # Uses chembl dataset
+ * npm run test:smoke -- -all      # All datasets
+ *
+ * @example
+ * node test/smoke-test.js
+ * node test/smoke-test.js chembl
+ * node test/smoke-test.js -all
+ */
+
+const { spawnSync } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+/**
+ * Get the short commit hash for a git repository
+ * @param {string} repoPath - Path to the git repository
+ * @returns {string} Short commit hash or 'unknown' if error
+ */
+function getCommitHash(repoPath) {
+    const result = spawnSync('git', ['rev-parse', '--short', 'HEAD'], {
+        cwd: repoPath,
+        encoding: 'utf8'
+    });
+
+    if (result.error || result.status !== 0) {
+        return 'unknown';
+    }
+
+    return result.stdout.trim();
+}
+
+/**
+ * Check if there are uncommitted changes in the working directory
+ * @param {string} repoPath - Path to the git repository
+ * @returns {boolean} True if there are uncommitted changes
+ */
+function hasUncommittedChanges(repoPath) {
+    const result = spawnSync('git', ['status', '--porcelain'], {
+        cwd: repoPath,
+        encoding: 'utf8'
+    });
+
+    if (result.error || result.status !== 0) {
+        return false;
+    }
+
+    return result.stdout.trim().length > 0;
+}
+
+/**
+ * Get the git diff for the src/ directory
+ * @param {string} repoPath - Path to the git repository
+ * @returns {string} Git diff output or empty string if error
+ */
+function getSrcDiff(repoPath) {
+    const result = spawnSync('git', ['diff', 'HEAD', 'src/'], {
+        cwd: repoPath,
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large diffs
+    });
+
+    if (result.error || result.status !== 0) {
+        return '';
+    }
+
+    return result.stdout;
+}
+
+/**
+ * Escape HTML special characters
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Collapse long sections of unchanged lines in a diff
+ * @param {string} diffText - Git diff text
+ * @returns {string} Collapsed diff text
+ */
+function collapseDiff(diffText) {
+    if (!diffText) return '';
+
+    const lines = diffText.split('\n');
+    const result = [];
+    let unchangedChunk = [];
+    const CONTEXT_LINES = 3;  // Lines to show before/after changes
+    const MIN_COLLAPSE = 7;   // Minimum unchanged lines to collapse
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const isChanged = line.startsWith('+') || line.startsWith('-') ||
+                         line.startsWith('@@') || line.startsWith('diff ') ||
+                         line.startsWith('index ') || line.startsWith('---') ||
+                         line.startsWith('+++');
+
+        if (isChanged) {
+            // Flush unchanged chunk before this change
+            if (unchangedChunk.length > MIN_COLLAPSE) {
+                // Show first CONTEXT_LINES
+                for (let j = 0; j < CONTEXT_LINES && j < unchangedChunk.length; j++) {
+                    result.push(unchangedChunk[j]);
+                }
+                // Add collapse marker
+                const collapsedCount = unchangedChunk.length - (2 * CONTEXT_LINES);
+                if (collapsedCount > 0) {
+                    result.push(`... (${collapsedCount} unchanged lines) ...`);
+                }
+                // Show last CONTEXT_LINES
+                for (let j = Math.max(CONTEXT_LINES, unchangedChunk.length - CONTEXT_LINES); j < unchangedChunk.length; j++) {
+                    result.push(unchangedChunk[j]);
+                }
+            } else {
+                // Chunk too small, show all
+                result.push(...unchangedChunk);
+            }
+            unchangedChunk = [];
+            result.push(line);
+        } else {
+            unchangedChunk.push(line);
+        }
+    }
+
+    // Flush remaining unchanged chunk
+    if (unchangedChunk.length > MIN_COLLAPSE) {
+        for (let j = 0; j < CONTEXT_LINES && j < unchangedChunk.length; j++) {
+            result.push(unchangedChunk[j]);
+        }
+        const collapsedCount = unchangedChunk.length - CONTEXT_LINES;
+        if (collapsedCount > 0) {
+            result.push(`... (${collapsedCount} unchanged lines) ...`);
+        }
+    } else {
+        result.push(...unchangedChunk);
+    }
+
+    return result.join('\n');
+}
+
+const fastDatasets = [
+    { name: 'fastregression', file: './fastregression.js' }
+];
+
+const fullDatasets = [
+    { name: 'chembl', file: './chembl.js' },
+    { name: 'drugbank', file: './drugbank.js' },
+    { name: 'fdb', file: './fdb.js' },
+    { name: 'force', file: './force.js' },
+    { name: 'gdb17', file: './gdb17.js' },
+    { name: 'schembl', file: './schembl.js' }
+];
+
+const args = process.argv.slice(2);
+const allMode = args.includes('-all');
+
+// Determine dataset
+let datasets;
+if (allMode) {
+    datasets = fullDatasets;
+} else {
+    const datasetName = args.find(arg => !arg.startsWith('-'));
+    if (datasetName) {
+        const found = fullDatasets.find(ds => ds.name === datasetName);
+        if (!found) {
+            console.error('ERROR: Unknown dataset: ' + datasetName);
+            console.error('Available datasets:', fullDatasets.map(ds => ds.name).join(', '));
+            process.exit(2);
+        }
+        datasets = [found];
+    } else {
+        datasets = fastDatasets;
+    }
+}
+
+// Create output directory (delete old results)
+const outputDir = path.join(__dirname, 'smoketest');
+if (fs.existsSync(outputDir)) {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+}
+fs.mkdirSync(outputDir, { recursive: true });
+
+// Get git information for current codebase
+const currentDir = path.join(__dirname, '..');
+const commitHash = getCommitHash(currentDir);
+const hasChanges = hasUncommittedChanges(currentDir);
+const srcDiff = hasChanges ? getSrcDiff(currentDir) : '';
+
+console.log('='.repeat(80));
+console.log('SMILES DRAWER SMOKE TEST');
+console.log('='.repeat(80));
+console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : datasets[0].name));
+console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
+console.log('OUTPUT DIRECTORY: ' + outputDir);
+console.log('='.repeat(80));
+console.log('');
+
+let totalOutputs = 0;
+let totalErrors = 0;
+
+for (const dataset of datasets) {
+    console.log('='.repeat(80));
+    console.log('TESTING DATASET: ' + dataset.name);
+    console.log('='.repeat(80));
+
+    const datasetPath = path.join(__dirname, dataset.file);
+    if (!fs.existsSync(datasetPath)) {
+        console.error('ERROR: Dataset file not found: ' + datasetPath);
+        totalErrors++;
+        continue;
+    }
+
+    const smilesData = require(datasetPath);
+    console.log('LOADED: ' + smilesData.length + ' SMILES strings');
+    console.log('');
+
+    for (let i = 0; i < smilesData.length; i++) {
+        const smiles = smilesData[i];
+        const outputNum = totalOutputs + 1;
+
+        // Truncate long SMILES for display
+        const displaySmiles = smiles.length > 60 ? smiles.substring(0, 57) + '...' : smiles;
+        console.log(`[${dataset.name} ${i + 1}/${smilesData.length}] Generating: ${displaySmiles}`);
+
+        try {
+            // Generate SVG to temporary file (avoids stdout buffer issues with large molecules)
+            const tempSvgFile = path.join(outputDir, `temp-${outputNum}.svg`);
+            const svgResult = spawnSync('node', ['generate-svg.js', smiles, tempSvgFile], {
+                cwd: __dirname,
+                encoding: 'utf8'
+            });
+
+            if (svgResult.error || svgResult.status !== 0) {
+                console.error('  ERROR: Failed to generate SVG');
+                console.error('  ' + (svgResult.stderr || svgResult.error?.message || 'Unknown error'));
+                totalErrors++;
+                continue;
+            }
+
+            // Read SVG from file
+            let svg;
+            try {
+                svg = fs.readFileSync(tempSvgFile, 'utf8');
+                fs.unlinkSync(tempSvgFile);
+            } catch (err) {
+                console.error('  ERROR: Could not read SVG file');
+                console.error('  ' + err.message);
+                totalErrors++;
+                continue;
+            }
+
+            // Generate JSON to temporary file (avoids stdout buffer issues with large molecules)
+            const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
+            const jsonResult = spawnSync('node', ['generate-json.js', smiles, tempJsonFile], {
+                cwd: __dirname,
+                encoding: 'utf8'
+            });
+
+            if (jsonResult.error || jsonResult.status !== 0) {
+                console.error('  ERROR: Failed to generate JSON');
+                console.error('  ' + (jsonResult.stderr || jsonResult.error?.message || 'Unknown error'));
+                totalErrors++;
+                continue;
+            }
+
+            // Read JSON from file
+            let json;
+            try {
+                json = fs.readFileSync(tempJsonFile, 'utf8');
+                fs.unlinkSync(tempJsonFile);
+            } catch (err) {
+                console.error('  ERROR: Could not read JSON file');
+                console.error('  ' + err.message);
+                totalErrors++;
+                continue;
+            }
+
+            // Generate HTML wrapper
+            const collapsedDiff = hasChanges && srcDiff ? collapseDiff(srcDiff) : '';
+            const diffSection = hasChanges && collapsedDiff ? `
+        <div class="diff-section">
+            <h3>Uncommitted Changes in src/</h3>
+            <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
+        </div>` : '';
+
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smoke Test #${outputNum}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .commit-info {
+            background: #ecf0f1;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        .commit-info .commit-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .commit-info .commit-hash {
+            font-family: 'Courier New', monospace;
+            color: #34495e;
+        }
+        .commit-info .uncommitted-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+        .smiles-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .smiles-display code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+        .svg-container {
+            background: white;
+            border: 1px solid #ecf0f1;
+            border-radius: 3px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .svg-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .diff-section {
+            margin-top: 30px;
+            background: #fff9e6;
+            border: 1px solid #f1c40f;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .diff-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .diff-content {
+            background: #f8f8f8;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .json-section {
+            margin-top: 30px;
+        }
+        .json-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .json-container {
+            background: #f8f8f8;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Smoke Test #${outputNum}</h1>
+
+        <div class="commit-info">
+            <span class="commit-label">Commit:</span>
+            <span class="commit-hash">${escapeHtml(commitHash)}</span>${hasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+        </div>
+
+        <div class="smiles-display">
+            <strong>SMILES:</strong> <code>${escapeHtml(smiles)}</code>
+        </div>
+
+        <div class="svg-container">
+            ${svg}
+        </div>
+
+        <div class="json-section">
+            <h3>JSON Position Data</h3>
+            <div class="json-container">
+                <pre>${escapeHtml(json)}</pre>
+            </div>
+        </div>
+
+        ${diffSection}
+    </div>
+</body>
+</html>`;
+
+            // Save outputs
+            const htmlPath = path.join(outputDir, outputNum + '.html');
+            const jsonPath = path.join(outputDir, outputNum + '.json');
+
+            fs.writeFileSync(htmlPath, html, 'utf8');
+            fs.writeFileSync(jsonPath, json, 'utf8');
+
+            console.log('  SUCCESS: Saved ' + outputNum + '.html and ' + outputNum + '.json');
+            totalOutputs++;
+
+        } catch (error) {
+            console.error('  ERROR: ' + error.message);
+            totalErrors++;
+        }
+    }
+
+    console.log('');
+}
+
+console.log('='.repeat(80));
+console.log('SMOKE TEST COMPLETE');
+console.log('='.repeat(80));
+console.log('Total outputs generated: ' + totalOutputs);
+console.log('Total errors: ' + totalErrors);
+console.log('Output directory: ' + outputDir);
+console.log('='.repeat(80));
+
+if (totalErrors > 0) {
+    process.exit(1);
+} else {
+    process.exit(0);
+}

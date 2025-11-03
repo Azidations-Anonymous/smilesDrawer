@@ -9,6 +9,7 @@
   "private": false,
   "scripts": {
     "test:regression": "./scripts/regression-test.sh",
+    "test:smoke": "node test/smoke-test.js",
     "type-check": "tsc",
     "type-check:watch": "tsc --watch"
   },
