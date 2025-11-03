@@ -10,7 +10,7 @@ import { BondType, WedgeType } from '../types/CommonTypes';
  * @property {String} [bondType='-'] The bond type of this edge.
  * @property {Boolean} [isPartOfAromaticRing=false] Whether or not this edge is part of an aromatic ring.
  * @property {Boolean} [center=false] Wheter or not the bond is centered. For example, this affects straight double bonds.
- * @property {String} [wedge=''] Wedge direction. Either '', 'up' or 'down'
+ * @property {String} [wedge=null] Wedge direction. Either null, 'up' or 'down'
  */
 class Edge {
     id: number | null;
@@ -37,7 +37,7 @@ class Edge {
         this.bondType = '-';
         this.isPartOfAromaticRing = false;
         this.center = false;
-        this.wedge = '';
+        this.wedge = null;
     }
 
     /**

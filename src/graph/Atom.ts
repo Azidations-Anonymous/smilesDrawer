@@ -118,7 +118,7 @@ class Atom {
     this.neighbouringElements = Array();
     this.isPartOfAromaticRing = element !== this.element;
     this.bondCount = 0;
-    this.chirality = '';
+    this.chirality = null;
     this.isStereoCenter = false;
     this.priority = 0;
     this.mainChain = false;

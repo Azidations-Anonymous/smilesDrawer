@@ -17,7 +17,7 @@ export type BondType =
 /**
  * Wedge type for stereochemical bonds
  */
-export type WedgeType = 'up' | 'down' | '';
+export type WedgeType = 'up' | 'down' | null;
 
 /**
  * Atom visualization mode
@@ -27,12 +27,12 @@ export type AtomVisualization = 'default' | 'balls' | 'allballs';
 /**
  * SMILES chirality notation (used in bracket atoms)
  */
-export type SmilesChirality = '@' | '@@' | '';
+export type SmilesChirality = '@' | '@@' | null;
 
 /**
  * CIP chirality designation (R/S nomenclature)
  */
-export type Chirality = 'R' | 'S' | '';
+export type Chirality = 'R' | 'S' | null;
 
 /**
  * Text rendering direction for atom labels
@@ -42,4 +42,4 @@ export type TextDirection = 'up' | 'down' | 'left' | 'right';
 /**
  * Hydrogen direction for stereochemistry
  */
-export type HydrogenDirection = 'up' | 'down' | 'left' | 'right' | '';
+export type HydrogenDirection = 'up' | 'down' | 'left' | 'right' | null;

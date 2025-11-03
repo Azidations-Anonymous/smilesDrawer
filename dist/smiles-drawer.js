@@ -8488,7 +8488,7 @@ class Atom {
     this.neighbouringElements = Array();
     this.isPartOfAromaticRing = element !== this.element;
     this.bondCount = 0;
-    this.chirality = '';
+    this.chirality = null;
     this.isStereoCenter = false;
     this.priority = 0;
     this.mainChain = false;
@@ -8991,7 +8991,7 @@ module.exports = Atom;
  * @property {String} [bondType='-'] The bond type of this edge.
  * @property {Boolean} [isPartOfAromaticRing=false] Whether or not this edge is part of an aromatic ring.
  * @property {Boolean} [center=false] Wheter or not the bond is centered. For example, this affects straight double bonds.
- * @property {String} [wedge=''] Wedge direction. Either '', 'up' or 'down'
+ * @property {String} [wedge=null] Wedge direction. Either null, 'up' or 'down'
  */
 
 class Edge {
@@ -9010,7 +9010,7 @@ class Edge {
     this.bondType = '-';
     this.isPartOfAromaticRing = false;
     this.center = false;
-    this.wedge = '';
+    this.wedge = null;
   }
   /**
    * Set the bond type of this edge. This also sets the edge weight.
