@@ -21,7 +21,7 @@ class RingConnection {
      * @param {Ring} firstRing A ring.
      * @param {Ring} secondRing A ring.
      */
-    constructor(firstRing: any, secondRing: any) {
+    constructor(firstRing: Ring, secondRing: Ring) {
         this.id = null;
         this.firstRingId = firstRing.id;
         this.secondRingId = secondRing.id;
@@ -79,7 +79,7 @@ class RingConnection {
      * @param {Vertex[]} vertices The array of vertices associated with the current molecule.
      * @returns {Boolean} A boolean indicating whether or not this ring connection is a bridge.
      */
-    isBridge(vertices: any[]): boolean {
+    isBridge(vertices: Vertex[]): boolean {
       if (this.vertices.size > 2) {
           return true;
       }
@@ -103,7 +103,7 @@ class RingConnection {
      * @param {Number} secondRingId A ring id.
      * @returns {Boolean} A boolean indicating whether or not two rings ar connected by a bridged bond.
      */
-    static isBridge(ringConnections: any[], vertices: any[], firstRingId: number, secondRingId: number): boolean {
+    static isBridge(ringConnections: RingConnection[], vertices: Vertex[], firstRingId: number, secondRingId: number): boolean {
       let ringConnection = null;
       
       for (let i = 0; i < ringConnections.length; i++) {
@@ -126,7 +126,7 @@ class RingConnection {
      * @param {Number} ringId A ring id.
      * @returns {Number[]} An array of ring ids of neighbouring rings.
      */
-    static getNeighbours(ringConnections: any[], ringId: number): number[] {
+    static getNeighbours(ringConnections: RingConnection[], ringId: number): number[] {
         let neighbours = [];
 
         for (let i = 0; i < ringConnections.length; i++) {
@@ -151,7 +151,7 @@ class RingConnection {
      * @param {Number} secondRingId A ring id.
      * @returns {Number[]} An array of vertex ids associated with the ring connection.
      */
-    static getVertices(ringConnections: any[], firstRingId: number, secondRingId: number): number[] | undefined {
+    static getVertices(ringConnections: RingConnection[], firstRingId: number, secondRingId: number): number[] | undefined {
         for (let i = 0; i < ringConnections.length; i++) {
             let ringConnection = ringConnections[i];
             if (ringConnection.firstRingId === firstRingId && ringConnection.secondRingId === secondRingId ||
