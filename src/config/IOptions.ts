@@ -139,6 +139,19 @@ interface IReactionOptions {
   weights: IReactionWeightOptions;
 }
 
+/**
+ * Attached pseudo element information for rendering
+ */
+interface IAttachedPseudoElement {
+  element: string;
+  count: number;
+  hydrogenCount: number;
+  previousElement: string;
+  charge: number;
+}
+
+type AttachedPseudoElements = Record<string, IAttachedPseudoElement>;
+
 export {
   IThemeColors,
   IWeightOptions,
@@ -146,5 +159,7 @@ export {
   IArrowOptions,
   IPlusOptions,
   IReactionWeightOptions,
-  IReactionOptions
+  IReactionOptions,
+  IAttachedPseudoElement,
+  AttachedPseudoElements
 };

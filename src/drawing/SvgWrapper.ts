@@ -5,18 +5,8 @@ import Vertex = require('../graph/Vertex');
 import SvgUnicodeHelper = require('./helpers/SvgUnicodeHelper');
 import Vector2 = require('../graph/Vector2');
 import MathHelper = require('../utils/MathHelper');
-import { IMoleculeOptions } from '../config/IOptions';
+import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
-
-interface AttachedPseudoElement {
-  element: string;
-  count: number;
-  hydrogenCount: number;
-  previousElement: string;
-  charge: string;
-}
-
-type AttachedPseudoElements = Record<string, AttachedPseudoElement>;
 
 function makeid(length: number): string {
   var result = '';
@@ -618,7 +608,7 @@ class SvgWrapper {
     // Exception for nitro (draw nitro as NO2 instead of N+O-O)
     if (charge === 1 && elementName === 'N' && attachedPseudoElement.hasOwnProperty('0O') &&
       attachedPseudoElement.hasOwnProperty('0O-1')) {
-      attachedPseudoElement = { '0O': { element: 'O', count: 2, hydrogenCount: 0, previousElement: 'C', charge: '' } }
+      attachedPseudoElement = { '0O': { element: 'O', count: 2, hydrogenCount: 0, previousElement: 'C', charge: 0 } }
       charge = 0;
     }
 
@@ -634,8 +624,8 @@ class SvgWrapper {
         display += SvgUnicodeHelper.createUnicodeSubscript(pe.count);
       }
 
-      if (pe.charge !== '') {
-        display += SvgUnicodeHelper.createUnicodeCharge(charge);
+      if (pe.charge !== 0) {
+        display += SvgUnicodeHelper.createUnicodeCharge(pe.charge);
       }
 
       text.push([display, pe.element]);

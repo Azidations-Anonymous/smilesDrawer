@@ -7,6 +7,8 @@ import Ring = require('../graph/Ring');
 import CanvasWedgeDrawer = require('./draw/CanvasWedgeDrawer');
 import CanvasPrimitiveDrawer = require('./draw/CanvasPrimitiveDrawer');
 import CanvasTextDrawer = require('./draw/CanvasTextDrawer');
+import ThemeManager = require('../config/ThemeManager');
+import { IMoleculeOptions, IThemeColors, AttachedPseudoElements } from '../config/IOptions';
 
 /**
  * A class wrapping a canvas element.
@@ -25,8 +27,8 @@ import CanvasTextDrawer = require('./draw/CanvasTextDrawer');
 class CanvasDrawer {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D | null;
-    themeManager: any;
-    opts: any;
+    themeManager: ThemeManager;
+    opts: IMoleculeOptions;
     drawingWidth: number;
     drawingHeight: number;
     offsetX: number;
@@ -39,7 +41,7 @@ class CanvasDrawer {
     devicePixelRatio: number;
     backingStoreRatio: number;
     ratio: number;
-    colors: any;
+    colors: IThemeColors;
     private wedgeDrawer: CanvasWedgeDrawer;
     private primitiveDrawer: CanvasPrimitiveDrawer;
     private textDrawer: CanvasTextDrawer;
@@ -51,7 +53,7 @@ class CanvasDrawer {
      * @param {ThemeManager} themeManager Theme manager for setting proper colors.
      * @param {Object} options The smiles drawer options object.
      */
-    constructor(target: string | HTMLCanvasElement, themeManager: any, options: any) {
+    constructor(target: string | HTMLCanvasElement, themeManager: ThemeManager, options: IMoleculeOptions) {
         if (typeof target === 'string') {
             this.canvas = document.getElementById(target) as HTMLCanvasElement;
         } else {
@@ -110,7 +112,7 @@ class CanvasDrawer {
      *
      * @param {Object} theme A theme from the smiles drawer options.
      */
-    setTheme(theme: any): void {
+    setTheme(theme: IThemeColors): void {
         this.colors = theme;
     }
 
@@ -119,7 +121,7 @@ class CanvasDrawer {
      *
      * @param {Vertex[]} vertices An array of vertices containing the vertices associated with the current molecule.
      */
-    scale(vertices: any[]): void {
+    scale(vertices: Vertex[]): void {
         // Figure out the final size of the image
         let maxX = -Number.MAX_VALUE;
         let maxY = -Number.MAX_VALUE;
@@ -210,11 +212,11 @@ class CanvasDrawer {
         this.ctx.clearRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
     }
 
-    drawWedge(line: any, width: number = 1.0): void {
+    drawWedge(line: Line, width: number = 1.0): void {
         this.wedgeDrawer.drawWedge(line, width);
     }
 
-    drawDashedWedge(line: any): void {
+    drawDashedWedge(line: Line): void {
         this.wedgeDrawer.drawDashedWedge(line);
     }
 
@@ -222,7 +224,7 @@ class CanvasDrawer {
         this.primitiveDrawer.drawCircle(x, y, radius, color, fill, debug, debugText);
     }
 
-    drawLine(line: any, dashed: boolean = false, alpha: number = 1.0): void {
+    drawLine(line: Line, dashed: boolean = false, alpha: number = 1.0): void {
         this.primitiveDrawer.drawLine(line, dashed, alpha);
     }
 
@@ -234,7 +236,7 @@ class CanvasDrawer {
         this.primitiveDrawer.drawPoint(x, y, elementName);
     }
 
-    drawAromaticityRing(ring: any): void {
+    drawAromaticityRing(ring: Ring): void {
         this.primitiveDrawer.drawAromaticityRing(ring);
     }
 
@@ -242,7 +244,7 @@ class CanvasDrawer {
         this.primitiveDrawer.drawDebugText(x, y, text);
     }
 
-    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: any = {}): void {
+    drawText(x: number, y: number, elementName: string, hydrogens: number, direction: string, isTerminal: boolean, charge: number, isotope: number, vertexCount: number, attachedPseudoElement: AttachedPseudoElements = {}): void {
         this.textDrawer.drawText(x, y, elementName, hydrogens, direction, isTerminal, charge, isotope, vertexCount, attachedPseudoElement);
     }
 
