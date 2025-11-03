@@ -98,7 +98,7 @@ class Ring {
      * @param {Vertex[]} vertices An array of vertices representing the current molecule.
      * @returns {Vector2[]} An array of the positional vectors of the ring members.
      */
-    getPolygon(vertices: any[]): Vector2[] {
+    getPolygon(vertices: Vertex[]): Vector2[] {
         let polygon = [];
 
         for (let i = 0; i < this.members.length; i++) {
@@ -125,7 +125,7 @@ class Ring {
      * @param {Number} startVertexId The vertex id of the start vertex.
      * @param {Number} previousVertexId The vertex id of the previous vertex (the loop calling the callback function will run in the opposite direction of this vertex).
      */
-    eachMember(vertices: any[], callback: (vertexId: number) => void, startVertexId?: number, previousVertexId?: number): void {
+    eachMember(vertices: Vertex[], callback: (vertexId: number) => void, startVertexId?: number, previousVertexId?: number): void {
         startVertexId = startVertexId || startVertexId === 0 ? startVertexId : this.members[0];
         let current = startVertexId;
         let max = 0;
@@ -152,7 +152,7 @@ class Ring {
      * @param {RingConnection[]} ringConnections An array of ring connections associated with the current molecule.
      * @returns {Object[]} An array of neighbouring rings sorted by ring size. Example: { n: 5, neighbour: 1 }.
      */
-    getOrderedNeighbours(ringConnections: any[]): { n: number; neighbour: number }[] {
+    getOrderedNeighbours(ringConnections: RingConnection[]): { n: number; neighbour: number }[] {
         let orderedNeighbours = Array(this.neighbours.length);
         
         for (let i = 0; i < this.neighbours.length; i++) {
@@ -178,7 +178,7 @@ class Ring {
      * @param {Vertex[]} vertices An array of vertices associated with the current molecule.
      * @returns {Boolean} A boolean indicating whether or not this ring is an implicitly defined benzene-like.
      */
-    isBenzeneLike(vertices: any[]): boolean {
+    isBenzeneLike(vertices: Vertex[]): boolean {
         let db = this.getDoubleBondCount(vertices);
         let length = this.members.length;
 
@@ -192,7 +192,7 @@ class Ring {
      * @param {Vertex[]} vertices An array of vertices associated with the current molecule.
      * @returns {Number} The number of double bonds inside this ring.
      */
-    getDoubleBondCount(vertices: any[]): number {
+    getDoubleBondCount(vertices: Vertex[]): number {
         let doubleBondCount = 0;
 
         for (let i = 0; i < this.members.length; i++) {
