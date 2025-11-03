@@ -1,7 +1,12 @@
 import IMolecularData = require('./IMolecularData');
+import Graph = require('../graph/Graph');
+import Ring = require('../graph/Ring');
+import RingConnection = require('../graph/RingConnection');
 import Vertex = require('../graph/Vertex');
+import Edge = require('../graph/Edge');
 import Vector2 = require('../graph/Vector2');
-import { SideChoice } from './MolecularDataTypes';
+import { IMoleculeOptions } from '../config/IOptions';
+import { SideChoice, AtomHighlight } from './MolecularDataTypes';
 
 class MolecularDataSnapshot implements IMolecularData {
   private source: IMolecularData;
@@ -12,19 +17,19 @@ class MolecularDataSnapshot implements IMolecularData {
     this.serializedData = source.getPositionData();
   }
 
-  get graph(): any {
+  get graph(): Graph {
     return this.source.graph;
   }
 
-  get rings(): any {
+  get rings(): Ring[] {
     return this.source.rings;
   }
 
-  get ringConnections(): any {
+  get ringConnections(): RingConnection[] {
     return this.source.ringConnections;
   }
 
-  get opts(): any {
+  get opts(): IMoleculeOptions {
     return this.source.opts;
   }
 
@@ -32,23 +37,23 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.bridgedRing;
   }
 
-  get highlight_atoms(): any {
+  get highlight_atoms(): AtomHighlight[] {
     return this.source.highlight_atoms;
   }
 
-  isRingAromatic(ring: any): boolean {
+  isRingAromatic(ring: Ring): boolean {
     return this.source.isRingAromatic(ring);
   }
 
-  getEdgeNormals(edge: any): any[] {
+  getEdgeNormals(edge: Edge): Vector2[] {
     return this.source.getEdgeNormals(edge);
   }
 
-  getRingbondType(vertexA: any, vertexB: any): string | null {
+  getRingbondType(vertexA: Vertex, vertexB: Vertex): string | null {
     return this.source.getRingbondType(vertexA, vertexB);
   }
 
-  areVerticesInSameRing(vertexA: any, vertexB: any): boolean {
+  areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean {
     return this.source.areVerticesInSameRing(vertexA, vertexB);
   }
 
@@ -56,11 +61,11 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.chooseSide(vertexA, vertexB, sides);
   }
 
-  getLargestOrAromaticCommonRing(vertexA: any, vertexB: any): any {
+  getLargestOrAromaticCommonRing(vertexA: Vertex, vertexB: Vertex): Ring | null {
     return this.source.getLargestOrAromaticCommonRing(vertexA, vertexB);
   }
 
-  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: any): void {
+  initDraw(data: any, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
     throw new Error('MolecularDataSnapshot is read-only. initDraw() cannot be called.');
   }
 
