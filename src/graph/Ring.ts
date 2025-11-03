@@ -29,7 +29,7 @@ class Ring {
     neighbours: number[];
     positioned: boolean;
     center: Vector2;
-    rings: any[];
+    rings: Ring[];
     isBridged: boolean;
     isPartOfBridged: boolean;
     isSpiro: boolean;
@@ -72,7 +72,7 @@ class Ring {
         clone.neighbours = ArrayHelper.clone(this.neighbours) as number[];
         clone.positioned = this.positioned;
         clone.center = this.center.clone();
-        clone.rings = ArrayHelper.clone(this.rings) as any[];
+        clone.rings = ArrayHelper.clone(this.rings) as Ring[];
         clone.isBridged = this.isBridged;
         clone.isPartOfBridged = this.isPartOfBridged;
         clone.isSpiro = this.isSpiro;
