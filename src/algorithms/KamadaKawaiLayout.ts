@@ -52,24 +52,7 @@ class KamadaKawaiLayout {
         let arrEnergySumX = new Float32Array(length);
         let arrEnergySumY = new Float32Array(length);
 
-        // Helper: compute squared magnitude of a 2D vector
-        const squaredMagnitude = (x: number, y: number): number => x * x + y * y;
-
-        // Helper: compute energy contribution between two vertices
-        const computeEnergyPair = (
-            ux: number, uy: number, vx: number, vy: number,
-            strength: number, desiredLength: number
-        ): [number, number] => {
-            const dx = ux - vx;
-            const dy = uy - vy;
-            const denom = 1.0 / Math.sqrt(squaredMagnitude(dx, dy));
-            return [
-                strength * (dx - desiredLength * dx * denom),
-                strength * (dy - desiredLength * dy * denom)
-            ];
-        };
-
-        let ux, uy, dEx, dEy, vx, vy;
+        let ux, uy, dEx, dEy, vx, vy, denom;
 
         ArrayHelper.forEachIndexReverse(length, (rowIdx) => {
           ux = arrPositionX[rowIdx];
@@ -82,35 +65,32 @@ class KamadaKawaiLayout {
             }
             vx = arrPositionX[colIdx];
             vy = arrPositionY[colIdx];
-            const energyPair = computeEnergyPair(
-              ux, uy, vx, vy,
-              matStrength[rowIdx][colIdx],
-              matLength[rowIdx][colIdx]
-            );
-            matEnergy[rowIdx][colIdx] = energyPair;
-            matEnergy[colIdx][rowIdx] = energyPair;
-            dEx += energyPair[0];
-            dEy += energyPair[1];
+            denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+            matEnergy[rowIdx][colIdx] = [
+              matStrength[rowIdx][colIdx] * ((ux - vx) - matLength[rowIdx][colIdx] * (ux - vx) * denom),
+              matStrength[rowIdx][colIdx] * ((uy - vy) - matLength[rowIdx][colIdx] * (uy - vy) * denom)
+            ];
+            matEnergy[colIdx][rowIdx] = matEnergy[rowIdx][colIdx];
+            dEx += matEnergy[rowIdx][colIdx][0];
+            dEy += matEnergy[rowIdx][colIdx][1];
           });
           arrEnergySumX[rowIdx] = dEx;
           arrEnergySumY[rowIdx] = dEy;
         });
 
-        // Compute energy at a vertex (squared gradient magnitude and gradient components)
-        const energy = (index: number): [number, number, number] => {
-          const sqMag = squaredMagnitude(arrEnergySumX[index], arrEnergySumY[index]);
-          return [sqMag, arrEnergySumX[index], arrEnergySumY[index]];
-        };
+        // Utility functions, maybe inline them later
+        let energy = function (index) {
+          return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
+        }
 
-        // Find the vertex with highest energy among unpositioned vertices
-        const highestEnergy = (): [number, number, number, number] => {
+        let highestEnergy = function () {
           let maxEnergy = 0.0;
           let maxEnergyId = 0;
           let maxDEX = 0.0;
-          let maxDEY = 0.0;
+          let maxDEY = 0.0
 
           ArrayHelper.forEachIndexReverse(length, (idx) => {
-            const [delta, dEX, dEY] = energy(idx);
+            let [delta, dEX, dEY] = energy(idx);
 
             if (delta > maxEnergy && arrPositioned[idx] === false) {
               maxEnergy = delta;
@@ -121,55 +101,61 @@ class KamadaKawaiLayout {
           });
 
           return [maxEnergyId, maxEnergy, maxDEX, maxDEY];
-        };
+        }
 
-        // Update vertex position and recompute energies
-        const update = (index: number, dEX: number, dEY: number): void => {
+        let update = function (index, dEX, dEY) {
           let dxx = 0.0;
           let dyy = 0.0;
           let dxy = 0.0;
-          const ux = arrPositionX[index];
-          const uy = arrPositionY[index];
-          const arrL = matLength[index];
-          const arrK = matStrength[index];
+          let ux = arrPositionX[index];
+          let uy = arrPositionY[index];
+          let arrL = matLength[index];
+          let arrK = matStrength[index];
 
           ArrayHelper.forEachIndexReverse(length, (idx) => {
             if (idx === index) {
               return;
             }
 
-            const vx = arrPositionX[idx];
-            const vy = arrPositionY[idx];
-            const l = arrL[idx];
-            const k = arrK[idx];
-            const dx = ux - vx;
-            const dy = uy - vy;
-            const denom = 1.0 / Math.pow(squaredMagnitude(dx, dy), 1.5);
+            let vx = arrPositionX[idx];
+            let vy = arrPositionY[idx];
+            let l = arrL[idx];
+            let k = arrK[idx];
+            let m = (ux - vx) * (ux - vx);
+            let denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
 
-            dxx += k * (1 - l * dy * dy * denom);
-            dyy += k * (1 - l * dx * dx * denom);
-            dxy += k * (l * dx * dy * denom);
+            dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
+            dyy += k * (1 - l * m * denom);
+            dxy += k * (l * (ux - vx) * (uy - vy) * denom);
           });
 
           // Prevent division by zero
-          dxx = Math.max(dxx, 0.1);
-          dyy = Math.max(dyy, 0.1);
-          dxy = Math.max(dxy, 0.1);
+          if (dxx === 0) {
+            dxx = 0.1;
+          }
+
+          if (dyy === 0) {
+            dyy = 0.1;
+          }
+
+          if (dxy === 0) {
+            dxy = 0.1;
+          }
 
           let dy = (dEX / dxx + dEY / dxy);
-          dy /= (dxy / dxx - dyy / dxy);
-          const dx = -(dxy * dy + dEX) / dxx;
+          dy /= (dxy / dxx - dyy / dxy); // had to split this onto two lines because the syntax highlighter went crazy.
+          let dx = -(dxy * dy + dEX) / dxx;
 
           arrPositionX[index] += dx;
           arrPositionY[index] += dy;
 
           // Update the energies
-          const arrE = matEnergy[index];
-          let newDEX = 0.0;
-          let newDEY = 0.0;
+          let arrE = matEnergy[index];
+          dEX = 0.0;
+          dEY = 0.0;
 
-          const newUx = arrPositionX[index];
-          const newUy = arrPositionY[index];
+          ux = arrPositionX[index];
+          uy = arrPositionY[index];
 
           ArrayHelper.forEachIndexReverse(length, (idx) => {
             if (index === idx) {
@@ -177,24 +163,22 @@ class KamadaKawaiLayout {
             }
             const vx = arrPositionX[idx];
             const vy = arrPositionY[idx];
+            // Store old energies
             const prevEx = arrE[idx][0];
             const prevEy = arrE[idx][1];
+            const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+            const dxLocal = arrK[idx] * ((ux - vx) - arrL[idx] * (ux - vx) * denom);
+            const dyLocal = arrK[idx] * ((uy - vy) - arrL[idx] * (uy - vy) * denom);
 
-            const [newEx, newEy] = computeEnergyPair(
-              newUx, newUy, vx, vy,
-              arrK[idx],
-              arrL[idx]
-            );
-
-            arrE[idx] = [newEx, newEy];
-            newDEX += newEx;
-            newDEY += newEy;
-            arrEnergySumX[idx] += newEx - prevEx;
-            arrEnergySumY[idx] += newEy - prevEy;
+            arrE[idx] = [dxLocal, dyLocal];
+            dEX += dxLocal;
+            dEY += dyLocal;
+            arrEnergySumX[idx] += dxLocal - prevEx;
+            arrEnergySumY[idx] += dyLocal - prevEy;
           });
-          arrEnergySumX[index] = newDEX;
-          arrEnergySumY[index] = newDEY;
-        };
+          arrEnergySumX[index] = dEX;
+          arrEnergySumY[index] = dEY;
+        }
 
         // Setting up variables for the while loops
         let maxEnergyId = 0;
