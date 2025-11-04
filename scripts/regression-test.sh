@@ -217,6 +217,8 @@ if [ "$BISECT_MODE" = "YES" ]; then
 
         # Checkout commit in baseline directory
         cd "${BASELINE_DIR}"
+        git reset --hard > /dev/null 2>&1
+        git clean -fd > /dev/null 2>&1
         if ! git checkout "${COMMIT}" > /dev/null 2>&1; then
             echo -e "  \033[1;31m✗\033[0m Git checkout failed, skipping"
             LEFT=$((MID + 1))
@@ -271,6 +273,8 @@ if [ "$BISECT_MODE" = "YES" ]; then
 
             # Checkout and build the previous commit
             cd "${BASELINE_DIR}"
+            git reset --hard > /dev/null 2>&1
+            git clean -fd > /dev/null 2>&1
             if git checkout "${PREV_COMMIT}" > /dev/null 2>&1; then
                 npx tsc > /dev/null 2>&1 || true
                 if npx gulp build > /dev/null 2>&1; then
