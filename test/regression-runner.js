@@ -108,23 +108,98 @@ const args = process.argv.slice(2);
 const allMode = args.includes('-all');
 const failEarly = args.includes('-failearly');
 const noVisual = args.includes('-novisual');
-const pathArgs = args.filter(arg => !arg.startsWith('-'));
+
+// Check for bisect mode
+const bisectIndex = args.indexOf('-bisect');
+const bisectMode = bisectIndex !== -1;
+let bisectSmiles = '';
+
+if (bisectMode) {
+    if (bisectIndex + 1 >= args.length) {
+        console.error('ERROR: -bisect flag requires a SMILES string argument');
+        process.exit(2);
+    }
+    bisectSmiles = args[bisectIndex + 1];
+}
+
+const pathArgs = args.filter((arg, index) => {
+    if (arg.startsWith('-')) return false;
+    if (index > 0 && args[index - 1] === '-bisect') return false;
+    return true;
+});
 
 const oldCodePath = pathArgs[0];
 const newCodePath = pathArgs[1];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual]');
-    console.error('  -all       Test all datasets (default: fastregression only)');
-    console.error('  -failearly Stop at first difference (default: continue)');
-    console.error('  -novisual  Skip SVG generation (default: generate visual comparisons)');
+    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-bisect "<smiles>"]');
+    console.error('  -all         Test all datasets (default: fastregression only)');
+    console.error('  -failearly   Stop at first difference (default: continue)');
+    console.error('  -novisual    Skip SVG generation (default: generate visual comparisons)');
+    console.error('  -bisect      Test single SMILES for bisect mode (returns 0=match, 1=difference)');
     console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -all -failearly');
+    console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer -bisect "C1CCCCC1"');
     process.exit(2);
 }
 
+// Bisect mode: test single SMILES and exit with 0=match, 1=difference
+if (bisectMode) {
+    const smiles = sanitizeSmiles(bisectSmiles);
+
+    // Generate JSON for comparison
+    const oldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.json');
+    const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.json');
+
+    const oldJsonResult = spawnSync('node', ['test/generate-json.js', smiles, oldJsonFile], {
+        cwd: oldCodePath,
+        encoding: 'utf8'
+    });
+
+    if (oldJsonResult.error || oldJsonResult.status !== 0) {
+        // Old code failed - treat as difference
+        process.exit(1);
+    }
+
+    const newJsonResult = spawnSync('node', ['test/generate-json.js', smiles, newJsonFile], {
+        cwd: newCodePath,
+        encoding: 'utf8'
+    });
+
+    if (newJsonResult.error || newJsonResult.status !== 0) {
+        // New code failed - treat as difference
+        process.exit(1);
+    }
+
+    // Read and compare JSON
+    let oldJson, newJson;
+    try {
+        oldJson = fs.readFileSync(oldJsonFile, 'utf8');
+        newJson = fs.readFileSync(newJsonFile, 'utf8');
+    } catch (err) {
+        // File read error - treat as difference
+        process.exit(1);
+    } finally {
+        // Clean up temp files
+        try {
+            fs.unlinkSync(oldJsonFile);
+            fs.unlinkSync(newJsonFile);
+        } catch (err) {
+            // Ignore cleanup errors
+        }
+    }
+
+    // Exit 0 if match, 1 if difference
+    if (oldJson === newJson) {
+        process.exit(0);
+    } else {
+        process.exit(1);
+    }
+}
+
+// Regular regression test mode
 const datasets = allMode ? fullDatasets : fastDatasets;
 
 // Create output directory for reports (delete old results)

@@ -8,10 +8,20 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fc = require('fast-check');
 
+// Use the production preprocessing code paths to ensure the WASM/JS layout is
+// exercised exactly as it would be in the browser.
 const Parser = require('../src/parsing/Parser.js');
 const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocessor.js');
 const Graph = require('../src/graph/Graph.js');
 
+// ---------------------------------------------------------------------------
+// Helper utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Fully preprocess a SMILES string so the returned graph reflects the
+ * production layout pipeline (ring handling, fused structures, etc.).
+ */
 function prepareMolecule(smiles) {
     const preprocessor = new MolecularPreprocessor({});
     preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
@@ -22,6 +32,10 @@ function prepareMolecule(smiles) {
     };
 }
 
+/**
+ * Return current vertex positions for evaluation. We copy the values to avoid
+ * mutating the underlying graph in the tests.
+ */
 function collectPositions(graph) {
     return graph.vertices.map(vertex => ({
         x: vertex.position.x,
@@ -29,6 +43,9 @@ function collectPositions(graph) {
     }));
 }
 
+/**
+ * Compute layout edge lengths; used to correlate geometry with bond length.
+ */
 function computeEdgeLengths(graph) {
     const positions = collectPositions(graph);
     return graph.edges.map(edge => {
@@ -38,6 +55,9 @@ function computeEdgeLengths(graph) {
     });
 }
 
+/**
+ * Assert every coordinate is finite.
+ */
 function ensureFinite(points, context) {
     points.forEach((p, idx) => {
         assert.ok(Number.isFinite(p.x), `${context}: x not finite for vertex ${idx}`);
@@ -45,6 +65,9 @@ function ensureFinite(points, context) {
     });
 }
 
+/**
+ * Rough bounding radius of the layout used in "more atoms ⇒ more space" checks.
+ */
 function computeBoundingSize(points) {
     const xs = points.map(p => p.x);
     const ys = points.map(p => p.y);
@@ -53,6 +76,9 @@ function computeBoundingSize(points) {
     return Math.hypot(width, height);
 }
 
+/**
+ * Centre a set of points around the origin (translation invariance).
+ */
 function centrePoints(points) {
     const centroid = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
     const inv = 1 / points.length;
@@ -61,6 +87,9 @@ function centrePoints(points) {
     return points.map(p => ({ x: p.x - centroid.x, y: p.y - centroid.y }));
 }
 
+/**
+ * Rotate a point cloud by a given angle.
+ */
 function rotatePoints(points, angle) {
     const c = Math.cos(angle);
     const s = Math.sin(angle);
@@ -70,6 +99,9 @@ function rotatePoints(points, angle) {
     }));
 }
 
+/**
+ * Translate a point cloud.
+ */
 function translatePoints(points, dx, dy) {
     return points.map(p => ({
         x: p.x + dx,
@@ -77,15 +109,24 @@ function translatePoints(points, dx, dy) {
     }));
 }
 
+/**
+ * Compute radii about the origin (after centring).
+ */
 function computeRadii(points) {
     return points.map(p => Math.hypot(p.x, p.y));
 }
 
+/**
+ * Max |value - mean| helper.
+ */
 function maxDeviation(values) {
     const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
     return Math.max(...values.map(v => Math.abs(v - avg)));
 }
 
+/**
+ * Pairwise distances sorted ascending (used to compare congruent layouts).
+ */
 function pairwiseSortedDistances(points) {
     const distances = [];
     for (let i = 0; i < points.length; i++) {
@@ -96,6 +137,9 @@ function pairwiseSortedDistances(points) {
     return distances.sort((a, b) => a - b);
 }
 
+/**
+ * Average spring energy per pair.
+ */
 function computeSpringEnergyAverage(graph, bondLength) {
     const positions = collectPositions(graph);
     const dist = graph.getDistanceMatrix();
@@ -119,6 +163,9 @@ function computeSpringEnergyAverage(graph, bondLength) {
     return pairs ? total / pairs : 0;
 }
 
+/**
+ * Gradient magnitude of the current energy landscape.
+ */
 function computeGradientMagnitude(graph, bondLength) {
     const positions = collectPositions(graph);
     const dist = graph.getDistanceMatrix();
@@ -153,16 +200,9 @@ function computeGradientMagnitude(graph, bondLength) {
     return Math.sqrt(gradientSum);
 }
 
-function chainSmiles(length) {
-    return 'C'.repeat(length);
-}
-
-function ringSmiles(length) {
-    if (length === 3) {
-        return 'C1CC1';
-    }
-    return 'C1' + 'C'.repeat(length - 2) + 'C1';
-}
+/** SMILES helpers used by properties */
+const chainSmiles = (length) => 'C'.repeat(length);
+const ringSmiles = (length) => (length === 3 ? 'C1CC1' : 'C1' + 'C'.repeat(length - 2) + 'C1');
 
 // --- property suites ----------------------------------------------------
 

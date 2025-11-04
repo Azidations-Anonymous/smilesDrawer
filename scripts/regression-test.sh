@@ -4,12 +4,29 @@ set -e
 
 BASELINE_COMMIT="HEAD"
 FLAGS=""
+BISECT_MODE="NO"
+BISECT_SMILES=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -all|-failearly|-novisual)
             FLAGS="${FLAGS} $1"
             shift
+            ;;
+        -bisect)
+            BISECT_MODE="YES"
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "ERROR: -bisect flag requires a SMILES string argument"
+                exit 1
+            fi
+            BISECT_SMILES="$1"
+            shift
+            # Optional baseline commit
+            if [[ $# -gt 0 ]] && [[ ! "$1" =~ ^- ]]; then
+                BASELINE_COMMIT="$1"
+                shift
+            fi
             ;;
         *)
             BASELINE_COMMIT="$1"
@@ -23,10 +40,32 @@ if [ "${BASELINE_COMMIT}" = "HEAD" ]; then
     if [ -z "$(git status --porcelain)" ]; then
         # Working directory is clean - compare against previous commit
         BASELINE_COMMIT="HEAD^"
-        echo "Working directory is clean - comparing against previous commit (HEAD^)"
+        if [ "$BISECT_MODE" = "NO" ]; then
+            echo "Working directory is clean - comparing against previous commit (HEAD^)"
+        fi
     else
         # Working directory has changes - compare against current commit
-        echo "Working directory has uncommitted changes - comparing against HEAD"
+        if [ "$BISECT_MODE" = "NO" ]; then
+            echo "Working directory has uncommitted changes - comparing against HEAD"
+        fi
+    fi
+fi
+
+# Validate bisect mode requirements
+if [ "$BISECT_MODE" = "YES" ]; then
+    # Verify baseline is an ancestor of current HEAD
+    if ! git merge-base --is-ancestor "${BASELINE_COMMIT}" HEAD 2>/dev/null; then
+        echo -e "\033[1;31mERROR:\033[0m Baseline commit '${BASELINE_COMMIT}' is not an ancestor of HEAD"
+        echo "Cannot bisect - commits must be in linear history"
+        exit 3
+    fi
+
+    # Verify there are commits to search
+    COMMIT_COUNT=$(git rev-list --count "${BASELINE_COMMIT}..HEAD")
+    if [ "${COMMIT_COUNT}" -eq 0 ]; then
+        echo -e "\033[1;31mERROR:\033[0m No commits between ${BASELINE_COMMIT} and HEAD"
+        echo "Cannot bisect - no commits to search"
+        exit 3
     fi
 fi
 
@@ -58,14 +97,25 @@ fi
 
 # Display header
 echo -e "\033[1;36m================================================================================\033[0m"
-echo -e "\033[1;35mSMILES DRAWER REGRESSION TEST\033[0m"
+if [ "$BISECT_MODE" = "YES" ]; then
+    echo -e "\033[1;35mSMILES DRAWER BISECT: Finding First Matching Commit\033[0m"
+else
+    echo -e "\033[1;35mSMILES DRAWER REGRESSION TEST\033[0m"
+fi
 echo -e "\033[1;36m================================================================================\033[0m"
-echo -e "\033[93mMODE:\033[0m $([ "$ALL_MODE" = "YES" ] && echo "FULL (all datasets)" || echo "FAST (fastregression only)")"
-echo -e "\033[93mFAIL-EARLY:\033[0m $([ "$FAIL_EARLY" = "YES" ] && echo "YES (stop at first difference)" || echo "NO (collect all differences)")"
-echo -e "\033[93mVISUAL:\033[0m $([ "$NO_VISUAL" = "YES" ] && echo "NO (skip SVG generation)" || echo "YES (generate side-by-side comparisons)")"
-echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
-echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
-echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/test/regression-results"
+
+if [ "$BISECT_MODE" = "YES" ]; then
+    echo -e "\033[93mSMILES:\033[0m ${BISECT_SMILES:0:60}$([ ${#BISECT_SMILES} -gt 60 ] && echo '...')"
+    echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
+    echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
+else
+    echo -e "\033[93mMODE:\033[0m $([ "$ALL_MODE" = "YES" ] && echo "FULL (all datasets)" || echo "FAST (fastregression only)")"
+    echo -e "\033[93mFAIL-EARLY:\033[0m $([ "$FAIL_EARLY" = "YES" ] && echo "YES (stop at first difference)" || echo "NO (collect all differences)")"
+    echo -e "\033[93mVISUAL:\033[0m $([ "$NO_VISUAL" = "YES" ] && echo "NO (skip SVG generation)" || echo "YES (generate side-by-side comparisons)")"
+    echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
+    echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
+    echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/test/regression-results"
+fi
 echo ""
 
 # Cleanup function to remove temporary directory
@@ -138,28 +188,110 @@ fi
 echo -e "\033[1;32m✓\033[0m Current build complete"
 echo ""
 
-echo -e "\033[93mStep 5:\033[0m Running regression tests..."
-echo "Flags:${FLAGS:-" (none)"}"
+if [ "$BISECT_MODE" = "YES" ]; then
+    # Binary search mode
+    echo -e "\033[93mStep 5:\033[0m Running binary search..."
+    echo ""
 
-cd "${CURRENT_DIR}/test"
-node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
+    # Get list of commits (oldest to newest)
+    # Use bash 3-compatible array population instead of mapfile
+    COMMITS=()
+    while IFS= read -r commit; do
+        COMMITS+=("$commit")
+    done < <(git rev-list --reverse "${BASELINE_COMMIT}..HEAD")
+    TOTAL_COMMITS=${#COMMITS[@]}
 
-REGRESSION_EXIT_CODE=$?
+    echo -e "\033[93mCOMMIT RANGE:\033[0m ${TOTAL_COMMITS} commits to search"
+    echo ""
 
-if [ ${REGRESSION_EXIT_CODE} -eq 0 ]; then
-    echo -e "\033[1;36m================================================================================\033[0m"
-    echo -e "\033[1;32mSUCCESS:\033[0m No differences detected!"
-    echo -e "\033[1;36m================================================================================\033[0m"
-    exit 0
-elif [ ${REGRESSION_EXIT_CODE} -eq 1 ]; then
-    echo -e "\033[1;36m================================================================================\033[0m"
-    echo -e "\033[93mDIFFERENCES FOUND:\033[0m Regression reports generated"
-    echo "Check regression-results/ for details"
-    echo -e "\033[1;36m================================================================================\033[0m"
-    exit 1
+    LEFT=0
+    RIGHT=$((TOTAL_COMMITS - 1))
+
+    while [ $((RIGHT - LEFT)) -gt 0 ]; do
+        MID=$(( (LEFT + RIGHT) / 2 ))
+        COMMIT=${COMMITS[$MID]}
+        COMMIT_SHORT=$(git rev-parse --short "${COMMIT}")
+        POSITION=$((MID + 1))
+
+        echo -e "Testing commit \033[93m${POSITION}/${TOTAL_COMMITS}\033[0m: \033[1;36m${COMMIT_SHORT}\033[0m"
+
+        # Checkout commit in baseline directory
+        cd "${BASELINE_DIR}"
+        if ! git checkout "${COMMIT}" > /dev/null 2>&1; then
+            echo -e "  \033[1;31m✗\033[0m Git checkout failed, skipping"
+            LEFT=$((MID + 1))
+            continue
+        fi
+
+        # Build the commit
+        npx tsc > /dev/null 2>&1 || true
+        if ! npx gulp build > /dev/null 2>&1; then
+            echo -e "  \033[1;31m✗\033[0m Build failed, skipping"
+            LEFT=$((MID + 1))
+            continue
+        fi
+
+        # Test with single SMILES
+        cd "${CURRENT_DIR}/test"
+        if node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" > /dev/null 2>&1; then
+            echo -e "  \033[1;32m✓\033[0m Output matches current"
+            RIGHT=$MID
+        else
+            echo -e "  \033[1;31m✗\033[0m Output differs from current"
+            LEFT=$((MID + 1))
+        fi
+
+        echo ""
+    done
+
+    # Report the result
+    if [ $RIGHT -lt $TOTAL_COMMITS ]; then
+        FOUND_COMMIT=${COMMITS[$RIGHT]}
+        FOUND_COMMIT_SHORT=$(git rev-parse --short "${FOUND_COMMIT}")
+        FOUND_POSITION=$((RIGHT + 1))
+
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo -e "\033[1;32mFOUND:\033[0m First commit matching current behavior"
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo -e "\033[93mCommit:\033[0m ${FOUND_COMMIT_SHORT} (position ${FOUND_POSITION}/${TOTAL_COMMITS})"
+        echo ""
+        git show --stat --pretty=format:"%C(yellow)Date:%C(reset) %ad%nAuthor: %an%n%n%s%n%n%b" --date=format:'%Y-%m-%d %H:%M:%S' "${FOUND_COMMIT}"
+        echo ""
+        echo -e "\033[1;36m================================================================================\033[0m"
+        exit 0
+    else
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo -e "\033[93mNOT FOUND:\033[0m No commit in range matches current behavior"
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo "All commits in the range differ from current output."
+        echo "The change may have been introduced before ${BASELINE_COMMIT}"
+        exit 1
+    fi
 else
-    echo -e "\033[1;36m================================================================================\033[0m"
-    echo -e "\033[1;31mERROR:\033[0m Test infrastructure failure (exit code ${REGRESSION_EXIT_CODE})"
-    echo -e "\033[1;36m================================================================================\033[0m"
-    exit 2
+    # Regular regression test mode
+    echo -e "\033[93mStep 5:\033[0m Running regression tests..."
+    echo "Flags:${FLAGS:-" (none)"}"
+
+    cd "${CURRENT_DIR}/test"
+    node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" ${FLAGS}
+
+    REGRESSION_EXIT_CODE=$?
+
+    if [ ${REGRESSION_EXIT_CODE} -eq 0 ]; then
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo -e "\033[1;32mSUCCESS:\033[0m No differences detected!"
+        echo -e "\033[1;36m================================================================================\033[0m"
+        exit 0
+    elif [ ${REGRESSION_EXIT_CODE} -eq 1 ]; then
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo -e "\033[93mDIFFERENCES FOUND:\033[0m Regression reports generated"
+        echo "Check regression-results/ for details"
+        echo -e "\033[1;36m================================================================================\033[0m"
+        exit 1
+    else
+        echo -e "\033[1;36m================================================================================\033[0m"
+        echo -e "\033[1;31mERROR:\033[0m Test infrastructure failure (exit code ${REGRESSION_EXIT_CODE})"
+        echo -e "\033[1;36m================================================================================\033[0m"
+        exit 2
+    fi
 fi
