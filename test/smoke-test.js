@@ -20,13 +20,13 @@
  *
  * ## Usage
  * npm run test:smoke                        # Uses fastregression dataset
- * npm run test:smoke chembl                 # Uses chembl dataset
+ * npm run test:smoke -- -dataset chembl    # Uses chembl dataset
  * npm run test:smoke -- -all                # All datasets
  * npm run test:smoke "C1CCCCC1"             # Single SMILES string
  *
  * @example
  * node test/smoke-test.js
- * node test/smoke-test.js chembl
+ * node test/smoke-test.js -dataset chembl
  * node test/smoke-test.js -all
  * node test/smoke-test.js "C1=CC=CC=C1"
  */
@@ -210,13 +210,16 @@ const fullDatasets = [
 const args = process.argv.slice(2);
 const allMode = args.includes('-all');
 
-// Check if user provided a SMILES string directly
-const providedArg = args.find(arg => !arg.startsWith('-'));
-const knownDatasets = [...fastDatasets, ...fullDatasets];
-const isKnownDataset = providedArg && knownDatasets.some(ds => ds.name === providedArg);
+// Check for -dataset flag
+const datasetFlagIndex = args.indexOf('-dataset');
+const hasDatasetFlag = datasetFlagIndex !== -1;
+const datasetName = hasDatasetFlag && datasetFlagIndex + 1 < args.length ? args[datasetFlagIndex + 1] : null;
 
-// If argument is provided but not a known dataset, treat it as a SMILES string
-if (providedArg && !isKnownDataset && !allMode) {
+// Get any non-flag argument (for SMILES string)
+const providedArg = args.find(arg => !arg.startsWith('-'));
+
+// If argument is provided and no -dataset flag, treat it as a SMILES string
+if (providedArg && !hasDatasetFlag && !allMode) {
     (async () => {
         const smiles = providedArg;
 
@@ -496,19 +499,16 @@ if (providedArg && !isKnownDataset && !allMode) {
 let datasets;
 if (allMode) {
     datasets = fullDatasets;
-} else {
-    const datasetName = args.find(arg => !arg.startsWith('-'));
-    if (datasetName) {
-        const found = fullDatasets.find(ds => ds.name === datasetName);
-        if (!found) {
-            console.error('ERROR: Unknown dataset: ' + datasetName);
-            console.error('Available datasets:', fullDatasets.map(ds => ds.name).join(', '));
-            process.exit(2);
-        }
-        datasets = [found];
-    } else {
-        datasets = fastDatasets;
+} else if (hasDatasetFlag && datasetName) {
+    const found = fullDatasets.find(ds => ds.name === datasetName);
+    if (!found) {
+        console.error('ERROR: Unknown dataset: ' + datasetName);
+        console.error('Available datasets:', fullDatasets.map(ds => ds.name).join(', '));
+        process.exit(2);
     }
+    datasets = [found];
+} else {
+    datasets = fastDatasets;
 }
 
 // Create output directory (delete old results)
