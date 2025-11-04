@@ -1,5 +1,6 @@
 import Atom = require('../graph/Atom');
 import { BondType, WedgeType, Chirality, HydrogenDirection } from '../types/CommonTypes';
+import { IAttachedPseudoElement } from '../config/IOptions';
 
 /**
  * Atom highlighting configuration: [atomClass, color]
@@ -92,7 +93,7 @@ export interface SerializedAtomValue {
   subtreeDepth: number;
 
   // Pseudo elements
-  attachedPseudoElements: Record<string, any>;
+  attachedPseudoElements: Record<string, IAttachedPseudoElement>;
   hasAttachedPseudoElements: boolean;
 }
 
@@ -132,7 +133,7 @@ export interface SerializedEdge {
   bondType: BondType;
   isPartOfAromaticRing: boolean;
   center: boolean;
-  wedge: WedgeType | null;
+  wedge: WedgeType;
 }
 
 /**
