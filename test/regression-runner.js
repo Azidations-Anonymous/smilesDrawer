@@ -140,28 +140,15 @@ const newCommitHash = getCommitHash(newCodePath);
 const newHasChanges = hasUncommittedChanges(newCodePath);
 const newSrcDiff = newHasChanges ? getSrcDiff(newCodePath) : '';
 
-console.log('='.repeat(80));
-console.log('SMILES DRAWER REGRESSION TEST');
-console.log('='.repeat(80));
-console.log('MODE: ' + (allMode ? 'FULL (all datasets)' : 'FAST (fastregression only)'));
-console.log('FAIL-EARLY: ' + (failEarly ? 'YES (stop at first difference)' : 'NO (collect all differences)'));
-console.log('VISUAL: ' + (noVisual ? 'NO (skip SVG generation)' : 'YES (generate side-by-side comparisons)'));
-console.log('OLD CODE PATH: ' + oldCodePath);
-console.log('OLD COMMIT: ' + oldCommitHash);
-console.log('NEW CODE PATH: ' + newCodePath);
-console.log('NEW COMMIT: ' + newCommitHash + (newHasChanges ? ' (+ uncommitted changes)' : ''));
-console.log('OUTPUT DIRECTORY: ' + outputDir);
-console.log('='.repeat(80));
-
 let totalTested = 0;
 let totalDatasets = 0;
 let totalSkipped = 0;
 let totalDifferences = 0;
 
 for (const dataset of datasets) {
-    console.log('\n' + '='.repeat(80));
-    console.log('TESTING DATASET: ' + dataset.name);
-    console.log('='.repeat(80));
+    console.log('\n\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
+    console.log('\x1b[93mTESTING DATASET:\x1b[0m ' + dataset.name);
+    console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
 
     let smilesList;
     try {
@@ -177,7 +164,54 @@ for (const dataset of datasets) {
         process.exit(2);
     }
 
-    console.log('LOADED: ' + smilesList.length + ' SMILES strings');
+    console.log('\x1b[93mLOADED:\x1b[0m ' + smilesList.length + ' SMILES strings');
+
+    // Warmup phase: run a simple molecule through both old and new code to eliminate cold-start overhead
+    console.log('\n\x1b[93mWARMUP:\x1b[0m Running simple molecule to load modules and JIT compile...');
+    const warmupSmiles = 'C';
+    const warmupOldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-old.json');
+    const warmupNewJsonFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-new.json');
+
+    spawnSync('node', ['test/generate-json.js', warmupSmiles, warmupOldJsonFile], {
+        cwd: oldCodePath,
+        encoding: 'utf8'
+    });
+    spawnSync('node', ['test/generate-json.js', warmupSmiles, warmupNewJsonFile], {
+        cwd: newCodePath,
+        encoding: 'utf8'
+    });
+
+    if (!noVisual) {
+        const warmupOldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-old.svg');
+        const warmupNewSvgFile = path.join(os.tmpdir(), 'smiles-drawer-warmup-new.svg');
+
+        spawnSync('node', ['test/generate-svg.js', warmupSmiles, warmupOldSvgFile], {
+            cwd: oldCodePath,
+            encoding: 'utf8'
+        });
+        spawnSync('node', ['test/generate-svg.js', warmupSmiles, warmupNewSvgFile], {
+            cwd: newCodePath,
+            encoding: 'utf8'
+        });
+
+        // Clean up warmup files
+        try {
+            fs.unlinkSync(warmupOldSvgFile);
+            fs.unlinkSync(warmupNewSvgFile);
+        } catch (err) {
+            // Ignore cleanup errors
+        }
+    }
+
+    // Clean up warmup files
+    try {
+        fs.unlinkSync(warmupOldJsonFile);
+        fs.unlinkSync(warmupNewJsonFile);
+    } catch (err) {
+        // Ignore cleanup errors
+    }
+
+    console.log('\x1b[1;32m✓\x1b[0m Warmup complete');
 
     for (let i = 0; i < smilesList.length; i++) {
         const rawSmiles = smilesList[i];
@@ -359,31 +393,31 @@ for (const dataset of datasets) {
 }
 
 // Final summary
-console.log('\n' + '='.repeat(80));
+console.log('\n\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
 if (totalDifferences > 0) {
     if (noVisual) {
         console.log('DIFFERENCES FOUND - JSON REPORTS GENERATED');
     } else {
         console.log('DIFFERENCES FOUND - REPORTS GENERATED');
     }
-    console.log('='.repeat(80));
-    console.log('Total tested: ' + totalTested);
-    console.log('Total skipped: ' + totalSkipped);
-    console.log('Differences found: ' + totalDifferences);
-    console.log('\nReports saved to: ' + outputDir);
+    console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
+    console.log('\x1b[93mTotal tested:\x1b[0m ' + totalTested);
+    console.log('\x1b[93mTotal skipped:\x1b[0m ' + totalSkipped);
+    console.log('\x1b[93mDifferences found:\x1b[0m ' + totalDifferences);
+    console.log('\n\x1b[93mReports saved to:\x1b[0m ' + outputDir);
     if (noVisual) {
-        console.log('Files: 1.json through ' + totalDifferences + '.json');
+        console.log('\x1b[93mFiles:\x1b[0m 1.json through ' + totalDifferences + '.json');
     } else {
-        console.log('Files: 1.html, 1.json through ' + totalDifferences + '.html, ' + totalDifferences + '.json');
+        console.log('\x1b[93mFiles:\x1b[0m 1.html, 1.json through ' + totalDifferences + '.html, ' + totalDifferences + '.json');
     }
-    console.log('='.repeat(80));
+    console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
     process.exit(1);
 } else {
     console.log('ALL TESTS PASSED - NO DIFFERENCES FOUND');
-    console.log('='.repeat(80));
-    console.log('Total tested: ' + totalTested);
-    console.log('Total skipped: ' + totalSkipped);
-    console.log('='.repeat(80));
+    console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
+    console.log('\x1b[93mTotal tested:\x1b[0m ' + totalTested);
+    console.log('\x1b[93mTotal skipped:\x1b[0m ' + totalSkipped);
+    console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
     process.exit(0);
 }
 
