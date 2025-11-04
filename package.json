@@ -13,6 +13,7 @@
     "test:sssr": "node test/sssr.js",
     "test:array-helper": "node test/array-helper.js",
     "test:layout": "node test/layout.js",
+    "test:graph-matrix": "node test/graph-matrix.js",
     "type-check": "tsc",
     "type-check:watch": "tsc --watch"
   },
