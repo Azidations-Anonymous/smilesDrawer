@@ -12,6 +12,7 @@ import IMolecularData = require("./IMolecularData");
 import { SideChoice, AtomHighlight, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry, PositionData } from "./MolecularDataTypes";
 import { IMoleculeOptions, IThemeColors } from "../config/IOptions";
 import { BondType } from '../types/CommonTypes';
+import { POSITION_DATA_VERSION } from '../config/Version';
 
 import MathHelper = require('../utils/MathHelper');
 import ArrayHelper = require('../utils/ArrayHelper');
@@ -199,10 +200,10 @@ class MolecularPreprocessor implements IMolecularData {
    * vertices (atoms) with positions and angles, edges (bonds) with types and stereochemistry,
    * and ring information.
    *
-   * The output format is versioned for stability. Current version: 1
+   * The output format is versioned for stability. Version is derived from package.json major version.
    *
    * @returns {Object} An object containing:
-   *   - version: Format version number (currently 1)
+   *   - version: Format version number (from package.json major version)
    *   - vertices: Array of vertex objects with positions, angles, and atom data
    *   - edges: Array of edge objects with bond types and stereochemistry
    *   - rings: Array of ring member arrays
@@ -210,14 +211,14 @@ class MolecularPreprocessor implements IMolecularData {
    *
    * @example
    * const posData = drawer.getPositionData();
-   * // posData.version === 1
+   * // posData.version === 2 (if package version is 2.x.x)
    * // posData.vertices[0].position === { x: 150.5, y: 200.3 }
    * // posData.edges[0].bondType === '='
    */
   getPositionData(): PositionData {
       if (!this.graph) {
           return {
-              version: 1,
+              version: POSITION_DATA_VERSION,
               vertices: [],
               edges: [],
               rings: [],
@@ -321,7 +322,7 @@ class MolecularPreprocessor implements IMolecularData {
       })) : [];
 
       return {
-          version: 1,
+          version: POSITION_DATA_VERSION,
           vertices: vertices,
           edges: edges,
           rings: rings,
