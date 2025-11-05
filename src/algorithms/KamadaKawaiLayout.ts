@@ -52,7 +52,7 @@ class KamadaKawaiLayout {
 
         const zeroForce = (): ForceVector => ({ x: 0, y: 0 });
         const addForces = (a: ForceVector, b: ForceVector): ForceVector => ({ x: a.x + b.x, y: a.y + b.y });
-        const energyMagnitude = (force: ForceVector): number => force.x * force.x + force.y * force.y;
+        const squaredGradientMagnitude = (force: ForceVector): number => force.x * force.x + force.y * force.y;
 
         // --- Initial placement -------------------------------------------------------------
         //
@@ -104,16 +104,14 @@ class KamadaKawaiLayout {
         const arrEnergySumX = new Float32Array(length);
         const arrEnergySumY = new Float32Array(length);
 
-        let ux, uy, dEx, dEy;
-
         // Populate the initial energy/force contributions for all vertex pairs. Conceptually each
         // pair of vertices is connected by a spring that wants to sit at length l_ij. The values
         // stored in matEnergy correspond to the net x/y force the spring exerts on vertex i.
         ArrayHelper.forEachIndexReverse(length, (rowIdx) => {
-          ux = arrPositionX[rowIdx];
-          uy = arrPositionY[rowIdx];
-          dEx = 0.0;
-          dEy = 0.0;
+          const sourceX = arrPositionX[rowIdx];
+          const sourceY = arrPositionY[rowIdx];
+          let rowGradientX = 0.0;
+          let rowGradientY = 0.0;
           ArrayHelper.forEachIndexReverse(length, (colIdx) => {
             if (rowIdx === colIdx) {
               return;
@@ -122,21 +120,21 @@ class KamadaKawaiLayout {
             const vy = arrPositionY[colIdx];
             // denom = 1 / |u - v| converts Cartesian coordinates into unit direction vectors.
             // The value recurs throughout the derivatives, so we compute it once here.
-            const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
+            const denom = 1.0 / Math.sqrt((sourceX - vx) * (sourceX - vx) + (sourceY - vy) * (sourceY - vy));
             const force: ForceVector = {
-              x: matStrength[rowIdx][colIdx] * ((ux - vx) - matLength[rowIdx][colIdx] * (ux - vx) * denom),
-              y: matStrength[rowIdx][colIdx] * ((uy - vy) - matLength[rowIdx][colIdx] * (uy - vy) * denom)
+              x: matStrength[rowIdx][colIdx] * ((sourceX - vx) - matLength[rowIdx][colIdx] * (sourceX - vx) * denom),
+              y: matStrength[rowIdx][colIdx] * ((sourceY - vy) - matLength[rowIdx][colIdx] * (sourceY - vy) * denom)
             };
             matEnergy[rowIdx][colIdx] = force;
             // The energy contribution is symmetric: the force that i exerts on j equals the opposite force j exerts on i.
             matEnergy[colIdx][rowIdx] = force;
-            dEx += force.x;
-            dEy += force.y;
+            rowGradientX += force.x;
+            rowGradientY += force.y;
           });
           // Store the net force components for vertex rowIdx. These values are re-used when the
           // algorithm decides which vertex to optimise next.
-          arrEnergySumX[rowIdx] = dEx;
-          arrEnergySumY[rowIdx] = dEy;
+          arrEnergySumX[rowIdx] = rowGradientX;
+          arrEnergySumY[rowIdx] = rowGradientY;
         });
 
         // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
@@ -144,7 +142,7 @@ class KamadaKawaiLayout {
         const computeVertexEnergy = (index: number): VertexEnergy => {
           const gradient = { x: arrEnergySumX[index], y: arrEnergySumY[index] };
           return {
-            magnitude: energyMagnitude(gradient),
+            magnitude: squaredGradientMagnitude(gradient),
             gradient
           };
         };
