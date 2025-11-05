@@ -225,6 +225,27 @@ const fullDatasets = [
 const args = process.argv.slice(2);
 const allMode = args.includes('-all');
 
+// Build the project first
+console.log('Building project...');
+const buildResult = spawnSync('npx', ['tsc'], {
+    cwd: path.join(__dirname, '..'),
+    encoding: 'utf8'
+});
+
+// TypeScript compilation may have errors during migration, continue anyway
+const gulpResult = spawnSync('npx', ['gulp', 'build'], {
+    cwd: path.join(__dirname, '..'),
+    encoding: 'utf8'
+});
+
+if (gulpResult.error || gulpResult.status !== 0) {
+    console.error('ERROR: Build failed');
+    console.error(gulpResult.stderr || gulpResult.error?.message || 'Unknown error');
+    process.exit(2);
+}
+
+console.log('Build complete\n');
+
 // Check for -dataset flag
 const datasetFlagIndex = args.indexOf('-dataset');
 const hasDatasetFlag = datasetFlagIndex !== -1;
