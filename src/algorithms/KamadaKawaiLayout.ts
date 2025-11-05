@@ -262,6 +262,38 @@ class KamadaKawaiLayout {
         };
 
         type NewtonContext = { index: number; gradient: ForceVector };
+        /**
+         * Recompute the force contribution of a neighbour after the Newton displacement and update caches.
+         */
+        const recomputeNeighbourForce = (
+          sourceIndex: number,
+          neighbourIndex: number,
+          updatedPosition: { x: number; y: number },
+          referenceLength: number,
+          springStrength: number
+        ): ForceVector => {
+          const vx = arrPositionX[neighbourIndex];
+          const vy = arrPositionY[neighbourIndex];
+          const dxUnit = updatedPosition.x - vx;
+          const dyUnit = updatedPosition.y - vy;
+          const distanceSquared = dxUnit * dxUnit + dyUnit * dyUnit;
+          if (distanceSquared === 0.0) {
+            return zeroForce();
+          }
+
+          const invDistance = 1.0 / Math.sqrt(distanceSquared);
+          const denom = referenceLength * invDistance;
+          const dxLocal = springStrength * (dxUnit - dxUnit * denom);
+          const dyLocal = springStrength * (dyUnit - dyUnit * denom);
+
+          const previousForce = matEnergy[sourceIndex][neighbourIndex];
+          matEnergy[sourceIndex][neighbourIndex] = { x: dxLocal, y: dyLocal };
+          arrEnergySumX[neighbourIndex] += dxLocal - previousForce.x;
+          arrEnergySumY[neighbourIndex] += dyLocal - previousForce.y;
+
+          return { x: dxLocal, y: dyLocal };
+        };
+
         const applyNewtonUpdate = ({ index, gradient }: NewtonContext): void => {
           let ux = arrPositionX[index];
           let uy = arrPositionY[index];
@@ -282,8 +314,6 @@ class KamadaKawaiLayout {
           arrPositionY[index] += displacement.y;
 
           // Update the energies
-          const arrE = matEnergy[index];
-
           ux = arrPositionX[index];
           uy = arrPositionY[index];
 
@@ -292,52 +322,27 @@ class KamadaKawaiLayout {
               return accumulatedGradient;
             }
 
-            const vx = arrPositionX[idx];
-            const vy = arrPositionY[idx];
-            const dxUnit = ux - vx;
-            const dyUnit = uy - vy;
-            const distanceSquared = dxUnit * dxUnit + dyUnit * dyUnit;
-            if (distanceSquared === 0.0) {
-              return accumulatedGradient;
-            }
-
-            const invDistance = 1.0 / Math.sqrt(distanceSquared);
-            const denom = arrL[idx] * invDistance;
-            const dxLocal = arrK[idx] * (dxUnit - dxUnit * denom);
-            const dyLocal = arrK[idx] * (dyUnit - dyUnit * denom);
-
-            const prevEx = arrE[idx].x;
-            const prevEy = arrE[idx].y;
-            arrE[idx] = { x: dxLocal, y: dyLocal };
-            // Adjust the global force sums by the delta between old and new partial derivatives.
-            arrEnergySumX[idx] += dxLocal - prevEx;
-            arrEnergySumY[idx] += dyLocal - prevEy;
-
+            const neighbourForce = recomputeNeighbourForce(index, idx, { x: ux, y: uy }, arrL[idx], arrK[idx]);
             return {
-              x: accumulatedGradient.x + dxLocal,
-              y: accumulatedGradient.y + dyLocal
+              x: accumulatedGradient.x + neighbourForce.x,
+              y: accumulatedGradient.y + neighbourForce.y
             };
           }, zeroForce());
           arrEnergySumX[index] = updatedGradient.x;
           arrEnergySumY[index] = updatedGradient.y;
         };
 
-        type NewtonState = { energy: VertexEnergy; iterations: number };
         const relaxCandidate = (candidate: VertexEnergyCandidate): VertexEnergyCandidate => {
-          const iterateNewton = ({ energy, iterations }: NewtonState): NewtonState => {
-            if (energy.magnitude <= innerThreshold || iterations >= maxInnerIteration) {
-              return { energy, iterations };
-            }
+          let relaxedEnergy = candidate.energy;
+          let iterations = 0;
 
-            applyNewtonUpdate({ index: candidate.index, gradient: energy.gradient });
-            return iterateNewton({
-              energy: computeVertexEnergy(candidate.index),
-              iterations: iterations + 1
-            });
-          };
+          while (relaxedEnergy.magnitude > innerThreshold && iterations < maxInnerIteration) {
+            applyNewtonUpdate({ index: candidate.index, gradient: relaxedEnergy.gradient });
+            relaxedEnergy = computeVertexEnergy(candidate.index);
+            iterations += 1;
+          }
 
-          const relaxedState = iterateNewton({ energy: candidate.energy, iterations: 0 });
-          return { index: candidate.index, energy: relaxedState.energy };
+          return { index: candidate.index, energy: relaxedEnergy };
         };
 
         const iterateLayoutOnce = (): number => {
@@ -347,15 +352,15 @@ class KamadaKawaiLayout {
           return energyBeforeRelaxation;
         };
 
-        const iterateLayout = (maxIterationCount: number): void => {
-          for (let iteration = 0; !layoutConverged() && iteration < maxIterationCount; iteration++) {
-            maxEnergy = iterateLayoutOnce();
-          }
-        };
-
         // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
         // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
         const layoutConverged = (): boolean => maxEnergy <= threshold;
+
+        const iterateLayout = (iterationLimit: number): void => {
+          for (let iteration = 0; !layoutConverged() && iteration < iterationLimit; iteration++) {
+            maxEnergy = iterateLayoutOnce();
+          }
+        };
 
         iterateLayout(maxIteration);
 
