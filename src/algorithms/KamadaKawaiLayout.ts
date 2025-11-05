@@ -47,7 +47,18 @@ class KamadaKawaiLayout {
           return;
         }
 
+        type VertexIndex = number;
+        type MovableVertexIndices = VertexIndex[];
         type ForceVector = { x: number; y: number };
+        type VertexEnergy = { magnitude: number; gradient: ForceVector };
+        type VertexEnergyCandidate = { index: number; energy: VertexEnergy };
+
+        const sumForces = (accumulatedForce: ForceVector, contribution: ForceVector): ForceVector => ({
+          x: accumulatedForce.x + contribution.x,
+          y: accumulatedForce.y + contribution.y
+        });
+        const findMovableVertices = (anchoredFlags: ReadonlyArray<boolean>): MovableVertexIndices =>
+          anchoredFlags.flatMap((isAnchored, vertexIndex) => (isAnchored ? [] : [vertexIndex]));
 
         const zeroForce = (): ForceVector => ({ x: 0, y: 0 });
         const squaredGradientMagnitude = (force: ForceVector): number => force.x * force.x + force.y * force.y;
@@ -82,7 +93,7 @@ class KamadaKawaiLayout {
           return currentAngle + angle;
         };
         vertexIds.reduceRight(placeVertex, 0.0);
-        const movableVertexIndices = Array.from({ length }, (_, vertexIndex) => vertexIndex).filter((vertexIndex) => !arrPositioned[vertexIndex]);
+        const movableVertexIndices = findMovableVertices(arrPositioned);
 
         // Equivalent of equation (2) in the paper: desired Euclidean distance l_ij = L * d_ij.
         // Each graph-theoretical distance gets translated into how far the points should sit apart
@@ -145,10 +156,8 @@ class KamadaKawaiLayout {
           const strengthsRow = matStrength[rowIdx];
           const desiredLengthsRow = matLength[rowIdx];
           const energyRow = matEnergy[rowIdx];
-          let rowGradientX = 0.0;
-          let rowGradientY = 0.0;
 
-          for (let colIdx = length - 1; colIdx >= 0; colIdx--) {
+          const rowGradient = Array.from({ length }, (_, colIdx) => {
             const force = calculatePairForce(
               sourceX,
               sourceY,
@@ -160,12 +169,11 @@ class KamadaKawaiLayout {
             );
             energyRow[colIdx] = force;
             matEnergy[colIdx][rowIdx] = force;
-            rowGradientX += force.x;
-            rowGradientY += force.y;
-          }
+            return force;
+          }).reduce(sumForces, zeroForce());
 
-          arrEnergySumX[rowIdx] = rowGradientX;
-          arrEnergySumY[rowIdx] = rowGradientY;
+          arrEnergySumX[rowIdx] = rowGradient.x;
+          arrEnergySumY[rowIdx] = rowGradient.y;
         };
 
         for (let rowIdx = length - 1; rowIdx >= 0; rowIdx--) {
@@ -173,8 +181,6 @@ class KamadaKawaiLayout {
         }
 
         // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
-        type VertexEnergy = { magnitude: number; gradient: ForceVector };
-        type VertexEnergyCandidate = { index: number; energy: VertexEnergy };
         const computeVertexEnergy = (index: number): VertexEnergy => {
           const gradient = { x: arrEnergySumX[index], y: arrEnergySumY[index] };
           return {
