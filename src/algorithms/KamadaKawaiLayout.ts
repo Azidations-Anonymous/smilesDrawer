@@ -215,11 +215,47 @@ class KamadaKawaiLayout {
         // Performs a two-dimensional Newton-Raphson update for a single vertex (Section 3.2).
         // The Hessian is represented by dxx, dyy, dxy and the gradient is dEX/dEY. After the
         // position update we refresh the cached energy contributions to keep the global sums valid.
+        type Hessian = { dxx: number; dyy: number; dxy: number };
+        const stabiliseHessian = ({ dxx, dyy, dxy }: Hessian): Hessian => ({
+          dxx: dxx === 0 ? 0.1 : dxx,
+          dyy: dyy === 0 ? 0.1 : dyy,
+          dxy: dxy === 0 ? 0.1 : dxy
+        });
+
+        const computeHessian = (vertexIndex: number, ux: number, uy: number, arrL: number[], arrK: number[]): Hessian => {
+          const candidateIndices = Array.from({ length }, (_, idx) => idx);
+
+          return candidateIndices.reduce<Hessian>(
+            (accumulatedHessian, idx) => {
+              if (idx === vertexIndex) {
+                return accumulatedHessian;
+              }
+
+              const vx = arrPositionX[idx];
+              const vy = arrPositionY[idx];
+              const l = arrL[idx];
+              const k = arrK[idx];
+              const dxToNeighbour = ux - vx;
+              const dyToNeighbour = uy - vy;
+              const distanceSquared = dxToNeighbour * dxToNeighbour + dyToNeighbour * dyToNeighbour;
+              if (distanceSquared === 0) {
+                return accumulatedHessian;
+              }
+              const invDistance = 1.0 / Math.sqrt(distanceSquared);
+              const denom = invDistance * invDistance * invDistance;
+
+              return {
+                dxx: accumulatedHessian.dxx + k * (1 - l * dyToNeighbour * dyToNeighbour * denom),
+                dyy: accumulatedHessian.dyy + k * (1 - l * dxToNeighbour * dxToNeighbour * denom),
+                dxy: accumulatedHessian.dxy + k * (l * dxToNeighbour * dyToNeighbour * denom)
+              };
+            },
+            { dxx: 0.0, dyy: 0.0, dxy: 0.0 }
+          );
+        };
+
         type NewtonContext = { index: number; gradient: ForceVector };
         const applyNewtonUpdate = ({ index, gradient }: NewtonContext): void => {
-          let dxx = 0.0;
-          let dyy = 0.0;
-          let dxy = 0.0;
           let ux = arrPositionX[index];
           let uy = arrPositionY[index];
           const arrL = matLength[index];
@@ -227,41 +263,7 @@ class KamadaKawaiLayout {
 
           // Compute the Hessian entries around vertex m (Kamada-Kawai eq. 15). Each neighbouring vertex
           // contributes to the second derivatives d²E/dx², d²E/dy² and d²E/dxdy used by the Newton update.
-          ArrayHelper.forEachIndexReverse(length, (idx) => {
-            if (idx === index) {
-              return;
-            }
-
-            const vx = arrPositionX[idx];
-            const vy = arrPositionY[idx];
-            const l = arrL[idx];
-            const k = arrK[idx];
-            const m = (ux - vx) * (ux - vx);
-            const dySquared = (uy - vy) * (uy - vy);
-            const distanceSquared = m + dySquared;
-            if (distanceSquared === 0) {
-              return;
-            }
-            const invDistance = 1.0 / Math.sqrt(distanceSquared);
-            const denom = invDistance * invDistance * invDistance;
-
-            dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
-            dyy += k * (1 - l * m * denom);
-            dxy += k * (l * (ux - vx) * (uy - vy) * denom);
-          });
-
-          // Prevent division by zero or extremely small matrix pivots that would explode the update.
-          if (dxx === 0) {
-            dxx = 0.1;
-          }
-
-          if (dyy === 0) {
-            dyy = 0.1;
-          }
-
-          if (dxy === 0) {
-            dxy = 0.1;
-          }
+          const { dxx, dyy, dxy } = stabiliseHessian(computeHessian(index, ux, uy, arrL, arrK));
 
           // Solve the 2x2 linear system that Newton-Raphson requires. The formulas below are the
           // closed-form solutions for dx and dy when dealing with the symmetric Hessian in the paper.
