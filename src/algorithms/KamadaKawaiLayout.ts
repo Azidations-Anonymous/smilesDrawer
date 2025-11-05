@@ -250,21 +250,20 @@ class KamadaKawaiLayout {
             }
             const vx = arrPositionX[idx];
             const vy = arrPositionY[idx];
-            // Store old energies
-           const prevEx = arrE[idx].x;
-           const prevEy = arrE[idx].y;
             const dxUnit = ux - vx;
             const dyUnit = uy - vy;
             const distanceSquared = dxUnit * dxUnit + dyUnit * dyUnit;
-            let dxLocal = 0.0;
-            let dyLocal = 0.0;
-            if (distanceSquared !== 0.0) {
-              const invDistance = 1.0 / Math.sqrt(distanceSquared);
-              const denom = arrL[idx] * invDistance;
-              dxLocal = arrK[idx] * (dxUnit - dxUnit * denom);
-              dyLocal = arrK[idx] * (dyUnit - dyUnit * denom);
+            if (distanceSquared === 0.0) {
+              return;
             }
 
+            const invDistance = 1.0 / Math.sqrt(distanceSquared);
+            const denom = arrL[idx] * invDistance;
+            const dxLocal = arrK[idx] * (dxUnit - dxUnit * denom);
+            const dyLocal = arrK[idx] * (dyUnit - dyUnit * denom);
+
+            const prevEx = arrE[idx].x;
+            const prevEy = arrE[idx].y;
             arrE[idx] = { x: dxLocal, y: dyLocal };
             updatedGradientX += dxLocal;
             updatedGradientY += dyLocal;
