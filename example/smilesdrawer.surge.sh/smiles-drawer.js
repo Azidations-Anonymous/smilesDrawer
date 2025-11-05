@@ -14754,6 +14754,142 @@ class SvgDrawer {
     normals[0].multiplyScalar(spacing);
     normals[1].multiplyScalar(spacing);
   }
+  /**
+   * Returns the position data for the current molecule including vertices, edges, rings, and metadata.
+   * This is a comprehensive data structure containing all molecular graph information with positioning.
+   *
+   * @returns {Object} Position data object with version, vertices, edges, rings, and metadata
+   */
+
+
+  getPositionData() {
+    if (!this.preprocessor || !this.preprocessor.graph) {
+      return {
+        version: 1,
+        vertices: [],
+        edges: [],
+        rings: [],
+        metadata: {
+          vertexCount: 0,
+          edgeCount: 0,
+          ringCount: 0,
+          isomeric: false
+        }
+      };
+    }
+
+    const graph = this.preprocessor.graph;
+    const rings = this.preprocessor.rings || []; // Serialize vertices with comprehensive atom data
+
+    const vertices = graph.vertices.map(v => ({
+      // Vertex topology
+      id: v.id,
+      parentVertexId: v.parentVertexId,
+      children: v.children ? v.children.slice() : [],
+      spanningTreeChildren: v.spanningTreeChildren ? v.spanningTreeChildren.slice() : [],
+      edges: v.edges ? v.edges.slice() : [],
+      neighbours: v.neighbours ? v.neighbours.slice() : [],
+      neighbourCount: v.neighbourCount,
+      // Positioning data
+      position: v.position ? {
+        x: v.position.x,
+        y: v.position.y
+      } : {
+        x: 0,
+        y: 0
+      },
+      previousPosition: v.previousPosition ? {
+        x: v.previousPosition.x,
+        y: v.previousPosition.y
+      } : {
+        x: 0,
+        y: 0
+      },
+      positioned: v.positioned,
+      forcePositioned: v.forcePositioned,
+      angle: v.angle,
+      dir: v.dir,
+      // Atom data from v.value
+      value: v.value ? {
+        idx: v.value.idx,
+        element: v.value.element,
+        drawExplicit: v.value.drawExplicit,
+        isDrawn: v.value.isDrawn,
+        bondType: v.value.bondType,
+        branchBond: v.value.branchBond,
+        ringbonds: v.value.ringbonds ? v.value.ringbonds.slice() : [],
+        rings: v.value.rings ? v.value.rings.slice() : [],
+        bondCount: v.value.bondCount,
+        class: v.value.class,
+        neighbouringElements: v.value.neighbouringElements ? v.value.neighbouringElements.slice() : [],
+        // Ring membership
+        isBridge: v.value.isBridge,
+        isBridgeNode: v.value.isBridgeNode,
+        bridgedRing: v.value.bridgedRing,
+        originalRings: v.value.originalRings ? v.value.originalRings.slice() : [],
+        anchoredRings: v.value.anchoredRings ? v.value.anchoredRings.slice() : [],
+        isConnectedToRing: v.value.isConnectedToRing,
+        isPartOfAromaticRing: v.value.isPartOfAromaticRing,
+        // Bracket notation data
+        bracket: v.value.bracket ? {
+          hcount: v.value.bracket.hcount,
+          charge: v.value.bracket.charge,
+          isotope: v.value.bracket.isotope,
+          class: v.value.bracket.class
+        } : null,
+        // Stereochemistry
+        plane: v.value.plane,
+        chirality: v.value.chirality,
+        isStereoCenter: v.value.isStereoCenter,
+        priority: v.value.priority,
+        mainChain: v.value.mainChain,
+        hydrogenDirection: v.value.hydrogenDirection,
+        hasHydrogen: v.value.hasHydrogen,
+        subtreeDepth: v.value.subtreeDepth,
+        // Pseudo elements
+        attachedPseudoElements: v.value.attachedPseudoElements ? Object.assign({}, v.value.attachedPseudoElements) : {},
+        hasAttachedPseudoElements: v.value.hasAttachedPseudoElements
+      } : null
+    })); // Serialize edges with comprehensive bond data
+
+    const edges = graph.edges.map(e => ({
+      id: e.id,
+      sourceId: e.sourceId,
+      targetId: e.targetId,
+      weight: e.weight,
+      bondType: e.bondType,
+      isPartOfAromaticRing: e.isPartOfAromaticRing,
+      center: e.center,
+      wedge: e.wedge
+    })); // Serialize ring data
+
+    const serializedRings = rings.map(ring => ({
+      id: ring.id,
+      members: ring.members ? ring.members.slice() : [],
+      isBridged: ring.isBridged,
+      isPartOfBridged: ring.isPartOfBridged,
+      isFused: ring.isFused,
+      isSpiro: ring.isSpiro,
+      neighbours: ring.neighbours ? ring.neighbours.slice() : [],
+      center: ring.center ? {
+        x: ring.center.x,
+        y: ring.center.y
+      } : null
+    }));
+    return {
+      version: 1,
+      vertices: vertices,
+      edges: edges,
+      rings: serializedRings,
+      metadata: {
+        vertexCount: graph.vertices.length,
+        edgeCount: graph.edges.length,
+        ringCount: rings.length,
+        atomIdxToVertexId: graph.atomIdxToVertexId ? graph.atomIdxToVertexId.slice() : [],
+        isomeric: graph.isomeric
+      }
+    };
+  }
 
 }
 

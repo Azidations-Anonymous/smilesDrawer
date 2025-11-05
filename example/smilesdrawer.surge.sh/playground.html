@@ -600,47 +600,11 @@
             };
         };
 
-        function collectPositionData(preprocessor) {
-            if (!preprocessor || !preprocessor.graph) {
-                return null;
-            }
-
-            const graph = preprocessor.graph;
-            const rings = preprocessor.rings || [];
-
-            const vertices = graph.vertices.map((v) => ({
-                id: v.id,
-                element: v.value.element,
-                rings: v.value.rings ? v.value.rings.slice() : [],
-                bridgedRing: v.value.bridgedRing !== undefined ? v.value.bridgedRing : null,
-                x: v.position.x,
-                y: v.position.y,
-                isDrawn: v.value.isDrawn,
-            }));
-
-            const edges = graph.edges.map((e) => ({
-                id: e.id,
-                sourceId: e.sourceId,
-                targetId: e.targetId,
-                bondType: e.bondType || '-',
-                weight: e.weight || 1,
-            }));
-
-            const ringData = rings.map((r) => ({
-                id: r.id,
-                members: r.members ? r.members.slice() : [],
-                isBridged: !!r.isBridged,
-                neighbours: r.neighbours ? r.neighbours.slice() : [],
-            }));
-
-            return { vertices, edges, rings: ringData };
-        }
-
         function drawAndCollect(smiles, displaySelector, textareaId) {
             const sd = new SmiDrawer(moleculeOptions, reactionOptions);
             try {
                 sd.draw(smiles, displaySelector, theme);
-                const data = collectPositionData(sd.drawer ? sd.drawer.preprocessor : null);
+                const data = sd.drawer ? sd.drawer.getPositionData() : null;
 
                 if (textareaId) {
                     const output = document.getElementById(textareaId);

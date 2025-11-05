@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test getPositionData()</title>
+    <script type="text/javascript" src="smiles-drawer.js"></script>
+</head>
+<body>
+    <h1>Test getPositionData() API</h1>
+    <svg id="output" width="500" height="500"></svg>
+    <h2>Position Data:</h2>
+    <pre id="data" style="max-height: 400px; overflow: auto; background: #f5f5f5; padding: 10px;"></pre>
+
+    <script>
+        const options = {
+            width: 500,
+            height: 500,
+            bondThickness: 1.0,
+            bondLength: 30,
+        };
+
+        const sd = new SmiDrawer(options);
+        const smiles = 'c1ccccc1';  // benzene
+
+        sd.draw(smiles, '#output', 'light');
+
+        // Test the getPositionData() method
+        const positionData = sd.drawer.getPositionData();
+
+        document.getElementById('data').textContent = JSON.stringify(positionData, null, 2);
+
+        // Verify structure
+        console.log('Position Data Version:', positionData.version);
+        console.log('Vertex Count:', positionData.metadata.vertexCount);
+        console.log('Edge Count:', positionData.metadata.edgeCount);
+        console.log('Ring Count:', positionData.metadata.ringCount);
+        console.log('First Vertex:', positionData.vertices[0]);
+        console.log('First Edge:', positionData.edges[0]);
+        console.log('First Ring:', positionData.rings[0]);
+
+        // Check for required fields
+        if (positionData.version !== 1) {
+            console.error('FAIL: Version should be 1');
+        } else {
+            console.log('PASS: Version is 1');
+        }
+
+        if (!positionData.metadata) {
+            console.error('FAIL: Missing metadata');
+        } else {
+            console.log('PASS: Metadata exists');
+        }
+
+        if (positionData.vertices.length === 0) {
+            console.error('FAIL: No vertices');
+        } else {
+            console.log('PASS: Has', positionData.vertices.length, 'vertices');
+        }
+
+        const v = positionData.vertices[0];
+        if (!v.value || !v.position || typeof v.id !== 'number') {
+            console.error('FAIL: Vertex missing required fields');
+        } else {
+            console.log('PASS: Vertex has required fields');
+        }
+    </script>
+</body>
+</html>
