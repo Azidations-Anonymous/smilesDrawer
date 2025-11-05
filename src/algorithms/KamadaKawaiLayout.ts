@@ -94,6 +94,7 @@ class KamadaKawaiLayout {
         };
         vertexIds.reduceRight(placeVertex, 0.0);
         const movableVertexIndices = findMovableVertices(arrPositioned);
+        const layoutVertexIndices = Array.from({ length }, (_, idx) => idx);
 
         // Equivalent of equation (2) in the paper: desired Euclidean distance l_ij = L * d_ij.
         // Each graph-theoretical distance gets translated into how far the points should sit apart
@@ -223,9 +224,7 @@ class KamadaKawaiLayout {
         });
 
         const computeHessian = (vertexIndex: number, ux: number, uy: number, arrL: number[], arrK: number[]): Hessian => {
-          const candidateIndices = Array.from({ length }, (_, idx) => idx);
-
-          return candidateIndices.reduce<Hessian>(
+          return layoutVertexIndices.reduce<Hessian>(
             (accumulatedHessian, idx) => {
               if (idx === vertexIndex) {
                 return accumulatedHessian;
@@ -254,6 +253,14 @@ class KamadaKawaiLayout {
           );
         };
 
+        const computeNewtonDisplacement = (gradient: ForceVector, { dxx, dyy, dxy }: Hessian): ForceVector => {
+          const dyNumerator = gradient.x / dxx + gradient.y / dxy;
+          const dyDenominator = dxy / dxx - dyy / dxy;
+          const displacementY = dyNumerator / dyDenominator;
+          const displacementX = -(dxy * displacementY + gradient.x) / dxx;
+          return { x: displacementX, y: displacementY };
+        };
+
         type NewtonContext = { index: number; gradient: ForceVector };
         const applyNewtonUpdate = ({ index, gradient }: NewtonContext): void => {
           let ux = arrPositionX[index];
@@ -263,38 +270,35 @@ class KamadaKawaiLayout {
 
           // Compute the Hessian entries around vertex m (Kamada-Kawai eq. 15). Each neighbouring vertex
           // contributes to the second derivatives d²E/dx², d²E/dy² and d²E/dxdy used by the Newton update.
-          const { dxx, dyy, dxy } = stabiliseHessian(computeHessian(index, ux, uy, arrL, arrK));
+          const stabilisedHessian = stabiliseHessian(computeHessian(index, ux, uy, arrL, arrK));
 
           // Solve the 2x2 linear system that Newton-Raphson requires. The formulas below are the
           // closed-form solutions for dx and dy when dealing with the symmetric Hessian in the paper.
-          let dy = (gradient.x / dxx + gradient.y / dxy);
-          dy /= (dxy / dxx - dyy / dxy); // had to split this onto two lines because the syntax highlighter went crazy.
-          let dx = -(dxy * dy + gradient.x) / dxx;
+          const displacement = computeNewtonDisplacement(gradient, stabilisedHessian);
 
           // Apply the positional correction for vertex m. dx/dy describe how far we move the point
           // along the x and y axes to reduce the local spring energy.
-          arrPositionX[index] += dx;
-          arrPositionY[index] += dy;
+          arrPositionX[index] += displacement.x;
+          arrPositionY[index] += displacement.y;
 
           // Update the energies
           const arrE = matEnergy[index];
-          let updatedGradientX = 0.0;
-          let updatedGradientY = 0.0;
 
           ux = arrPositionX[index];
           uy = arrPositionY[index];
 
-          ArrayHelper.forEachIndexReverse(length, (idx) => {
+          const updatedGradient = layoutVertexIndices.reduce<ForceVector>((accumulatedGradient, idx) => {
             if (index === idx) {
-              return;
+              return accumulatedGradient;
             }
+
             const vx = arrPositionX[idx];
             const vy = arrPositionY[idx];
             const dxUnit = ux - vx;
             const dyUnit = uy - vy;
             const distanceSquared = dxUnit * dxUnit + dyUnit * dyUnit;
             if (distanceSquared === 0.0) {
-              return;
+              return accumulatedGradient;
             }
 
             const invDistance = 1.0 / Math.sqrt(distanceSquared);
@@ -305,14 +309,17 @@ class KamadaKawaiLayout {
             const prevEx = arrE[idx].x;
             const prevEy = arrE[idx].y;
             arrE[idx] = { x: dxLocal, y: dyLocal };
-            updatedGradientX += dxLocal;
-            updatedGradientY += dyLocal;
             // Adjust the global force sums by the delta between old and new partial derivatives.
             arrEnergySumX[idx] += dxLocal - prevEx;
             arrEnergySumY[idx] += dyLocal - prevEy;
-          });
-          arrEnergySumX[index] = updatedGradientX;
-          arrEnergySumY[index] = updatedGradientY;
+
+            return {
+              x: accumulatedGradient.x + dxLocal,
+              y: accumulatedGradient.y + dyLocal
+            };
+          }, zeroForce());
+          arrEnergySumX[index] = updatedGradient.x;
+          arrEnergySumY[index] = updatedGradient.y;
         };
 
         // Setting up variables for the nested optimisation loops (outer = vertex selection,
