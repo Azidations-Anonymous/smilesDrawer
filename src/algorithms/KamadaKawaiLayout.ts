@@ -306,8 +306,8 @@ class KamadaKawaiLayout {
         //
         // Copy the optimised positions back into the main graph structure so that the drawing
         // pipeline can render the bridged ring using the newly computed coordinates.
-        ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
-          let vertex = this.graph.vertices[vertexId];
+        vertexIds.forEach((vertexId, idx) => {
+          const vertex = this.graph.vertices[vertexId];
           // Transfer the computed coordinates to the vertex so downstream rendering can use them.
           vertex.position.x = arrPositionX[idx];
           vertex.position.y = arrPositionY[idx];
