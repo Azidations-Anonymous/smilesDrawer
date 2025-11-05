@@ -199,7 +199,13 @@ class KamadaKawaiLayout {
             const l = arrL[idx];
             const k = arrK[idx];
             const m = (ux - vx) * (ux - vx);
-            const denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
+            const dySquared = (uy - vy) * (uy - vy);
+            const distanceSquared = m + dySquared;
+            if (distanceSquared === 0) {
+              return;
+            }
+            const invDistance = 1.0 / Math.sqrt(distanceSquared);
+            const denom = invDistance * invDistance * invDistance;
 
             dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
             dyy += k * (1 - l * m * denom);
