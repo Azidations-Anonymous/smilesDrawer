@@ -94,7 +94,13 @@ class KamadaKawaiLayout {
 
         // Equation (4): spring strength k_ij = K / d_ij^2. We use bondLength as K because the
         // molecular input is already scaled to bond lengths in the drawing space.
-        const matStrength = matDist.map((row) => row.map((value) => edgeStrength * Math.pow(value, -2.0)));
+        const springStrength = (graphDistance: number): number => {
+          if (graphDistance === 0) {
+            return 0;
+          }
+          return edgeStrength / (graphDistance * graphDistance);
+        };
+        const matStrength = matDist.map((row) => row.map((value) => springStrength(value)));
 
         // Stores the first-order partial derivatives dE/dx and dE/dy for each pair. These values
         // are repeatedly reused and updated after each Newton step (see Section 3.2).
