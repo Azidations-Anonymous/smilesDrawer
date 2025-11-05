@@ -348,19 +348,20 @@ class KamadaKawaiLayout {
           maxEnergy = iterateLayoutOnce();
         }
 
+        const transferOptimisedPositions = (): void => {
+          vertexIds.forEach((vertexId, idx) => {
+            const vertex = this.graph.vertices[vertexId];
+            // Transfer the computed coordinates to the vertex so downstream rendering can use them.
+            vertex.position.x = arrPositionX[idx];
+            vertex.position.y = arrPositionY[idx];
+            vertex.positioned = true;
+            // forcePositioned keeps future layout passes from moving the vertex unless explicitly allowed.
+            vertex.forcePositioned = true;
+          });
+        };
+
         // --- Final transfer ----------------------------------------------------------------
-        //
-        // Copy the optimised positions back into the main graph structure so that the drawing
-        // pipeline can render the bridged ring using the newly computed coordinates.
-        vertexIds.forEach((vertexId, idx) => {
-          const vertex = this.graph.vertices[vertexId];
-          // Transfer the computed coordinates to the vertex so downstream rendering can use them.
-          vertex.position.x = arrPositionX[idx];
-          vertex.position.y = arrPositionY[idx];
-          vertex.positioned = true;
-          // forcePositioned keeps future layout passes from moving the vertex unless explicitly allowed.
-          vertex.forcePositioned = true;
-        });
+        transferOptimisedPositions();
     }
 }
 
