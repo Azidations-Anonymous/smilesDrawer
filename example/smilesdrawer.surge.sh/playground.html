@@ -662,12 +662,25 @@
             ringManager.__debugPatched = true;
         }
 
+        function collectPositionData(drawerInstance) {
+            if (!drawerInstance || !drawerInstance.drawer || typeof drawerInstance.drawer.getPositionData !== 'function') {
+                return null;
+            }
+
+            try {
+                return drawerInstance.drawer.getPositionData();
+            } catch (err) {
+                console.error('collectPositionData error', err);
+                return null;
+            }
+        }
+
         function drawAndCollect(smiles, displaySelector, textareaId) {
             const sd = new SmiDrawer(moleculeOptions, reactionOptions);
             patchRingManager(sd.drawer.preprocessor.ringManager);
             try {
                 sd.draw(smiles, displaySelector, theme);
-                const data = collectPositionData(sd.drawer ? sd.drawer.preprocessor : null);
+                const data = collectPositionData(sd);
 
                 if (textareaId) {
                     const output = document.getElementById(textareaId);
