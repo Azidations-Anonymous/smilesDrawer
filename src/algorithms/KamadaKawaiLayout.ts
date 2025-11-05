@@ -111,35 +111,57 @@ class KamadaKawaiLayout {
         // Populate the initial energy/force contributions for all vertex pairs. Conceptually each
         // pair of vertices is connected by a spring that wants to sit at length l_ij. The values
         // stored in matEnergy correspond to the net x/y force the spring exerts on vertex i.
-        ArrayHelper.forEachIndexReverse(length, (rowIdx) => {
+        const calculatePairForce = (
+          sourceIndex: number,
+          targetIndex: number,
+          positionsX: Float32Array,
+          positionsY: Float32Array,
+          strengths: number[][],
+          desiredLengths: number[][]
+        ): ForceVector => {
+          if (sourceIndex === targetIndex) {
+            return zeroForce();
+          }
+
+          const dx = positionsX[sourceIndex] - positionsX[targetIndex];
+          const dy = positionsY[sourceIndex] - positionsY[targetIndex];
+          const distanceSquared = dx * dx + dy * dy;
+
+          if (distanceSquared === 0) {
+            return zeroForce();
+          }
+
+          const invDistance = 1.0 / Math.sqrt(distanceSquared);
+          const desiredLength = desiredLengths[sourceIndex][targetIndex];
+          const strength = strengths[sourceIndex][targetIndex];
+
+          return {
+            x: strength * (dx - desiredLength * dx * invDistance),
+            y: strength * (dy - desiredLength * dy * invDistance)
+          };
+        };
+
+        const initializeEnergyRow = (rowIdx: number): void => {
           const sourceX = arrPositionX[rowIdx];
           const sourceY = arrPositionY[rowIdx];
           let rowGradientX = 0.0;
           let rowGradientY = 0.0;
-          ArrayHelper.forEachIndexReverse(length, (colIdx) => {
-            if (rowIdx === colIdx) {
-              return;
-            }
-            const vx = arrPositionX[colIdx];
-            const vy = arrPositionY[colIdx];
-            // denom = 1 / |u - v| converts Cartesian coordinates into unit direction vectors.
-            // The value recurs throughout the derivatives, so we compute it once here.
-            const denom = 1.0 / Math.sqrt((sourceX - vx) * (sourceX - vx) + (sourceY - vy) * (sourceY - vy));
-            const force: ForceVector = {
-              x: matStrength[rowIdx][colIdx] * ((sourceX - vx) - matLength[rowIdx][colIdx] * (sourceX - vx) * denom),
-              y: matStrength[rowIdx][colIdx] * ((sourceY - vy) - matLength[rowIdx][colIdx] * (sourceY - vy) * denom)
-            };
+
+          for (let colIdx = length - 1; colIdx >= 0; colIdx--) {
+            const force = calculatePairForce(rowIdx, colIdx, arrPositionX, arrPositionY, matStrength, matLength);
             matEnergy[rowIdx][colIdx] = force;
-            // The energy contribution is symmetric: the force that i exerts on j equals the opposite force j exerts on i.
             matEnergy[colIdx][rowIdx] = force;
             rowGradientX += force.x;
             rowGradientY += force.y;
-          });
-          // Store the net force components for vertex rowIdx. These values are re-used when the
-          // algorithm decides which vertex to optimise next.
+          }
+
           arrEnergySumX[rowIdx] = rowGradientX;
           arrEnergySumY[rowIdx] = rowGradientY;
-        });
+        };
+
+        for (let rowIdx = length - 1; rowIdx >= 0; rowIdx--) {
+          initializeEnergyRow(rowIdx);
+        }
 
         // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
         type VertexEnergy = { magnitude: number; gradient: ForceVector };
