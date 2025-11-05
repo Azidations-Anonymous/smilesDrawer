@@ -322,31 +322,25 @@ class KamadaKawaiLayout {
           arrEnergySumY[index] = updatedGradient.y;
         };
 
-        // Setting up variables for the nested optimisation loops (outer = vertex selection,
-        // inner = Newton iteration for that vertex).
-        let maxEnergyId = 0;
-        let dEX = 0.0;
-        let dEY = 0.0;
+        const relaxCandidate = (candidate: VertexEnergyCandidate): VertexEnergyCandidate => {
+          let relaxedEnergy = candidate.energy;
+          let iterations = 0;
+
+          while (relaxedEnergy.magnitude > innerThreshold && iterations < maxInnerIteration) {
+            applyNewtonUpdate({ index: candidate.index, gradient: relaxedEnergy.gradient });
+            relaxedEnergy = computeVertexEnergy(candidate.index);
+            iterations += 1;
+          }
+
+          return { index: candidate.index, energy: relaxedEnergy };
+        };
 
         // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
         // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
         for (let iteration = 0; maxEnergy > threshold && iteration < maxIteration; iteration++) {
           const candidate = findHighestEnergy();
-          maxEnergyId = candidate.index;
           maxEnergy = candidate.energy.magnitude;
-          dEX = candidate.energy.gradient.x;
-          dEY = candidate.energy.gradient.y;
-          let delta = maxEnergy;
-
-          // Inner loop: apply Newton updates to the selected vertex until the forces acting on it are
-          // below the requested tolerance or a hard iteration limit is reached to avoid infinite loops.
-          for (let innerIteration = 0; delta > innerThreshold && innerIteration < maxInnerIteration; innerIteration++) {
-            applyNewtonUpdate({ index: maxEnergyId, gradient: { x: dEX, y: dEY } });
-            const energyAfterUpdate = computeVertexEnergy(maxEnergyId);
-            delta = energyAfterUpdate.magnitude;
-            dEX = energyAfterUpdate.gradient.x;
-            dEY = energyAfterUpdate.gradient.y;
-          }
+          relaxCandidate(candidate);
         }
 
         // --- Final transfer ----------------------------------------------------------------
