@@ -178,7 +178,7 @@ class KamadaKawaiLayout {
         // The Hessian is represented by dxx, dyy, dxy and the gradient is dEX/dEY. After the
         // position update we refresh the cached energy contributions to keep the global sums valid.
         type NewtonContext = { index: number; gradient: ForceVector };
-        const update = function ({ index, gradient }: NewtonContext): void {
+        const applyNewtonUpdate = ({ index, gradient }: NewtonContext): void => {
           let dxx = 0.0;
           let dyy = 0.0;
           let dxy = 0.0;
@@ -299,7 +299,7 @@ class KamadaKawaiLayout {
           // below the requested tolerance or a hard iteration limit is reached to avoid infinite loops.
           while (delta > innerThreshold && maxInnerIteration > innerIteration) {
             innerIteration++;
-            update({ index: maxEnergyId, gradient: { x: dEX, y: dEY } });
+            applyNewtonUpdate({ index: maxEnergyId, gradient: { x: dEX, y: dEY } });
             const energyAfterUpdate = computeVertexEnergy(maxEnergyId);
             delta = energyAfterUpdate.magnitude;
             dEX = energyAfterUpdate.gradient.x;
