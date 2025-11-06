@@ -34,6 +34,12 @@ class KamadaKawaiLayout {
      * @param maxEnergy Historical parameter: expected energy level of unconverged layouts (kept for API compatibility).
      */
     layout(vertexIds: number[], center: Vector2, startVertexId: number, ring: Ring, bondLength: number, threshold: number, innerThreshold: number, maxIteration: number, maxInnerIteration: number, maxEnergy: number): void {
+        // Algorithm roadmap:
+        // 1. Prepare numeric caches (positions, distances, spring strengths) for the subgraph.
+        // 2. Seed vertices on a circle or reuse anchored coordinates to avoid degeneracy.
+        // 3. Pre-compute per-pair force derivatives so the Newton steps can reuse them cheaply.
+        // 4. Repeatedly pick the highest-energy vertex and apply Newton relaxation until the residual drops.
+        // 5. Write the optimised coordinates back to the graph for downstream rendering.
         // Spring stiffness constant (K in the paper). In the molecular drawing context one unit of
         // length already corresponds to an ideal bond length, so reusing bondLength keeps distances
         // and strengths in the same scale.
@@ -71,6 +77,7 @@ class KamadaKawaiLayout {
         // This avoids the algorithm getting stuck in a degenerate layout (e.g. everything on a line).
         const radius = MathHelper.polyCircumradius(500, length);
         const angle = MathHelper.centralAngle(length);
+        // Separate Float32Arrays keep x/y coordinates and gradient sums cache-friendly while minimising allocation churn.
         const arrPositionX = new Float32Array(length);
         const arrPositionY = new Float32Array(length);
         // Tracks whether the caller already anchored a vertex. Anchored vertices provide better

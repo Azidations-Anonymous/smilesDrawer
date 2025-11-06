@@ -4152,8 +4152,6 @@ module.exports = SmilesDrawer;
 "use strict";
 
 const MathHelper = require("../utils/MathHelper");
-
-const ArrayHelper = require("../utils/ArrayHelper");
 /**
  * Implements the Kamada-Kawai force-directed graph layout algorithm.
  *
@@ -4188,6 +4186,12 @@ class KamadaKawaiLayout {
 
 
   layout(vertexIds, center, startVertexId, ring, bondLength, threshold, innerThreshold, maxIteration, maxInnerIteration, maxEnergy) {
+    // Algorithm roadmap:
+    // 1. Prepare numeric caches (positions, distances, spring strengths) for the subgraph.
+    // 2. Seed vertices on a circle or reuse anchored coordinates to avoid degeneracy.
+    // 3. Pre-compute per-pair force derivatives so the Newton steps can reuse them cheaply.
+    // 4. Repeatedly pick the highest-energy vertex and apply Newton relaxation until the residual drops.
+    // 5. Write the optimised coordinates back to the graph for downstream rendering.
     // Spring stiffness constant (K in the paper). In the molecular drawing context one unit of
     // length already corresponds to an ideal bond length, so reusing bondLength keeps distances
     // and strengths in the same scale.
@@ -4197,17 +4201,23 @@ class KamadaKawaiLayout {
     const matDist = this.graph.getSubgraphDistanceMatrix(vertexIds);
     const length = vertexIds.length;
 
+    if (length === 0) {
+      return;
+    }
+
+    const sumForces = (accumulatedForce, contribution) => ({
+      x: accumulatedForce.x + contribution.x,
+      y: accumulatedForce.y + contribution.y
+    });
+
+    const findMovableVertices = anchoredFlags => anchoredFlags.flatMap((isAnchored, vertexIndex) => isAnchored ? [] : [vertexIndex]);
+
     const zeroForce = () => ({
       x: 0,
       y: 0
     });
 
-    const addForces = (a, b) => ({
-      x: a.x + b.x,
-      y: a.y + b.y
-    });
-
-    const energyMagnitude = force => force.x * force.x + force.y * force.y; // --- Initial placement -------------------------------------------------------------
+    const squaredGradientMagnitude = force => force.x * force.x + force.y * force.y; // --- Initial placement -------------------------------------------------------------
     //
     // Before the optimisation starts we need a concrete 2D position for every vertex.
     // Following Section 3.3 of the paper, we distribute the nodes evenly on the
@@ -4216,22 +4226,21 @@ class KamadaKawaiLayout {
 
 
     const radius = MathHelper.polyCircumradius(500, length);
-    const angle = MathHelper.centralAngle(length);
-    let a = 0.0;
+    const angle = MathHelper.centralAngle(length); // Separate Float32Arrays keep x/y coordinates and gradient sums cache-friendly while minimising allocation churn.
+
     const arrPositionX = new Float32Array(length);
     const arrPositionY = new Float32Array(length); // Tracks whether the caller already anchored a vertex. Anchored vertices provide better
     // continuity with the rest of the molecule (bridged rings are often partially positioned already).
 
     const arrPositioned = Array(length);
-    ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
-      // ArrayHelper.forEachReverse expects an array of arrays, hence the [vertexIds] wrapper.
-      // The helper simply walks the list in reverse order, giving us one vertex id per call.
+
+    const placeVertex = (currentAngle, vertexId, idx) => {
       const vertex = this.graph.vertices[vertexId];
 
       if (!vertex.positioned) {
         // Vertex has no previous coordinates: place it on the current angle on the circle.
-        arrPositionX[idx] = center.x + Math.cos(a) * radius;
-        arrPositionY[idx] = center.y + Math.sin(a) * radius;
+        arrPositionX[idx] = center.x + Math.cos(currentAngle) * radius;
+        arrPositionY[idx] = center.y + Math.sin(currentAngle) * radius;
       } else {
         // A coordinate already exists (e.g. due to earlier layout passes). Reuse it so the
         // optimiser nudges from an informed starting point rather than overwriting it.
@@ -4240,15 +4249,29 @@ class KamadaKawaiLayout {
       }
 
       arrPositioned[idx] = vertex.positioned;
-      a += angle;
-    }); // Equivalent of equation (2) in the paper: desired Euclidean distance l_ij = L * d_ij.
+      return currentAngle + angle;
+    };
+
+    vertexIds.reduceRight(placeVertex, 0.0);
+    const movableVertexIndices = findMovableVertices(arrPositioned);
+    const layoutVertexIndices = Array.from({
+      length
+    }, (_, idx) => idx); // Equivalent of equation (2) in the paper: desired Euclidean distance l_ij = L * d_ij.
     // Each graph-theoretical distance gets translated into how far the points should sit apart
     // in the final drawing. If d_ij == 1 we end up with the base bond length.
 
     const matLength = matDist.map(row => row.map(value => bondLength * value)); // Equation (4): spring strength k_ij = K / d_ij^2. We use bondLength as K because the
     // molecular input is already scaled to bond lengths in the drawing space.
 
-    const matStrength = matDist.map(row => row.map(value => edgeStrength * Math.pow(value, -2.0))); // Stores the first-order partial derivatives dE/dx and dE/dy for each pair. These values
+    const springStrength = graphDistance => {
+      if (graphDistance === 0) {
+        return 0;
+      }
+
+      return edgeStrength / (graphDistance * graphDistance);
+    };
+
+    const matStrength = matDist.map(row => row.map(value => springStrength(value))); // Stores the first-order partial derivatives dE/dx and dE/dy for each pair. These values
     // are repeatedly reused and updated after each Newton step (see Section 3.2).
 
     const matEnergy = Array.from({
@@ -4257,197 +4280,284 @@ class KamadaKawaiLayout {
     // to zero the vertex is considered to be in equilibrium.
 
     const arrEnergySumX = new Float32Array(length);
-    const arrEnergySumY = new Float32Array(length);
-    let ux, uy, dEx, dEy; // Populate the initial energy/force contributions for all vertex pairs. Conceptually each
+    const arrEnergySumY = new Float32Array(length); // Populate the initial energy/force contributions for all vertex pairs. Conceptually each
     // pair of vertices is connected by a spring that wants to sit at length l_ij. The values
     // stored in matEnergy correspond to the net x/y force the spring exerts on vertex i.
 
-    ArrayHelper.forEachIndexReverse(length, rowIdx => {
-      ux = arrPositionX[rowIdx];
-      uy = arrPositionY[rowIdx];
-      dEx = 0.0;
-      dEy = 0.0;
-      ArrayHelper.forEachIndexReverse(length, colIdx => {
-        if (rowIdx === colIdx) {
-          return;
-        }
+    const calculatePairForce = (sourceX, sourceY, targetX, targetY, strength, desiredLength, isSameVertex) => {
+      if (isSameVertex || strength === 0) {
+        return zeroForce();
+      }
 
-        const vx = arrPositionX[colIdx];
-        const vy = arrPositionY[colIdx]; // denom = 1 / |u - v| converts Cartesian coordinates into unit direction vectors.
-        // The value recurs throughout the derivatives, so we compute it once here.
+      const dx = sourceX - targetX;
+      const dy = sourceY - targetY;
+      const distanceSquared = dx * dx + dy * dy;
 
-        const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        const force = {
-          x: matStrength[rowIdx][colIdx] * (ux - vx - matLength[rowIdx][colIdx] * (ux - vx) * denom),
-          y: matStrength[rowIdx][colIdx] * (uy - vy - matLength[rowIdx][colIdx] * (uy - vy) * denom)
-        };
-        matEnergy[rowIdx][colIdx] = force; // The energy contribution is symmetric: the force that i exerts on j equals the opposite force j exerts on i.
+      if (distanceSquared === 0) {
+        return zeroForce();
+      }
 
+      const invDistance = 1.0 / Math.sqrt(distanceSquared);
+      return {
+        x: strength * (dx - desiredLength * dx * invDistance),
+        y: strength * (dy - desiredLength * dy * invDistance)
+      };
+    };
+
+    const initializeEnergyRow = rowIdx => {
+      const sourceX = arrPositionX[rowIdx];
+      const sourceY = arrPositionY[rowIdx];
+      const strengthsRow = matStrength[rowIdx];
+      const desiredLengthsRow = matLength[rowIdx];
+      const energyRow = matEnergy[rowIdx];
+      const rowGradient = Array.from({
+        length
+      }, (_, colIdx) => {
+        const force = calculatePairForce(sourceX, sourceY, arrPositionX[colIdx], arrPositionY[colIdx], strengthsRow[colIdx], desiredLengthsRow[colIdx], rowIdx === colIdx);
+        energyRow[colIdx] = force;
         matEnergy[colIdx][rowIdx] = force;
-        dEx += force.x;
-        dEy += force.y;
-      }); // Store the net force components for vertex rowIdx. These values are re-used when the
-      // algorithm decides which vertex to optimise next.
+        return force;
+      }).reduce(sumForces, zeroForce());
+      arrEnergySumX[rowIdx] = rowGradient.x;
+      arrEnergySumY[rowIdx] = rowGradient.y;
+    };
 
-      arrEnergySumX[rowIdx] = dEx;
-      arrEnergySumY[rowIdx] = dEy;
-    }); // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
+    for (let rowIdx = length - 1; rowIdx >= 0; rowIdx--) {
+      initializeEnergyRow(rowIdx);
+    } // Returns both gradient components and the squared gradient magnitude ||Δ_m||^2.
 
-    const energy = index => {
-      return [arrEnergySumX[index] * arrEnergySumX[index] + arrEnergySumY[index] * arrEnergySumY[index], arrEnergySumX[index], arrEnergySumY[index]];
+
+    const computeVertexEnergy = index => {
+      const gradient = {
+        x: arrEnergySumX[index],
+        y: arrEnergySumY[index]
+      };
+      return {
+        magnitude: squaredGradientMagnitude(gradient),
+        gradient
+      };
     }; // Identifies the vertex with the highest residual energy (see equation (9) in the paper).
     // The optimisation always targets the node that is currently "unhappiest", i.e. subject
     // to the largest displacement forces.
 
 
-    const highestEnergy = () => {
-      let maxEnergy = 0.0;
-      let maxEnergyId = 0;
-      let maxDEX = 0.0;
-      let maxDEY = 0.0;
-      ArrayHelper.forEachIndexReverse(length, idx => {
-        let [delta, dEX, dEY] = energy(idx);
+    const findHighestEnergy = () => {
+      if (movableVertexIndices.length === 0) {
+        return {
+          index: 0,
+          energy: {
+            magnitude: 0.0,
+            gradient: zeroForce()
+          }
+        };
+      }
 
-        if (delta > maxEnergy && arrPositioned[idx] === false) {
-          // Once a vertex has been marked as "positioned" we skip it so that pre-existing anchors
-          // such as previously drawn rings remain stable.
-          maxEnergy = delta;
-          maxEnergyId = idx;
-          maxDEX = dEX;
-          maxDEY = dEY;
+      const [firstCandidateIndex, ...remainingCandidateIndices] = movableVertexIndices;
+      const initialCandidate = {
+        index: firstCandidateIndex,
+        energy: computeVertexEnergy(firstCandidateIndex)
+      };
+      return remainingCandidateIndices.reduce((bestCandidate, candidateIndex) => {
+        const candidateEnergy = computeVertexEnergy(candidateIndex);
+
+        if (candidateEnergy.magnitude > bestCandidate.energy.magnitude) {
+          return {
+            index: candidateIndex,
+            energy: candidateEnergy
+          };
         }
-      });
-      return [maxEnergyId, maxEnergy, maxDEX, maxDEY];
-    }; // Performs a two-dimensional Newton-Raphson update for a single vertex (Section 3.2).
-    // The Hessian is represented by dxx, dyy, dxy and the gradient is dEX/dEY. After the
-    // position update we refresh the cached energy contributions to keep the global sums valid.
 
+        return bestCandidate;
+      }, initialCandidate);
+    };
 
-    const update = function (index, dEX, dEY) {
-      let dxx = 0.0;
-      let dyy = 0.0;
-      let dxy = 0.0;
-      let ux = arrPositionX[index];
-      let uy = arrPositionY[index];
-      const arrL = matLength[index];
-      const arrK = matStrength[index]; // Compute the Hessian entries around vertex m (Kamada-Kawai eq. 15). Each neighbouring vertex
-      // contributes to the second derivatives d²E/dx², d²E/dy² and d²E/dxdy used by the Newton update.
+    const stabiliseHessian = ({
+      dxx,
+      dyy,
+      dxy
+    }) => ({
+      dxx: dxx === 0 ? 0.1 : dxx,
+      dyy: dyy === 0 ? 0.1 : dyy,
+      dxy: dxy === 0 ? 0.1 : dxy
+    });
 
-      ArrayHelper.forEachIndexReverse(length, idx => {
-        if (idx === index) {
-          return;
+    const computeHessian = (vertexIndex, ux, uy, arrL, arrK) => {
+      return layoutVertexIndices.reduce((accumulatedHessian, idx) => {
+        if (idx === vertexIndex) {
+          return accumulatedHessian;
         }
 
         const vx = arrPositionX[idx];
         const vy = arrPositionY[idx];
         const l = arrL[idx];
         const k = arrK[idx];
-        const m = (ux - vx) * (ux - vx);
-        const denom = 1.0 / Math.pow(m + (uy - vy) * (uy - vy), 1.5);
-        dxx += k * (1 - l * (uy - vy) * (uy - vy) * denom);
-        dyy += k * (1 - l * m * denom);
-        dxy += k * (l * (ux - vx) * (uy - vy) * denom);
-      }); // Prevent division by zero or extremely small matrix pivots that would explode the update.
+        const dxToNeighbour = ux - vx;
+        const dyToNeighbour = uy - vy;
+        const distanceSquared = dxToNeighbour * dxToNeighbour + dyToNeighbour * dyToNeighbour;
 
-      if (dxx === 0) {
-        dxx = 0.1;
-      }
-
-      if (dyy === 0) {
-        dyy = 0.1;
-      }
-
-      if (dxy === 0) {
-        dxy = 0.1;
-      } // Solve the 2x2 linear system that Newton-Raphson requires. The formulas below are the
-      // closed-form solutions for dx and dy when dealing with the symmetric Hessian in the paper.
-
-
-      let dy = dEX / dxx + dEY / dxy;
-      dy /= dxy / dxx - dyy / dxy; // had to split this onto two lines because the syntax highlighter went crazy.
-
-      let dx = -(dxy * dy + dEX) / dxx; // Apply the positional correction for vertex m. dx/dy describe how far we move the point
-      // along the x and y axes to reduce the local spring energy.
-
-      arrPositionX[index] += dx;
-      arrPositionY[index] += dy; // Update the energies
-
-      const arrE = matEnergy[index];
-      dEX = 0.0;
-      dEY = 0.0;
-      ux = arrPositionX[index];
-      uy = arrPositionY[index];
-      ArrayHelper.forEachIndexReverse(length, idx => {
-        if (index === idx) {
-          return;
+        if (distanceSquared === 0) {
+          return accumulatedHessian;
         }
 
-        const vx = arrPositionX[idx];
-        const vy = arrPositionY[idx]; // Store old energies
-
-        const prevEx = arrE[idx].x;
-        const prevEy = arrE[idx].y;
-        const denom = 1.0 / Math.sqrt((ux - vx) * (ux - vx) + (uy - vy) * (uy - vy));
-        const dxLocal = arrK[idx] * (ux - vx - arrL[idx] * (ux - vx) * denom);
-        const dyLocal = arrK[idx] * (uy - vy - arrL[idx] * (uy - vy) * denom);
-        arrE[idx] = {
-          x: dxLocal,
-          y: dyLocal
+        const invDistance = 1.0 / Math.sqrt(distanceSquared);
+        const denom = invDistance * invDistance * invDistance;
+        return {
+          dxx: accumulatedHessian.dxx + k * (1 - l * dyToNeighbour * dyToNeighbour * denom),
+          dyy: accumulatedHessian.dyy + k * (1 - l * dxToNeighbour * dxToNeighbour * denom),
+          dxy: accumulatedHessian.dxy + k * (l * dxToNeighbour * dyToNeighbour * denom)
         };
-        dEX += dxLocal;
-        dEY += dyLocal; // Adjust the global force sums by the delta between old and new partial derivatives.
-
-        arrEnergySumX[idx] += dxLocal - prevEx;
-        arrEnergySumY[idx] += dyLocal - prevEy;
+      }, {
+        dxx: 0.0,
+        dyy: 0.0,
+        dxy: 0.0
       });
-      arrEnergySumX[index] = dEX;
-      arrEnergySumY[index] = dEY;
-    }; // Setting up variables for the nested optimisation loops (outer = vertex selection,
-    // inner = Newton iteration for that vertex).
+    };
+
+    const computeNewtonDisplacement = (gradient, {
+      dxx,
+      dyy,
+      dxy
+    }) => {
+      const dyNumerator = gradient.x / dxx + gradient.y / dxy;
+      const dyDenominator = dxy / dxx - dyy / dxy;
+      const displacementY = dyNumerator / dyDenominator;
+      const displacementX = -(dxy * displacementY + gradient.x) / dxx;
+      return {
+        x: displacementX,
+        y: displacementY
+      };
+    };
+    /**
+     * Recompute the force contribution of a neighbour after the Newton displacement and update caches.
+     */
 
 
-    let maxEnergyId = 0;
-    let dEX = 0.0;
-    let dEY = 0.0;
-    let delta = 0.0;
-    let iteration = 0;
-    let innerIteration = 0; // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
+    const recomputeNeighbourForce = (sourceIndex, neighbourIndex, updatedPosition, referenceLength, springStrength) => {
+      const vx = arrPositionX[neighbourIndex];
+      const vy = arrPositionY[neighbourIndex];
+      const dxUnit = updatedPosition.x - vx;
+      const dyUnit = updatedPosition.y - vy;
+      const distanceSquared = dxUnit * dxUnit + dyUnit * dyUnit;
+
+      if (distanceSquared === 0.0) {
+        return zeroForce();
+      }
+
+      const invDistance = 1.0 / Math.sqrt(distanceSquared);
+      const denom = referenceLength * invDistance;
+      const dxLocal = springStrength * (dxUnit - dxUnit * denom);
+      const dyLocal = springStrength * (dyUnit - dyUnit * denom);
+      const previousForce = matEnergy[sourceIndex][neighbourIndex];
+      matEnergy[sourceIndex][neighbourIndex] = {
+        x: dxLocal,
+        y: dyLocal
+      };
+      arrEnergySumX[neighbourIndex] += dxLocal - previousForce.x;
+      arrEnergySumY[neighbourIndex] += dyLocal - previousForce.y;
+      return {
+        x: dxLocal,
+        y: dyLocal
+      };
+    };
+
+    const applyNewtonUpdate = ({
+      index,
+      gradient
+    }) => {
+      let ux = arrPositionX[index];
+      let uy = arrPositionY[index];
+      const arrL = matLength[index];
+      const arrK = matStrength[index]; // Compute the Hessian entries around vertex m (Kamada-Kawai eq. 15). Each neighbouring vertex
+      // contributes to the second derivatives d²E/dx², d²E/dy² and d²E/dxdy used by the Newton update.
+
+      const stabilisedHessian = stabiliseHessian(computeHessian(index, ux, uy, arrL, arrK)); // Solve the 2x2 linear system that Newton-Raphson requires. The formulas below are the
+      // closed-form solutions for dx and dy when dealing with the symmetric Hessian in the paper.
+
+      const displacement = computeNewtonDisplacement(gradient, stabilisedHessian); // Apply the positional correction for vertex m. dx/dy describe how far we move the point
+      // along the x and y axes to reduce the local spring energy.
+
+      arrPositionX[index] += displacement.x;
+      arrPositionY[index] += displacement.y; // Update the energies
+
+      ux = arrPositionX[index];
+      uy = arrPositionY[index];
+      const updatedGradient = layoutVertexIndices.reduce((accumulatedGradient, idx) => {
+        if (index === idx) {
+          return accumulatedGradient;
+        }
+
+        const neighbourForce = recomputeNeighbourForce(index, idx, {
+          x: ux,
+          y: uy
+        }, arrL[idx], arrK[idx]);
+        return {
+          x: accumulatedGradient.x + neighbourForce.x,
+          y: accumulatedGradient.y + neighbourForce.y
+        };
+      }, zeroForce());
+      arrEnergySumX[index] = updatedGradient.x;
+      arrEnergySumY[index] = updatedGradient.y;
+    };
+
+    const relaxCandidate = candidate => {
+      let relaxedEnergy = candidate.energy;
+      let iterations = 0;
+
+      while (relaxedEnergy.magnitude > innerThreshold && iterations < maxInnerIteration) {
+        applyNewtonUpdate({
+          index: candidate.index,
+          gradient: relaxedEnergy.gradient
+        });
+        relaxedEnergy = computeVertexEnergy(candidate.index);
+        iterations += 1;
+      }
+
+      return {
+        index: candidate.index,
+        energy: relaxedEnergy
+      };
+    };
+
+    const iterateLayoutOnce = () => {
+      const candidate = findHighestEnergy();
+      const energyBeforeRelaxation = candidate.energy.magnitude;
+      relaxCandidate(candidate);
+      return energyBeforeRelaxation;
+    }; // Outer loop mirrors the stopping criterion in Section 3.2: iterate until the residual energy
     // (initially supplied via the maxEnergy parameter) drops below threshold or we hit the iteration cap.
 
-    while (maxEnergy > threshold && maxIteration > iteration) {
-      iteration++;
-      [maxEnergyId, maxEnergy, dEX, dEY] = highestEnergy();
-      delta = maxEnergy;
-      innerIteration = 0; // Inner loop: apply Newton updates to the selected vertex until the forces acting on it are
-      // below the requested tolerance or a hard iteration limit is reached to avoid infinite loops.
 
-      while (delta > innerThreshold && maxInnerIteration > innerIteration) {
-        innerIteration++;
-        update(maxEnergyId, dEX, dEY);
-        [delta, dEX, dEY] = energy(maxEnergyId);
+    const layoutConverged = () => maxEnergy <= threshold;
+
+    const iterateLayout = iterationLimit => {
+      for (let iteration = 0; !layoutConverged() && iteration < iterationLimit; iteration++) {
+        maxEnergy = iterateLayoutOnce();
       }
-    } // --- Final transfer ----------------------------------------------------------------
-    //
-    // Copy the optimised positions back into the main graph structure so that the drawing
-    // pipeline can render the bridged ring using the newly computed coordinates.
+    };
+
+    iterateLayout(maxIteration);
+
+    const transferOptimisedPositions = () => {
+      vertexIds.forEach((vertexId, idx) => {
+        const vertex = this.graph.vertices[vertexId]; // Transfer the computed coordinates to the vertex so downstream rendering can use them.
+
+        vertex.position.x = arrPositionX[idx];
+        vertex.position.y = arrPositionY[idx];
+        vertex.positioned = true; // forcePositioned keeps future layout passes from moving the vertex unless explicitly allowed.
+
+        vertex.forcePositioned = true;
+      });
+    }; // --- Final transfer ----------------------------------------------------------------
 
 
-    ArrayHelper.forEachReverse([vertexIds], (vertexId, idx) => {
-      let vertex = this.graph.vertices[vertexId]; // Transfer the computed coordinates to the vertex so downstream rendering can use them.
-
-      vertex.position.x = arrPositionX[idx];
-      vertex.position.y = arrPositionY[idx];
-      vertex.positioned = true; // forcePositioned keeps future layout passes from moving the vertex unless explicitly allowed.
-
-      vertex.forcePositioned = true;
-    });
+    transferOptimisedPositions();
   }
 
 }
 
 module.exports = KamadaKawaiLayout;
 
-},{"../utils/ArrayHelper":52,"../utils/MathHelper":54}],6:[function(require,module,exports){
+},{"../utils/MathHelper":54}],6:[function(require,module,exports){
 "use strict";
 
 const Graph = require("../graph/Graph");
