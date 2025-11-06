@@ -248,6 +248,43 @@ function matchesFilter(regex, value) {
     return regex.test(value);
 }
 
+/**
+ * Load dataset entries from either inline array or file reference.
+ * @param {{name: string, entries?: string[], file?: string}} dataset - Dataset descriptor.
+ * @returns {string[]} Array of SMILES strings.
+ */
+function loadDatasetEntries(dataset) {
+    if (Array.isArray(dataset.entries)) {
+        return dataset.entries;
+    }
+
+    if (!dataset.file) {
+        console.error('ERROR: Dataset "' + dataset.name + '" is missing entries or file path');
+        process.exit(2);
+    }
+
+    const datasetPath = path.join(__dirname, dataset.file);
+
+    if (!fs.existsSync(datasetPath)) {
+        console.error('ERROR: Dataset file not found: ' + datasetPath);
+        process.exit(2);
+    }
+
+    try {
+        const datasetContent = fs.readFileSync(datasetPath, 'utf8');
+        const extractor = new Function(datasetContent + '; return ' + dataset.name + ';');
+        const result = extractor();
+        if (!Array.isArray(result)) {
+            throw new Error('Dataset variable "' + dataset.name + '" not found or not an array');
+        }
+        return result;
+    } catch (err) {
+        console.error('ERROR: Failed to load dataset: ' + dataset.file);
+        console.error(err.message);
+        process.exit(2);
+    }
+}
+
 const fastDatasets = [
     { name: 'fastregression', file: '../test/fastregression.js' }
 ];
@@ -389,18 +426,7 @@ for (const dataset of datasets) {
     console.log('TESTING DATASET: ' + dataset.name);
     console.log('='.repeat(80));
 
-    let smilesData;
-    if (Array.isArray(dataset.entries)) {
-        smilesData = dataset.entries;
-    } else {
-        const datasetPath = path.join(__dirname, '..', 'test', dataset.file);
-        if (!fs.existsSync(datasetPath)) {
-            console.error('ERROR: Dataset file not found: ' + datasetPath);
-            totalErrors++;
-            continue;
-        }
-        smilesData = require(datasetPath);
-    }
+    let smilesData = loadDatasetEntries(dataset);
     console.log('LOADED: ' + smilesData.length + ' SMILES strings');
 
     if (filterRegex) {
