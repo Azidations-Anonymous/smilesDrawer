@@ -44,6 +44,8 @@ const fs = require('fs');
 const { performance } = require('perf_hooks');
 const { createCanvas, Image } = require('canvas');
 
+const DATA_DIR = path.join(__dirname, '..', 'test', 'data');
+
 /**
  * Get current timestamp in ISO8601 format (without milliseconds)
  * @returns {string} ISO8601 timestamp like "2025-11-05T14:30:22"
@@ -251,6 +253,31 @@ function matchesFilter(regex, value) {
     return regex.test(value);
 }
 
+function globToRegExp(pattern) {
+    const escaped = pattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '.*')
+        .replace(/\?/g, '.');
+    return new RegExp('^' + escaped + '$');
+}
+
+function collectJsonDatasets(pattern) {
+    if (!pattern || !fs.existsSync(DATA_DIR)) {
+        return [];
+    }
+
+    const regex = globToRegExp(pattern);
+    const files = fs.readdirSync(DATA_DIR).filter((file) => file.endsWith('.json'));
+
+    return files
+        .map((file) => ({
+            name: path.basename(file, '.json'),
+            file: path.join('..', 'test', 'data', file),
+            type: 'json'
+        }))
+        .filter((dataset) => regex.test(dataset.name));
+}
+
 /**
  * Check that a SMILES string contains only visible ASCII characters.
  * @param {unknown} smiles - Candidate SMILES string.
@@ -292,6 +319,40 @@ function loadDatasetEntries(dataset) {
     }
 
     try {
+        const ext = path.extname(datasetPath).toLowerCase();
+        if (ext === '.json' || dataset.type === 'json') {
+            const datasetContent = fs.readFileSync(datasetPath, 'utf8');
+            const parsed = JSON.parse(datasetContent);
+            if (!Array.isArray(parsed)) {
+                throw new Error('JSON dataset is not an array');
+            }
+
+            if (parsed.length === 0) {
+                return [];
+            }
+
+            if (typeof parsed[0] === 'string') {
+                return parsed;
+            }
+
+            if (typeof parsed[0] === 'object' && parsed[0] !== null) {
+                const candidateKeys = [];
+                if (dataset.smilesField) {
+                    candidateKeys.push(dataset.smilesField);
+                }
+                candidateKeys.push('smiles', 'SMILES', 'Smiles', 'original', 'Original');
+                const key = candidateKeys.find((k) => Object.prototype.hasOwnProperty.call(parsed[0], k) && typeof parsed[0][k] === 'string');
+                if (!key) {
+                    throw new Error('JSON dataset does not contain a recognizable SMILES field (smiles/original)');
+                }
+                return parsed
+                    .map((entry) => (entry && typeof entry[key] === 'string') ? entry[key] : null)
+                    .filter((value) => typeof value === 'string');
+            }
+
+            throw new Error('JSON dataset entries must be strings or objects');
+        }
+
         const datasetContent = fs.readFileSync(datasetPath, 'utf8');
         const extractor = new Function(datasetContent + '; return ' + dataset.name + ';');
         const result = extractor();
@@ -301,7 +362,7 @@ function loadDatasetEntries(dataset) {
         return result;
     } catch (err) {
         console.error('ERROR: Failed to load dataset: ' + dataset.file);
-        console.error(err.message);
+        console.error(err && err.message ? err.message : err);
         process.exit(2);
     }
 }
@@ -371,6 +432,10 @@ for (let i = 0; i < args.length; i++) {
     manualSmiles.push(arg);
 }
 
+if (datasetName) {
+    datasetName = datasetName.replace(/^['"]|['"]$/g, '');
+}
+
 let filterRegex = null;
 if (filterPattern !== null) {
     try {
@@ -414,13 +479,23 @@ if (!hasDatasetFlag && !allMode && manualSmiles.length > 0) {
 } else if (allMode) {
     datasets = fullDatasets;
 } else if (hasDatasetFlag && datasetName) {
-    const found = fullDatasets.find(ds => ds.name === datasetName);
-    if (!found) {
-        console.error('ERROR: Unknown dataset: ' + datasetName);
-        console.error('Available datasets:', fullDatasets.map(ds => ds.name).join(', '));
-        process.exit(2);
+    const jsonDatasets = collectJsonDatasets(datasetName);
+    if (jsonDatasets.length > 0) {
+        datasets = jsonDatasets;
+    } else {
+        const combinedDatasets = [...fastDatasets, ...fullDatasets];
+        const found = combinedDatasets.find(ds => ds.name === datasetName);
+        if (!found) {
+            const available = [
+                ...combinedDatasets.map(ds => ds.name),
+                ...(fs.existsSync(DATA_DIR) ? fs.readdirSync(DATA_DIR).filter((file) => file.endsWith('.json')).map((file) => path.basename(file, '.json')) : [])
+            ];
+            console.error('ERROR: Unknown dataset: ' + datasetName);
+            console.error('Available datasets:', available.join(', '));
+            process.exit(2);
+        }
+        datasets = [found];
     }
-    datasets = [found];
 } else {
     datasets = fastDatasets;
 }
@@ -440,7 +515,8 @@ console.log('SMILES DRAWER SMOKE TEST');
 console.log('='.repeat(80));
 const modeLabel = (!hasDatasetFlag && !allMode && manualSmiles.length > 0)
     ? `MANUAL (${manualSmiles.length} SMILES)`
-    : (allMode ? 'FULL (all datasets)' : datasets[0].name);
+    : (allMode ? 'FULL (all datasets)'
+        : (hasDatasetFlag && datasets.length > 1 ? `${datasetName} (${datasets.length} datasets)` : datasets[0].name));
 console.log('MODE: ' + modeLabel);
 console.log('COMMIT: ' + commitHash + (hasChanges ? ' (+ uncommitted changes)' : ''));
 console.log('OUTPUT DIRECTORY: ' + outputDir);

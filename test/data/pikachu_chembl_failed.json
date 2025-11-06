@@ -1,0 +1,2530 @@
+[
+  {
+    "smiles": "[SeH2]",
+    "error": "'SeH2'"
+  },
+  {
+    "smiles": "[AsH3]",
+    "error": "'AsH3'"
+  },
+  {
+    "smiles": "N#C[SeH]",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "[2H]O[2H]",
+    "error": "''"
+  },
+  {
+    "smiles": "[3H]O[3H]",
+    "error": "''"
+  },
+  {
+    "smiles": "c1c[se]cn1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cn1ccsc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1sccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccncc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccsc1=N.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccc(=N)s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN=c1cccccc1S",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1cc(O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.Cn1sccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1\\ccsn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cc(=N)sn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1\\cnsn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN=c1ccn(C)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.Cn1ccccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Cn1ccncc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCn1ccccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cc(F)ccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(N)cccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(F)cccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCc1c[nH]ccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=I(=O)c1ccccc1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cn1ccc(=N)cc1.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.Cn1ccc(=N)s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cc(=N)sn1C.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "c1ccc2cccc-2cc1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "C=CCOCC(O)C[SeH]",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cc1[nH]c(=N)sc1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCOCC(S)C[SeH]",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "CN=c1ccn(C)cc1.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nc(=N)cc[nH]1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[Na+].c1nc[n-]n1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cc1ccn(C)c(=N)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(O)Cn1ccccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1\\ccsn1C.Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1\\cnsn1C.Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cccc(C#N)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#CCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOc1cccc(=N)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cccc/c1=N\\CCO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Oc1cc2cccccc-2c1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "O=I(=O)c1c[nH]cn1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "O[C@H](CCl)C[SeH]",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cn1ccc2nccc-2c1.I",
+    "error": "Aromatic system 0, members: N_1, C_2, C_3, C_4, N_5, C_6, C_7, C_8, C_9"
+  },
+  {
+    "smiles": "Br.CCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nc(N)[se]c1CCN",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COCC/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1ccc2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1nnc(N)s/c1=N/O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Oc1ccc[nH]c1=[Se]",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.C=CCn1ccccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Cn1cc(F)ccc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1\\cccc(F)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1OI(O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "O[C@@H](CCl)C[SeH]",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "CCc1nn(CCO)c(=N)s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1sc2ccccc2n1CCO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(I(=O)=O)cc1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Clc1nssc1=Nc1nncs1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)N=c1nc(S)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1ccn(C)c(=N)c1.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cccc/c1=N\\CCO.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cccc(C#N)c1=N.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cccc/c1=N\\C1CC1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1\\cccc(NC)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[2H]c1ccc2ccccc2n1",
+    "error": "''"
+  },
+  {
+    "smiles": "[SeH]c1nc2ccccc2s1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Nc1nc(CN=C=S)c[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1[nH]c(=N)sc1C.Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCSc1nn(CCO)c(=N)s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[2H]C1(O)C=CCN(C)C1",
+    "error": "''"
+  },
+  {
+    "smiles": "CCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCC(=O)N=c1nc(S)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCn1ccc(=N)cc1.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1sccn1Cc1ccccc1F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccccn1Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\C1CCC1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COI1NC(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cc1cc(C)o/c(=N/O)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O/N=c1/ccc2ccccc2o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "OCCOc1ccccc2cccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Cn1cnc2c(cnn2C)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.N#CCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccccn1CC(F)(F)F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccc(=N)c2ccccc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "OB1OB2OB(O)OB(O1)O2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1ccc2ccccc2[te]1",
+    "error": "'TE'"
+  },
+  {
+    "smiles": "O=c1ccc2ccccc2[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "S=c1ccc2ccccc2[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "F[AsH](F)(F)(F)(F)F",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cc1nnc2sc(=N)[nH]n12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=S1(=O)C=Cc2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cc1nss/c1=N\\c1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1c[nH]c2ccccc2c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCc1nc(N)[se]c1CCC",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CC(C)(C)N=c1cccccc1O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1nc(SCCC(=O)O)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "c1csc(-c2c[se]nn2)c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "c1coc(-c2c[se]nn2)c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1nncs1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1nccs1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1cc2ccccc2ccc1=NO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1cc2n[se]nc2cc1Cl",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "O=c1c(=O)c2cscc2c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#CI1OC(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cc1nnc(N)s/c1=N/O.Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N[C@H](C[SeH])C(=O)O",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Br.Cc1nc(N)[se]c1CCN",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "COC(=O)Cc1csc(=N)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cc(C(F)(F)F)sc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[SeH]c1ccnc([SeH])n1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "[2H]C([2H])([2H])NC=O",
+    "error": "''"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N[C@@H](C[SeH])C(=O)O",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cn1cnc(=N)c2nc[nH]c21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCC#CC1CC1c1c[nH]cn1",
+    "error": "'NoneType' object has no attribute 'draw'"
+  },
+  {
+    "smiles": "C#CCn1c(=N)sc2ccccc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2nc2n1CCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "SC(C[SeH])COCc1ccccc1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cc1nn[se]c1C(=O)N(C)C",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Br.N=c1sc2ccccc2n1CCO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1ccccn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1cccnc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "OC(C[SeH])COCc1ccccc1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cl[TeH]1(Cl)(Cl)OCCO1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "CCCCCCCn1ccc(=N)cc1.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1c2ccccc2[se]n1CCO",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "NCCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "NCC/N=c1\\c(O)c(O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1ncccn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1ccncc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cc(C)c(C#N)c(=N)o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCn1c(C#N)c(N)sc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.CCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nnc(N=c2ssnc2Cl)o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1csc(=N)n1Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCn1sc(N)c(C#N)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "c1ccc(-c2c[se]nn2)cc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "c1ccc(-c2c[se]nn2)nc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1csc(=Nc2ccccc2)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ncccn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ccccn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1cccnc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\C1=NCCS1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N/N=c1\\[nH]c2ccccc2o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/N=c1/ssc(=S)n1C(C)C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCC/N=c1/c(O)c(O)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CSc1n/c(=N/C(C)=O)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1[nH][se]c2ccccc12",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Clc1cc(Br)c2cccccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Brc1cc(Br)c2cccccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "CSc1c(N(C)C)c(=O)c1=S",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1nc(S(N)(=O)=O)sc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c2cssc-2c(NC=O)c1=O",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "N=c1sccn1Cc1ccc(Cl)nc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1oc2ccccc2cc1C(N)=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)Nc1nc(CCl)c[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "O=c1ncnc2[nH][nH]cc1-2",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "COC(=O)n1ccn(C)c1=[Se]",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[2H][C@@](N)(CO)C(=O)O",
+    "error": "''"
+  },
+  {
+    "smiles": "Cc1nc(=N)c(C)c(C)[nH]1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=CNc1c2sscc-2[nH]c1=O",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cn1[nH]cc2c(=N)ncnc1-2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C#CCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "NCCCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "N=c1ncn2c3c1ncn3CC=CC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "NCCC/N=c1\\c(O)c(O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc2c(c1)sc(=N)n2C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.N=c1ccccn1Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nc2ccccc2nc(C)c1=NO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.N=c1sccn1Cc1ccccc1F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1ccccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccncc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(Cn2ccccc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "c1ccc2cc3n[se]nc3cc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Nc1nc([SeH])nc2ncccc12",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Nc1nc([SeH])nc2ccccc12",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Nc1cc[n-]c(=O)n1.[Na+]",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Nc1n/c(=N\\c2ccccc2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1cc(Cl)c2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "[2H][C@@](N)(CF)C(=O)O",
+    "error": "''"
+  },
+  {
+    "smiles": "C=CCNC(=S)/N=c1\\sccn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.N=c1ccccn1CC(F)(F)F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COC(=O)Cc1csc(=N)n1C.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cccc/c1=N\\CC(F)(F)F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C[n+]1[se]c2ccccc2c1Cl",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCCCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "C=CCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1ccc2[se]c(=S)ccc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1ccc2[se]c(=O)ccc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "[Se]=c1ccc2ccccc2[nH]1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(=[Se])ccc2ccccc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ncnc2c(=O)[nH]nc1-2",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "COc1ccccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C(O)c1ccc(I(=O)=O)cc1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "COC(=O)Nc1nc(CCl)c[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "O=c1ccc2nc3ccccc3oc-2c1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "O=C1NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "O=C(O)c1cccc(I(=O)=O)c1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cc1nn[se]c1C(=O)N1CCCC1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "c1ccc2c3c(ccc2c1)=NCN=3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1ccn(C(=O)OC)c1=[Se]",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)n1ccn(C)c1=[Se]",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[3H]C1(O)C=C(C(=O)O)CC1",
+    "error": "''"
+  },
+  {
+    "smiles": "CCc1ccc(C)c2ccc(C)c-2c1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Br.CCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl[TeH]1(Cl)(Cl)OCCO1.N",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cc1ccc2c(c1)sc(=N)n2CCO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1nc2ccc3ccccc3c2nc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=S1(=O)C=Cc2ccc(O)cc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Nc1c(NCC(=O)O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(C)CC(=O)N=c1nc(S)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C(O)COc1cccc2c1N=S=N2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Brc1ccc(-c2c[se]nn2)cc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Clc1ccc(-c2c[se]nn2)cc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2ccccc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccccc1=Nc1cccc[n+]1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ccccc1Br",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)Nc1cccc2n[se]nc12",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "OCc1ccccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ncccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nnc(/N=c2\\ssnc2Cl)o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1ccc2nc3ccccc3sc-2c1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "N=c1c2c3c(sc2ncn1N)CCC3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C1=Cc2cccc3occ(c23)C=C1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "c1cc2c3ccsc3c3sccc3c2s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COC(=O)c1ccc2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "OCc1c[te]c(-c2ccccc2)c1",
+    "error": "'TE'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2nc2n1CCCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCNC(=S)/N=c1/ccccn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Cn1cccc/c1=N\\C1CC1.O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cs/c(=N\\c2ccccc2)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)c1ccc2cccccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "[SeH]Cc1cc2c(cc1Br)OCO2",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "NN=c1c2ccccc2oc2ccccc12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "NC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "NS1(=O)=NC(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Nc1c(Nc2cccnc2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Fc1cccc2c1-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "CN(C)CCn1c(=N)sc2ccccc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=I(=O)c1ccc(I(=O)=O)cc1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cc1cccc2c1-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "O=c1c(O)c(-c2ccccc2)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cl.NCC/N=c1\\c(O)c(O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1cc2nc3ccccc3oc-2cc1=O",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Cc1cc(=O)n2nnc3ccccc3n12",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cc1nn[se]c1C(=O)N1CCCCC1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1nn[se]c1C(=O)N1CCOCC1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Clc1c2s[se]nc-2c2ccccc12",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Nc1nc([SeH])c2[nH]cnc2n1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "O=C1c2ccccc2S(=O)(=O)N1O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "N=c1sc2ccccc2n1Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2nc2n1CCCCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)n1ccn(CC)c1=[Se]",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1ccc(F)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1c(NCCC(=O)O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.Cl.N/C(CNCC(=O)O)=N\\O",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "CCC1=CS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Clc1c2n[se]sc-2c(Cl)c1Cl",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCCCCCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.CCCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1nc(N2CCCCC2)cc(N)n1O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.NCCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCc1c(C)c(=N)c2ccccc2n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)Cn1c2c(sc1=N)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCNc1nc(N)c2ncnc-2c(N)n1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "N#Cc1ccccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCN=c1ccn(CCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#Cc1cnc2sc3ccccc3n2c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#CCCN.O=C(O)/C=C/C(=O)O",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "N=c1cc(N2CCCCC2)nc(N)n1O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(-n2c(C)csc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Cc1csc(=Nc2ccccc2)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2[nH]c(=S)n1N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1sc2ccccc2n1-c1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "N#Cc1ccc(N=c2ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2c3c(sc2ncn1N)CCCC3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c(=N)n(CCO)c2ccccc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2ccc(F)cc2)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1sccn1Cc1ccc(Cl)cc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2cccc(F)c2)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cnc(/N=c2\\ssnc2Cl)cn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Oc1ccc(/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(/N=c2\\ssnc2Cl)nc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCc1nnc(/N=c2\\ssnc2Cl)s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cccc(/N=c2\\ssnc2Cl)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Fc1ccc(/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)c1nc(=NCc2cccs2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1c(C#N)c(=N)oc2ccccc12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)OI1NC(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CC/N=c1/c(O)c(O)/c1=N/CC",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N/N=c1/ccc(C(N)=O)n[nH]1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CSC1=CS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCCCOc1c(OCCCC)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.NC/C(CCCCCC(=O)O)=N/O",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "CCCCNc1c(NCCCC)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "OCC/N=c1\\cc(O)oc2ccccc12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)/N=c1/sc2ccccc2n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCNC(=S)/N=c1/ccccn1CC",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[3H]C(C(=O)O)N(C)C(=O)CN",
+    "error": "''"
+  },
+  {
+    "smiles": "O=c1c(O)c(Cc2ccccc2)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCNC(=O)c1ccc2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "COc1cccc2c1-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "COc1ccc(/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1cccc2c1-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "N=c1oc2cc(O)ccc2cc1C(N)=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1oc2c(O)cccc2cc1C(N)=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C1=C(c2ccc[se]2)C2CCN1CC2",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCOC(=O)c1c(SC)nc(C)oc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(=N)ccc2nc3ccccc3nc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1sc2nc[nH]c(=[Se])c2c1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc(COCC(O)C[SeH])cc1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "N#Cc1c2n[se]sc-2c(Cl)c1Cl",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Oc1nnc2ccc3c(c2n1)=CCCC=3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1c2ccccc2S(=O)(=O)N1CO",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "O=C1c2ccccc2S(=O)(=O)N1CF",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cl.NCCC/N=c1\\c(O)c(O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1C=CS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "c1ccc2c(c1)[I+]c1ccccc1-2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Oc1c2nccc-2c(S)nc2ccccc12",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "CC(=O)OI(OC(C)=O)c1ccccc1",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CC(C)CCC#CC1CC1c1c[nH]cn1",
+    "error": "'NoneType' object has no attribute 'draw'"
+  },
+  {
+    "smiles": "N=c1oc2ccc(O)cc2cc1C(N)=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1ccc(Br)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)Nc1c2sscc-2[nH]c1=O",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1ccc(Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc(-n2c(N)nsc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)Nc1c2sscc-2n(C)c1=O",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cl.Cl.N/C(CNCCC(=O)O)=N\\O",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "O=c1n[n+](C2CCCCC2)[n-]o1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "CC(=O)Nc1nc(CN=C=S)c[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cl.N=C(N)NC/C(=N/O)C(=O)O",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "CN(C=O)c1c2sscc-2[nH]c1=O",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "N=c1ccccn1CC(O)COc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOc1ccc2c(c1)sc(=N)n2CCO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(Cn2ccccc2=N)cc1.Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc(Cn2[nH]ccc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1nc2ccc3ccccc3c2nc1=N.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1ccccc1=Nc1cccc[n+]1CC",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)CCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cl.NCCCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "N=c1c[n+](N2CCOCC2)[n-]o1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "CCCCCCCn1ccc(=NCCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCC(=O)Cn1c2c(oc1=N)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCCCCCN=c1ccn(C)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCN=c1ccn(CCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCC(=O)Cn1c2c(sc1=N)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1c(NCCCC(=O)O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.N=c1ncn2c3c1ncn3CC=CC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CO/N=c1/[nH]cnc2[nH]cnc12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1c(NCc2ccccc2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1cc(=O)c2n[nH][nH]c-2n1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "N=c1c2c3c(sc2ncn1N)CCCCC3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(C)(O)c1[se]c2ccccc2c1I",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CC(C)(C)C(=O)N=c1nc(S)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCCCCCCCc1[se]c2ccccc2c1I",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCOc1c(N2CCOCC2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.CCCCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1csc(=N)n1-c1ccc(Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2cccc(Cl)c2)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCSC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "c1ccc2c(c1)[IH]c1ccccc1-2",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2ccc(Cl)cc2)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ccc(/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc(/N=c2\\ssnc2Cl)cn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ccnc(/N=c2\\ssnc2Cl)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1cccc(/N=c2\\ssnc2Cl)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOc1c(N2CCCCC2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ccc(Br)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(/N=c2\\ssnc2Cl)cc1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCC(=O)NI1OC(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "C/N=c1/oc2ccccc2cc1C(N)=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Nc1n/c(=N\\c2ccccc2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1c2c(c1=O)-c1ccccc1CN2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "NC(=O)c1cc2ccccc2o/c1=N/O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ccc(/N=c2\\ssnc2Cl)nc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ns/c(=N\\C(=S)N(C)C)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2nc2n1CCCCCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1c(O)c(Nc2ccccc2O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1c(Nc2cccnc2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COC(=O)/C=c1\\sc2ncnn2c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ss/c(=N\\c2ccccn2)c1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Cn1cccc/c1=N\\CC(F)(F)F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCNC(=S)/N=c1/scc(C)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(=O)N/N=c1\\sc2ccccc2n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCNC(=S)/N=c1/ccccn1CCC",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cs/c(=N\\c2ccccc2)n1CCO",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CNc1c(NCc2ccco2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1c(Nc2ccccc2)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1c(O)c(NCc2ccccc2)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C/C=c1\\sc2nc3ccccc3n2c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1c2ccccc2C(=O)N1C[SeH]",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "CC(C)CCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "O=C(O)Cn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCNC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Sc1nnc2c3nncn3c3ccccc3n12",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "CC1=CS(=O)(=O)c2c(F)cccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCC(=O)Nc1c2sscc-2n(C)c1=O",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Fc1ccc2c(c1)[I+]c1ccccc1-2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Cn1c(=O)[nH]c2c(cnn2C)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc2c(c1)[I+]c1ccccc1-2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "CCC(=O)Nc1nc(CN=C=S)c[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1ccc2c(c1)-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Fc1ccc2c(c1)-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Nc1c(NCP(=O)(O)O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c(=N)ccc2nc3ccccc3nc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1sc(=N)n(-c2ccccc2)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1c2ccccc2S(=O)(=O)N1CCl",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "C/N=C1/C=C(O)/C(=N/C)C=C1O",
+    "error": "chiral bond ring"
+  },
+  {
+    "smiles": "CCOC(=O)Cn1c2c(sc1=N)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(C(=O)Cn2ccsc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1c2ccccc2S(=O)(=O)N1CCO",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cn1c(=O)c2c(ncn2C)n(C)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOc1ccc(-n2c(N)nsc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(=N)c2nc[nH]c2n(C)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCc1c(C)c(=N)c2ccccc2n1C.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C(O)CCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CSc1ccccc1NC(=O)Cn1ccsc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nnc2n(c1=O)NP(C)(=O)NN2",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "NCCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "N=c1ccc2nc3ccc(N)cc3sc-2c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)c1[se]c2ccccc2c1Br",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCCc1c(CC)c(=N)c2ccccc2n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cnc(C(=O)N=c2sccn2C)cn1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1ccc2nc3ccc(O)cc3oc-2c1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "CCCCCCCN=c1ccn(CCCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCn1ccc(=NCCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCN=c1ccn(CCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c2c(c(=N)c3c1CCC3)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COC(=O)Nc1nc(CN=C=S)c[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "N=c1sc2c(n1Cc1ccccc1)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccccc1C(=O)N=c1nc(S)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "NCCNC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cl.NCCO/C=C/[C@H](N)C(=O)O",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "Cl.N=c1ccn(Cc2ccccc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(C(C)C)cc2c(C)ccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Cc1ccc(C(=O)Cn2ncsc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=S1(=O)N=C(SCCO)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCn1c2c(c(=N)c3c1CCC3)CCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#Cc1ccc(/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cc(/N=c2\\ssnc2Cl)n[nH]1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1c(Cl)cccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc(C/N=c2\\ssnc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "NN=c1cccc(C=Cc2ccccc2)cc1O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1nc2ccccc2s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1ccc(C)cc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)C(=S)/N=c1\\ssc(=S)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(CN=c1nc(N(C)C)ss1)OCC",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[SeH]c1nc([SeH])c2ccccc2n1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "[SeH]c1nc([SeH])c2cccnc2n1",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "Cc1ccccc1C(=O)/N=c1\\sccn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)/N=c1/nc(N(C)C)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1oc(=O)c2oc3ccccc3oc1=2",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "N=c1oc2ccc(Cl)cc2cc1C(N)=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)c1n/c(=N/Cc2cccs2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccccc1CN1CC=c2ccccc2=N1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Nc1ccc2c(c1)S(=O)(=O)NC2=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CN(C)c1n/c(=N/Cc2ccco2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "c1ccc2c(c1)n1nnnc1c1nnnn21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1nc2cccccc-2n1Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cn1c2cccc(=O)c-2nc2ccccc21",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cc1cc(C)n(C)c2cccc(=O)c1-2",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cc1cc(Cl)ccc1/N=c1\\ssnc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#Cc1cccc(/N=c2\\ssnc2Cl)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccsc1/C=c1\\sc2ncnn2c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCn1c(C)cs/c1=N\\c1cccnc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCC(=O)N/N=c1/sc2ccccc2n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(F)cccc1=N.O=S(=O)(O)F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccs/c1=N\\C(=O)Nc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1ccs/c1=N\\C(=O)c1ccccc1F",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.Cc1cs/c(=N\\c2ccccc2)n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccccc1Nc1nc2cccnc2[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CC(C)(C)n1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCOC(=O)c1c(O)cc2cccccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "[SeH]Cc1c2ccccc2nc2ccccc12",
+    "error": "string index out of range"
+  },
+  {
+    "smiles": "O=c1c2ccccc2[se]n1C1CCCCC1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Br.C/C=C(\\CSC(=N)N)C(=O)OC",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "CCCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "COC(=O)Cn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "c1ccc2c(c1)c1nonc1c1ccoc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=Cc1ccc2ccc(C(=O)O)ccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "CSc1nnc2c3nncn3c3ccccc3n12",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "O=C(NCCCO)c1ccc2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "[2H]C([2H])(CC(=O)O)C(=O)CN",
+    "error": "''"
+  },
+  {
+    "smiles": "CC(C)(C)CC#CC1CC1c1c[nH]cn1",
+    "error": "'NoneType' object has no attribute 'draw'"
+  },
+  {
+    "smiles": "O=c1c2ccccc2[se]n1-c1ccccc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "COc1ccc(/N=c2\\ssnc2Cl)cc1OC",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Nc1c(NCCP(=O)(O)O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#C/N=c1\\sccn1Cc1ccc(Cl)nc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CSCCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CC(C)(C)OOI1OC(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Clc1ccc2c(c1)-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "COc1ccc2c(c1)-c1ccccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Clc1ccc2c(c1)[I+]c1ccccc1-2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "Fc1cccc2c1-c1c(F)cccc1[I+]2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "COc1ccc2c(c1)[I+]c1ccccc1-2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "N=c1c2ccc(Cl)cc2nc2n1CCCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc2nnn3c(=O)cc(C)n3c2c1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "O=C(O)CCCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCCC/N=c1/c2ccccc2nc2n1CCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)CCCN(C)c1c(N)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1c/c1=N\\SNC(=O)C1(C#N)CC1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)C/N=c1\\c(O)c(O)c1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cc(=O)n2nnc3cc(F)ccc3n12",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Nc1nc2[nH]cnc2/c(=N\\O)[nH]1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1cnc(=N)c2c1ncn2Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#Cc1c(-c2ccccc2)cc(S)sc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=C1CN(C)c2ncc(C#N)c(=N)n21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1snc(N)n1-c1cccc2ccccc12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "[2H]C([2H])(N)C(=O)CCC(=O)O",
+    "error": "''"
+  },
+  {
+    "smiles": "Cc1cc2occ(C)c2cc2c(C)ccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "CCOC(=O)c1nss/c1=N\\c1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c2c(c(=N)c3ccccc31)CCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "NCCCNC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Br.CCCCCCN=c1ccn(CCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCCCCCN=c1ccn(C)cc1.I",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.CC(=O)Cn1c2c(sc1=N)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCc1nn(CCSP(=O)(O)O)c(=N)s1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=S1(=O)N=C(NCCCO)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cn1ncnc2c(=O)n(C)c(=O)nc1-2",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "CCN(CC)CCn1[se]c2ccccc2c1=O",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "CCCCCCCCCn1ccc(=NCCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCn1ccc(=NCCCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCCCN=c1ccn(CCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCN=c1ccn(CCCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c2c(c(=N)c3c1CCC3)CCCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCCCCCCN=c1ccn(CCCCCC)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C(O)COc1ccc2c(c1Cl)N=S=N2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "O=c1[n-]cnc2[nH]ncc12.[Na+]",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Cl.N=c1sccn1Cc1ccc(Cl)cc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2c3c(sc2ncn1CCCO)CCCC3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOc1c(Nc2ccccc2O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1nc2sc3c(c2c(=N)n1N)CCCC3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CNC(=O)c1cc2cc(OC)ccc2oc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c(=N)n(CCO)c2ccccc21.Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.N=c1ccn(Cc2cccc(F)c2)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCn1cnc2sc3c(c2c1=N)CCCC3",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COC(=O)CCCc1[se]c2ccccc2c1I",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Br.CCCCCCCCCCCCn1ccc(=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COc1cc(N=c2ssnc2Cl)cc(OC)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cl.N=c1ccn(Cc2ccc(F)cc2)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC1CCCc2sc3ncn(N)c(=N)c3c21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCOC(=O)COc1ccc2c(c1)N=S=N2",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "CCc1ccc(C(=O)Cn2ccsc2=N)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2c(Cl)cccc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCn1c2c(c(=N)c3c1CCC3)CCC2",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(=N)n(CC(=O)O)c2ccccc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1ccn(Cc2ccc(Cl)cc2Cl)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1nc(CC#N)c2c(=N)n(N)cnc21",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ccc(/N=c2\\ssnc2Cl)cc1Cl",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ccc2ccccc2c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1cnc2ccccc2c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Br.CN(C)c1nc(=NCc2cccs2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1nss/c1=N\\c1ccc2ncccc2c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1c2nc3ccccc3sc-2cc(=O)c1C",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "COc1ccccc1CNC(=O)Cn1ccsc1=N",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CSc1ccccc1C(=O)/N=c1\\sccn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C1NS(=O)(=O)c2cccc(Cl)c21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cn1c(=O)nc2n(CCO)ccnc-2c1=O",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "O=c1ccc2nc3cc(Br)ccc3sc-2c1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Cc1cc(C)nc(/N=c2/ssnc2Cl)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1cc(=O)n2c(cc3cccccc32)n1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "O=C1NS(=O)(=O)c2ccc(Cl)cc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCc1oc2ccc(OC)c3c2c1C=CC=C3",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "Cn1[nH]nn/c1=N\\N=C\\c1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)c1n/c(=N/Cc2ccncc2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c(=N)sc2nc3ccccc3n2c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2nc2oc3ccccc3n12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)c1n/c(=N/Cc2cccnc2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)c1n/c(=N/Cc2ccccn2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN(C)c1n/c(=N/Cc2ccccc2)ss1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCn1c2cccc(=O)c-2nc2ccccc21",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "N=c1c2ccccc2sc2nc3ccccc3n12",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1c2ccccc2[se]n1-c1cccnc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "O=c1[nH]c(=S)[n-]cc1I.[Na+]",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Nc1cc2nc3c(O)cccc3oc-2cc1=O",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "C=CCOC1=NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "Cc1n/c(=N\\c2ccc(Cl)cc2)sn1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCO.O=C1NS(=O)(=O)c2ccccc21",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CCCCNc1c(NCC(=O)O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CCCCNc1c(NCCN(C)C)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=C(O)c1c[se]c(-c2ccccc2)n1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Fc1ccc(/N=c2\\ssnc2Cl)c(F)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N#CCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "C#CCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "C=CCN1C(=O)c2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  },
+  {
+    "smiles": "CC(=O)/N=c1\\sc2cc(C)ccc2n1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cn1c(N)cccc1=N.O=C(O)C(=O)O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(C(=O)/N=c2/sccn2C)o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "COCCCn1c(C)cs/c1=N\\c1cccnc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "C=CCn1c(C)cs/c1=N\\c1ccccc1C",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N/N=c1\\sc2ccccc2n1-c1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CC(C)(C)NCC(O)CON=c1cccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1sccn1CC(=O)c1ccc(Br)cc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Clc1ccccc1Nc1nc2cccnc2[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "c1ccc(Nc2nc3cccnc3[se]2)cc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Brc1ccccc1Nc1nc2cccnc2[se]1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Cc1ccn2c(=O)c3cccn3c(=O)c12",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "COc1ccccc1CNc1c(O)c(=O)c1=O",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(=N)n(Cc2cccc(F)c2)c1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "Cc1ccc(NC(=O)C2=CN=S=N2)cc1",
+    "error": "This structure cannot be kekulised!"
+  },
+  {
+    "smiles": "O=c1c2ccccc2[se]n1-c1ccncc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "Clc1cc(N2CCOCC2)c2cccccc1-2",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "N=c1sccn1CC(O)c1cc2ccccc2o1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "N=c1c(C(N)=O)cccn1Cc1ccccc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "O=c1c2ccccc2[se]n1Cc1ccccc1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "COc1ccc2nc3ccc(=O)cc-3oc2c1",
+    "error": "'NoneType' object has no attribute 'kekulise'"
+  },
+  {
+    "smiles": "Br.CC/C=C(\\CSC(=N)N)C(=O)OC",
+    "error": "float division by zero"
+  },
+  {
+    "smiles": "O=C(NCCCCO)c1ccc2n[se]nc2c1",
+    "error": "'SE'"
+  },
+  {
+    "smiles": "COC(=O)c1ccc2ccc(C=O)c-2cc1",
+    "error": "aromaticity"
+  },
+  {
+    "smiles": "CCn1c(=S)n(C)s/c1=N\\c1cccnc1",
+    "error": "'NoneType' object has no attribute 'get_contributed_electrons'"
+  },
+  {
+    "smiles": "CN1c2cccnc2Nc2ccccc2S1(=O)=O",
+    "error": "list index out of range"
+  }
+]

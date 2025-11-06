@@ -13,6 +13,7 @@ FILTER_PATTERN=""
 FILTER_ENABLED="NO"
 IMAGE_ENABLED="NO"
 JSON_ENABLED="NO"
+DATASET_PATTERN=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -29,6 +30,16 @@ while [[ $# -gt 0 ]]; do
         -novisual)
             NO_VISUAL="YES"
             FLAG_ARGS+=("$1")
+            shift
+            ;;
+        -dataset)
+            shift
+            if [[ $# -eq 0 ]]; then
+                echo "ERROR: -dataset flag requires a dataset name or pattern"
+                exit 1
+            fi
+            DATASET_PATTERN="$1"
+            FLAG_ARGS+=("-dataset" "$DATASET_PATTERN")
             shift
             ;;
         -filter)
@@ -149,7 +160,12 @@ if [ "$BISECT_MODE" = "YES" ]; then
         echo -e "\033[93mFILTER:\033[0m ${FILTER_PATTERN} (ignored in bisect mode)"
     fi
 else
-    echo -e "\033[93mMODE:\033[0m $([ "$ALL_MODE" = "YES" ] && echo "FULL (all datasets)" || echo "FAST (fastregression only)")"
+    if [ -n "$DATASET_PATTERN" ]; then
+        MODE_DESCRIPTION="DATASET pattern (${DATASET_PATTERN})"
+    else
+        MODE_DESCRIPTION=$([ "$ALL_MODE" = "YES" ] && echo "FULL (all datasets)" || echo "FAST (fastregression only)")
+    fi
+    echo -e "\033[93mMODE:\033[0m ${MODE_DESCRIPTION}"
     echo -e "\033[93mFAIL-EARLY:\033[0m $([ "$FAIL_EARLY" = "YES" ] && echo "YES (stop at first difference)" || echo "NO (collect all differences)")"
     echo -e "\033[93mVISUAL:\033[0m $([ "$NO_VISUAL" = "YES" ] && echo "NO (skip SVG generation)" || echo "YES (generate side-by-side comparisons)")"
     echo -e "\033[93mFILTER:\033[0m $([ "$FILTER_ENABLED" = "YES" ] && echo "${FILTER_PATTERN}" || echo "(none)")"

@@ -42,6 +42,8 @@ const htmlFormatter = require('jsondiffpatch/formatters/html');
 const { performance } = require('perf_hooks');
 const { createCanvas, Image } = require('canvas');
 
+const DATA_DIR = path.join(__dirname, '..', 'test', 'data');
+
 /**
  * Get current timestamp in ISO8601 format (without milliseconds)
  * @returns {string} ISO8601 timestamp like "2025-11-05T14:30:22"
@@ -152,6 +154,110 @@ function matchesFilter(regex, value) {
     return regex.test(value);
 }
 
+function globToRegExp(pattern) {
+    const escaped = pattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*/g, '.*')
+        .replace(/\?/g, '.');
+    return new RegExp('^' + escaped + '$');
+}
+
+function collectJsonDatasets(pattern) {
+    if (!pattern || !fs.existsSync(DATA_DIR)) {
+        return [];
+    }
+
+    const regex = globToRegExp(pattern);
+    const files = fs.readdirSync(DATA_DIR).filter((file) => file.endsWith('.json'));
+
+    return files
+        .map((file) => ({
+            name: path.basename(file, '.json'),
+            file: path.join('..', 'test', 'data', file),
+            type: 'json'
+        }))
+        .filter((dataset) => regex.test(dataset.name));
+}
+
+function loadDatasetEntries(dataset) {
+    if (Array.isArray(dataset.entries)) {
+        return dataset.entries;
+    }
+
+    if (!dataset.file) {
+        console.error('ERROR: Dataset "' + dataset.name + '" is missing entries or file path');
+        process.exit(2);
+    }
+
+    const datasetPath = path.join(__dirname, dataset.file);
+
+    if (!fs.existsSync(datasetPath)) {
+        console.error('ERROR: Dataset file not found: ' + datasetPath);
+        process.exit(2);
+    }
+
+    try {
+        const ext = path.extname(datasetPath).toLowerCase();
+        if (ext === '.json' || dataset.type === 'json') {
+            const datasetContent = fs.readFileSync(datasetPath, 'utf8');
+            const parsed = JSON.parse(datasetContent);
+            if (!Array.isArray(parsed)) {
+                throw new Error('JSON dataset is not an array');
+            }
+
+            if (parsed.length === 0) {
+                return [];
+            }
+
+            if (typeof parsed[0] === 'string') {
+                return parsed;
+            }
+
+            if (typeof parsed[0] === 'object' && parsed[0] !== null) {
+                const candidateKeys = [];
+                if (dataset.smilesField) {
+                    candidateKeys.push(dataset.smilesField);
+                }
+                candidateKeys.push('smiles', 'SMILES', 'Smiles', 'original', 'Original');
+                const key = candidateKeys.find((k) => Object.prototype.hasOwnProperty.call(parsed[0], k) && typeof parsed[0][k] === 'string');
+                if (!key) {
+                    throw new Error('JSON dataset does not contain a recognizable SMILES field (smiles/original)');
+                }
+                return parsed
+                    .map((entry) => (entry && typeof entry[key] === 'string') ? entry[key] : null)
+                    .filter((value) => typeof value === 'string');
+            }
+
+            throw new Error('JSON dataset entries must be strings or objects');
+        }
+
+        const datasetContent = fs.readFileSync(datasetPath, 'utf8');
+        const extractor = new Function(datasetContent + '; return ' + dataset.name + ';');
+        const result = extractor();
+        if (!Array.isArray(result)) {
+            throw new Error('Dataset variable "' + dataset.name + '" not found in file');
+        }
+        return result;
+    } catch (err) {
+        console.error('ERROR: Failed to load dataset: ' + dataset.file);
+        console.error(err && err.message ? err.message : err);
+        process.exit(2);
+    }
+}
+
+function isVisibleSmiles(smiles) {
+    if (typeof smiles !== 'string') {
+        return false;
+    }
+    for (let i = 0; i < smiles.length; i++) {
+        const code = smiles.charCodeAt(i);
+        if (code < 32 || code === 127) {
+            return false;
+        }
+    }
+    return smiles.length > 0;
+}
+
 /**
  * Convert SVG string to PNG buffer using canvas.
  * @param {string} svgString - SVG content.
@@ -208,6 +314,7 @@ let noVisual = false;
 let bisectMode = false;
 let bisectSmiles = '';
 let filterPattern = null;
+let datasetName = null;
 let generateImages = false;
 let generateJsonReports = false;
 const positionalArgs = [];
@@ -227,6 +334,15 @@ for (let i = 0; i < args.length; i++) {
 
     if (arg === '-novisual') {
         noVisual = true;
+        continue;
+    }
+
+    if (arg === '-dataset') {
+        if (i + 1 >= args.length) {
+            console.error('ERROR: -dataset flag requires a dataset name');
+            process.exit(2);
+        }
+        datasetName = args[++i];
         continue;
     }
 
@@ -300,6 +416,10 @@ if (bisectMode && filterPattern !== null) {
 if (noVisual && generateImages && !bisectMode) {
     console.warn('WARNING: -image flag is ignored when -novisual is set');
     generateImages = false;
+}
+
+if (datasetName) {
+    datasetName = datasetName.replace(/^['"]|['"]$/g, '');
 }
 
 let filterRegex = null;
@@ -465,7 +585,30 @@ if (bisectMode) {
 }
 
 // Regular regression test mode
-const datasets = allMode ? fullDatasets : fastDatasets;
+let datasets;
+if (allMode) {
+    datasets = fullDatasets;
+} else if (datasetName) {
+    const jsonDatasets = collectJsonDatasets(datasetName);
+    if (jsonDatasets.length > 0) {
+        datasets = jsonDatasets;
+    } else {
+        const combinedDatasets = [...fastDatasets, ...fullDatasets];
+        const found = combinedDatasets.find((ds) => ds.name === datasetName);
+        if (!found) {
+            const available = [
+                ...combinedDatasets.map((ds) => ds.name),
+                ...(fs.existsSync(DATA_DIR) ? fs.readdirSync(DATA_DIR).filter((file) => file.endsWith('.json')).map((file) => path.basename(file, '.json')) : [])
+            ];
+            console.error('ERROR: Unknown dataset: ' + datasetName);
+            console.error('Available datasets:', available.join(', '));
+            process.exit(2);
+        }
+        datasets = [found];
+    }
+} else {
+    datasets = fastDatasets;
+}
 
 // Create output directory with timestamp
 const outputDir = path.join(__dirname, 'output', 'regression', timestamp);
@@ -494,26 +637,34 @@ for (const dataset of datasets) {
 
     let smilesList;
     try {
-        const datasetContent = fs.readFileSync(path.join(__dirname, dataset.file), 'utf8');
-        const func = new Function(datasetContent + '; return ' + dataset.name + ';');
-        smilesList = func();
-        if (!smilesList) {
-            throw new Error('Dataset variable "' + dataset.name + '" not found in file');
-        }
+        smilesList = loadDatasetEntries(dataset);
     } catch (err) {
         console.error('ERROR: Failed to load dataset: ' + dataset.file);
-        console.error(err.message);
+        console.error(err && err.message ? err.message : err);
         process.exit(2);
     }
 
     console.log('\x1b[93mLOADED:\x1b[0m ' + smilesList.length + ' SMILES strings');
 
+    const visibleSmiles = smilesList.filter(isVisibleSmiles);
+    const removedInvisible = smilesList.length - visibleSmiles.length;
+    if (removedInvisible > 0) {
+        console.log('\x1b[93mSANITIZED:\x1b[0m removed ' + removedInvisible + ' entries with non-visible characters');
+    }
+    smilesList = visibleSmiles;
+    if (smilesList.length === 0) {
+        console.log('');
+        console.log('\x1b[93mSKIP:\x1b[0m Dataset contains no SMILES with visible characters, skipping.');
+        continue;
+    }
+
     if (filterRegex) {
         const beforeCount = smilesList.length;
-        smilesList = smilesList.filter(smiles => matchesFilter(filterRegex, smiles));
+        smilesList = smilesList.filter((smiles) => matchesFilter(filterRegex, smiles));
         console.log('\x1b[93mFILTERED:\x1b[0m ' + smilesList.length + ' of ' + beforeCount + ' SMILES matched pattern');
         if (smilesList.length === 0) {
-            console.log('\x1b[93mSKIP:\x1b[0m Dataset has no SMILES matching filter, skipping.\n');
+            console.log('');
+            console.log('\x1b[93mSKIP:\x1b[0m Dataset has no SMILES matching filter, skipping.');
             continue;
         }
     }

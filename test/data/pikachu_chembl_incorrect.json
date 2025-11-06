@@ -1,0 +1,787 @@
+[
+  {
+    "original": "[K]",
+    "rdkit": "[K]",
+    "pikachu": "[KH]"
+  },
+  {
+    "original": "[C]",
+    "rdkit": "[C]",
+    "pikachu": "C"
+  },
+  {
+    "original": "[S]",
+    "rdkit": "[S]",
+    "pikachu": "S"
+  },
+  {
+    "original": "[Ra]",
+    "rdkit": "[Ra]",
+    "pikachu": "[RaH2]"
+  },
+  {
+    "original": "[Cs]",
+    "rdkit": "[Cs]",
+    "pikachu": "[CsH]"
+  },
+  {
+    "original": "[Rb]",
+    "rdkit": "[Rb]",
+    "pikachu": "[RbH]"
+  },
+  {
+    "original": "[OH]",
+    "rdkit": "[OH]",
+    "pikachu": "O"
+  },
+  {
+    "original": "[Ba]",
+    "rdkit": "[Ba]",
+    "pikachu": "[BaH2]"
+  },
+  {
+    "original": "[N]=O",
+    "rdkit": "[N]=O",
+    "pikachu": "N=O"
+  },
+  {
+    "original": "[81Kr]",
+    "rdkit": "[81Kr]",
+    "pikachu": "[Kr]"
+  },
+  {
+    "original": "[18FH]",
+    "rdkit": "[18FH]",
+    "pikachu": "F"
+  },
+  {
+    "original": "[82Rb]",
+    "rdkit": "[82Rb]",
+    "pikachu": "[RbH]"
+  },
+  {
+    "original": "[129Xe]",
+    "rdkit": "[129Xe]",
+    "pikachu": "[Xe]"
+  },
+  {
+    "original": "[127Xe]",
+    "rdkit": "[127Xe]",
+    "pikachu": "[Xe]"
+  },
+  {
+    "original": "[133Xe]",
+    "rdkit": "[133Xe]",
+    "pikachu": "[Xe]"
+  },
+  {
+    "original": "[13NH3]",
+    "rdkit": "[13NH3]",
+    "pikachu": "N"
+  },
+  {
+    "original": "[123IH]",
+    "rdkit": "[123IH]",
+    "pikachu": "I"
+  },
+  {
+    "original": "[15OH2]",
+    "rdkit": "[15OH2]",
+    "pikachu": "O"
+  },
+  {
+    "original": "[223Ra]",
+    "rdkit": "[223Ra]",
+    "pikachu": "[RaH2]"
+  },
+  {
+    "original": "[76BrH]",
+    "rdkit": "[76BrH]",
+    "pikachu": "Br"
+  },
+  {
+    "original": "[131Cs]",
+    "rdkit": "[131Cs]",
+    "pikachu": "[CsH]"
+  },
+  {
+    "original": "[125IH]",
+    "rdkit": "[125IH]",
+    "pikachu": "I"
+  },
+  {
+    "original": "O=[PH2]O",
+    "rdkit": "O=[PH2]O",
+    "pikachu": "O=PO"
+  },
+  {
+    "original": "[85SrH2]",
+    "rdkit": "[85SrH2]",
+    "pikachu": "[SrH2]"
+  },
+  {
+    "original": "N[14C](N)=O",
+    "rdkit": "N[14C](N)=O",
+    "pikachu": "NC(N)=O"
+  },
+  {
+    "original": "N[13C](N)=O",
+    "rdkit": "N[13C](N)=O",
+    "pikachu": "NC(N)=O"
+  },
+  {
+    "original": "[11C-]#[O+]",
+    "rdkit": "[11C-]#[O+]",
+    "pikachu": "[C-]#[O+]"
+  },
+  {
+    "original": "C[11C](=O)O",
+    "rdkit": "C[11C](=O)O",
+    "pikachu": "CC(=O)O"
+  },
+  {
+    "original": "[18F-].[Na+]",
+    "rdkit": "[18F-].[Na+]",
+    "pikachu": "[F-].[Na+]"
+  },
+  {
+    "original": "[42K+].[Cl-]",
+    "rdkit": "[42K+].[Cl-]",
+    "pikachu": "[Cl-].[K+]"
+  },
+  {
+    "original": "[123I-].[Na+]",
+    "rdkit": "[123I-].[Na+]",
+    "pikachu": "[I-].[Na+]"
+  },
+  {
+    "original": "[131I-].[Na+]",
+    "rdkit": "[131I-].[Na+]",
+    "pikachu": "[I-].[Na+]"
+  },
+  {
+    "original": "[82Rb+].[Cl-]",
+    "rdkit": "[82Rb+].[Cl-]",
+    "pikachu": "[Cl-].[Rb+]"
+  },
+  {
+    "original": "OCC(S)CS.[Bi]",
+    "rdkit": "OCC(S)CS.[Bi]",
+    "pikachu": "OCC(S)CS.[BiH3]"
+  },
+  {
+    "original": "[22Na+].[Cl-]",
+    "rdkit": "[22Na+].[Cl-]",
+    "pikachu": "[Cl-].[Na+]"
+  },
+  {
+    "original": "[125I-].[Na+]",
+    "rdkit": "[125I-].[Na+]",
+    "pikachu": "[I-].[Na+]"
+  },
+  {
+    "original": "[124I-].[Na+]",
+    "rdkit": "[124I-].[Na+]",
+    "pikachu": "[I-].[Na+]"
+  },
+  {
+    "original": "[11CH3]SC(=N)N",
+    "rdkit": "[11CH3]SC(=N)N",
+    "pikachu": "CSC(=N)N"
+  },
+  {
+    "original": "CC1(C)CC=CN1[O]",
+    "rdkit": "CC1(C)CC=CN1[O]",
+    "pikachu": "CC1(C)CC=CN1O"
+  },
+  {
+    "original": "Oc1ccc([125I])cc1",
+    "rdkit": "Oc1ccc([125I])cc1",
+    "pikachu": "Oc1ccc(I)cc1"
+  },
+  {
+    "original": "Oc1cccc([125I])c1",
+    "rdkit": "Oc1cccc([125I])c1",
+    "pikachu": "Oc1cccc(I)c1"
+  },
+  {
+    "original": "Nc1ccc([125I])cc1",
+    "rdkit": "Nc1ccc([125I])cc1",
+    "pikachu": "Nc1ccc(I)cc1"
+  },
+  {
+    "original": "N[11C](=O)c1cnccn1",
+    "rdkit": "N[11C](=O)c1cnccn1",
+    "pikachu": "NC(=O)c1cnccn1"
+  },
+  {
+    "original": "Cl.NCCCC[C@H](N)CS",
+    "rdkit": "Cl.NCCCC[C@H](N)CS",
+    "pikachu": "Cl.NCCCC[C@@H](N)CS"
+  },
+  {
+    "original": "NN[14C](=O)c1ccncc1",
+    "rdkit": "NN[14C](=O)c1ccncc1",
+    "pikachu": "NNC(=O)c1ccncc1"
+  },
+  {
+    "original": "NN[11C](=O)c1ccncc1",
+    "rdkit": "NN[11C](=O)c1ccncc1",
+    "pikachu": "NNC(=O)c1ccncc1"
+  },
+  {
+    "original": "F[14C](F)(F)C(Cl)Br",
+    "rdkit": "F[14C](F)(F)C(Cl)Br",
+    "pikachu": "FC(F)(F)C(Cl)Br"
+  },
+  {
+    "original": "Cc1nnc(CCC[18F])nn1",
+    "rdkit": "Cc1nnc(CCC[18F])nn1",
+    "pikachu": "Cc1nnc(CCCF)nn1"
+  },
+  {
+    "original": "O=[32PH]([O-])O.[K+]",
+    "rdkit": "O=[32PH]([O-])O.[K+]",
+    "pikachu": "O=[PH]([O-])O.[K+]"
+  },
+  {
+    "original": "CC1(C)CCC(C)(C)N1[O]",
+    "rdkit": "CC1(C)CCC(C)(C)N1[O]",
+    "pikachu": "CC1(C)CCC(C)(C)N1O"
+  },
+  {
+    "original": "Cl.N[C@@H](CS)C(=O)O",
+    "rdkit": "Cl.N[C@@H](CS)C(=O)O",
+    "pikachu": "Cl.N[C@H](CS)C(=O)O"
+  },
+  {
+    "original": "[89Sr+2].[Cl-].[Cl-]",
+    "rdkit": "[89Sr+2].[Cl-].[Cl-]",
+    "pikachu": "[Cl-].[Cl-].[Sr+2]"
+  },
+  {
+    "original": "CC([11CH3])(N)C(=O)O",
+    "rdkit": "CC([11CH3])(N)C(=O)O",
+    "pikachu": "CC(C)(N)C(=O)O"
+  },
+  {
+    "original": "[85Sr+2].[Cl-].[Cl-]",
+    "rdkit": "[85Sr+2].[Cl-].[Cl-]",
+    "pikachu": "[Cl-].[Cl-].[Sr+2]"
+  },
+  {
+    "original": "C[11C](=O)[O-].[Na+]",
+    "rdkit": "C[11C](=O)[O-].[Na+]",
+    "pikachu": "CC(=O)[O-].[Na+]"
+  },
+  {
+    "original": "[47Ca+2].[Cl-].[Cl-]",
+    "rdkit": "[47Ca+2].[Cl-].[Cl-]",
+    "pikachu": "[Ca+2].[Cl-].[Cl-]"
+  },
+  {
+    "original": "[45Ca+2].[Cl-].[Cl-]",
+    "rdkit": "[45Ca+2].[Cl-].[Cl-]",
+    "pikachu": "[Ca+2].[Cl-].[Cl-]"
+  },
+  {
+    "original": "C[N+](C)(C)CCOC[18F]",
+    "rdkit": "C[N+](C)(C)CCOC[18F]",
+    "pikachu": "C[N+](C)(C)CCOCF"
+  },
+  {
+    "original": "N=[11C](N)NCCc1ccccc1",
+    "rdkit": "N=[11C](N)NCCc1ccccc1",
+    "pikachu": "N=C(N)NCCc1ccccc1"
+  },
+  {
+    "original": "c1ccc(C2NCC[35S]2)cc1",
+    "rdkit": "c1ccc(C2NCC[35S]2)cc1",
+    "pikachu": "c1ccc(C2NCCS2)cc1"
+  },
+  {
+    "original": "CC1(C)CCCC(C)(C)N1[O]",
+    "rdkit": "CC1(C)CCCC(C)(C)N1[O]",
+    "pikachu": "CC1(C)CCCC(C)(C)N1O"
+  },
+  {
+    "original": "Cl.N[C@@H](CCl)C(=O)O",
+    "rdkit": "Cl.N[C@@H](CCl)C(=O)O",
+    "pikachu": "Cl.N[C@H](CCl)C(=O)O"
+  },
+  {
+    "original": "O=C(O)c1ccc([18F])cc1",
+    "rdkit": "O=C(O)c1ccc([18F])cc1",
+    "pikachu": "O=C(O)c1ccc(F)cc1"
+  },
+  {
+    "original": "[223Ra+2].[Cl-].[Cl-]",
+    "rdkit": "[223Ra+2].[Cl-].[Cl-]",
+    "pikachu": "[Cl-].[Cl-].[Ra+2]"
+  },
+  {
+    "original": "Cl.N[14CH2]CC[14CH2]N",
+    "rdkit": "Cl.N[14CH2]CC[14CH2]N",
+    "pikachu": "Cl.NCCCCN"
+  },
+  {
+    "original": "N#CC[14C](=O)c1ccccc1",
+    "rdkit": "N#CC[14C](=O)c1ccccc1",
+    "pikachu": "N#CCC(=O)c1ccccc1"
+  },
+  {
+    "original": "N#CC[14CH](O)c1ccccc1",
+    "rdkit": "N#CC[14CH](O)c1ccccc1",
+    "pikachu": "N#CCC(O)c1ccccc1"
+  },
+  {
+    "original": "CSCCC1NC(=O)N[11C]1=O",
+    "rdkit": "CSCCC1NC(=O)N[11C]1=O",
+    "pikachu": "CSCCC1NC(=O)NC1=O"
+  },
+  {
+    "original": "[CH2]c1c[nH]c2ccccc12",
+    "rdkit": "[CH2]c1c[nH]c2ccccc12",
+    "pikachu": "Cc1c[nH]c2ccccc12"
+  },
+  {
+    "original": "C[N+](C)(C)CCOCC[18F]",
+    "rdkit": "C[N+](C)(C)CCOCC[18F]",
+    "pikachu": "C[N+](C)(C)CCOCCF"
+  },
+  {
+    "original": "N=[11C](N)NCCc1ccccc1F",
+    "rdkit": "N=[11C](N)NCCc1ccccc1F",
+    "pikachu": "N=C(N)NCCc1ccccc1F"
+  },
+  {
+    "original": "CC(N)(C[18F])C(=O)O.Cl",
+    "rdkit": "CC(N)(C[18F])C(=O)O.Cl",
+    "pikachu": "CC(N)(CF)C(=O)O.Cl"
+  },
+  {
+    "original": "O=C(O)Cn1cc([123I])nn1",
+    "rdkit": "O=C(O)Cn1cc([123I])nn1",
+    "pikachu": "O=C(O)Cn1cc(I)nn1"
+  },
+  {
+    "original": "Cl.NCCCC[C@H](N)C(=O)O",
+    "rdkit": "Cl.NCCCC[C@H](N)C(=O)O",
+    "pikachu": "Cl.NCCCC[C@@H](N)C(=O)O"
+  },
+  {
+    "original": "CSCC[C@H](N)[11C](=O)O",
+    "rdkit": "CSCC[C@H](N)[11C](=O)O",
+    "pikachu": "CSCC[C@H](N)C(=O)O"
+  },
+  {
+    "original": "NCc1ccc(CN)c([125I])c1",
+    "rdkit": "NCc1ccc(CN)c([125I])c1",
+    "pikachu": "NCc1ccc(CN)c(I)c1"
+  },
+  {
+    "original": "O=[11C](O)C(O)c1ccccc1",
+    "rdkit": "O=[11C](O)C(O)c1ccccc1",
+    "pikachu": "O=C(O)C(O)c1ccccc1"
+  },
+  {
+    "original": "N=C(N)NCc1cccc([18F])c1",
+    "rdkit": "N=C(N)NCc1cccc([18F])c1",
+    "pikachu": "N=C(N)NCc1cccc(F)c1"
+  },
+  {
+    "original": "CNC(C)(C[18F])C(=O)O.Cl",
+    "rdkit": "CNC(C)(C[18F])C(=O)O.Cl",
+    "pikachu": "CNC(C)(CF)C(=O)O.Cl"
+  },
+  {
+    "original": "CC1(C)CC(N)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(N)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(N)C(C)(C)N1O"
+  },
+  {
+    "original": "CC1(C)CC(O)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(O)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(O)C(C)(C)N1O"
+  },
+  {
+    "original": "C[75Se]CC[C@H](N)C(=O)O",
+    "rdkit": "C[75Se]CC[C@H](N)C(=O)O",
+    "pikachu": "C[Se]CC[C@H](N)C(=O)O"
+  },
+  {
+    "original": "N=C(N)NCc1ccc([18F])cc1",
+    "rdkit": "N=C(N)NCc1ccc([18F])cc1",
+    "pikachu": "N=C(N)NCc1ccc(F)cc1"
+  },
+  {
+    "original": "CN([11CH3])C(=N)NC(=N)N",
+    "rdkit": "CN([11CH3])C(=N)NC(=N)N",
+    "pikachu": "CN(C)C(=N)NC(=N)N"
+  },
+  {
+    "original": "COc1ccc(C(O)[11C]#N)cc1",
+    "rdkit": "COc1ccc(C(O)[11C]#N)cc1",
+    "pikachu": "COc1ccc(C(O)C#N)cc1"
+  },
+  {
+    "original": "CCC1(CC)NC(=O)N[11C]1=O",
+    "rdkit": "CCC1(CC)NC(=O)N[11C]1=O",
+    "pikachu": "CCC1(CC)NC(=O)NC1=O"
+  },
+  {
+    "original": "[CH]=CCc1c[nH]c2ccccc12",
+    "rdkit": "[CH]=CCc1c[nH]c2ccccc12",
+    "pikachu": "C=CCc1c[nH]c2ccccc12"
+  },
+  {
+    "original": "N=[11C](N)NCCc1cccc(I)c1",
+    "rdkit": "N=[11C](N)NCCc1cccc(I)c1",
+    "pikachu": "N=C(N)NCCc1cccc(I)c1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1cccc(F)c1",
+    "rdkit": "N=[11C](N)NCCc1cccc(F)c1",
+    "pikachu": "N=C(N)NCCc1cccc(F)c1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1ccc(F)cc1",
+    "rdkit": "N=[11C](N)NCCc1ccc(F)cc1",
+    "pikachu": "N=C(N)NCCc1ccc(F)cc1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1ccc(O)cc1",
+    "rdkit": "N=[11C](N)NCCc1ccc(O)cc1",
+    "pikachu": "N=C(N)NCCc1ccc(O)cc1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1cccc(O)c1",
+    "rdkit": "N=[11C](N)NCCc1cccc(O)c1",
+    "pikachu": "N=C(N)NCCc1cccc(O)c1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1ccc(I)cc1",
+    "rdkit": "N=[11C](N)NCCc1ccc(I)cc1",
+    "pikachu": "N=C(N)NCCc1ccc(I)cc1"
+  },
+  {
+    "original": "[14CH3]n1cnc2c(Cl)ncnc21",
+    "rdkit": "[14CH3]n1cnc2c(Cl)ncnc21",
+    "pikachu": "Cn1cnc2c(Cl)ncnc21"
+  },
+  {
+    "original": "[14CH3]n1cnc2ncnc(Cl)c21",
+    "rdkit": "[14CH3]n1cnc2ncnc(Cl)c21",
+    "pikachu": "Cn1cnc2ncnc(Cl)c21"
+  },
+  {
+    "original": "Cc1cc(N)nc(CC(C)[18F])c1",
+    "rdkit": "Cc1cc(N)nc(CC(C)[18F])c1",
+    "pikachu": "Cc1cc(N)nc(CC(C)F)c1"
+  },
+  {
+    "original": "N=C(N)NCc1cccc([125I])c1",
+    "rdkit": "N=C(N)NCc1cccc([125I])c1",
+    "pikachu": "N=C(N)NCc1cccc(I)c1"
+  },
+  {
+    "original": "[18F]c1ccc(CC2CCNCC2)cc1",
+    "rdkit": "[18F]c1ccc(CC2CCNCC2)cc1",
+    "pikachu": "Fc1ccc(CC2CCNCC2)cc1"
+  },
+  {
+    "original": "CC1(C)CC(N)CC(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(N)CC(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(N)CC(C)(C)N1O"
+  },
+  {
+    "original": "CC1(C)CC(O)CC(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(O)CC(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(O)CC(C)(C)N1O"
+  },
+  {
+    "original": "CC1(C)CC(CN)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(CN)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(CN)C(C)(C)N1O"
+  },
+  {
+    "original": "CC1(C)CC(CO)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(CO)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(CO)C(C)(C)N1O"
+  },
+  {
+    "original": "CC1(C)CC(=O)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(=O)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(=O)C(C)(C)N1O"
+  },
+  {
+    "original": "CC(=O)OC1CCN(CC[18F])CC1",
+    "rdkit": "CC(=O)OC1CCN(CC[18F])CC1",
+    "pikachu": "CC(=O)OC1CCN(CCF)CC1"
+  },
+  {
+    "original": "N=C(N)NCc1cccc([123I])c1",
+    "rdkit": "N=C(N)NCc1cccc([123I])c1",
+    "pikachu": "N=C(N)NCc1cccc(I)c1"
+  },
+  {
+    "original": "N=C(N)NCc1cccc([131I])c1",
+    "rdkit": "N=C(N)NCc1cccc([131I])c1",
+    "pikachu": "N=C(N)NCc1cccc(I)c1"
+  },
+  {
+    "original": "[11CH3]SCC[C@H](N)C(=O)O",
+    "rdkit": "[11CH3]SCC[C@H](N)C(=O)O",
+    "pikachu": "CSCC[C@H](N)C(=O)O"
+  },
+  {
+    "original": "CC(=O)OC1CCN([11CH3])CC1",
+    "rdkit": "CC(=O)OC1CCN([11CH3])CC1",
+    "pikachu": "CC(=O)OC1CCN(C)CC1"
+  },
+  {
+    "original": "CO[P@@]1OCC2CCC[C@@H]2O1",
+    "rdkit": "CO[P@@]1OCC2CCC[C@@H]2O1",
+    "pikachu": "CO[P@]1OCC2CCC[C@@H]2O1"
+  },
+  {
+    "original": "[11CH3]C(N)C(=O)CCC(=O)O",
+    "rdkit": "[11CH3]C(N)C(=O)CCC(=O)O",
+    "pikachu": "CC(N)C(=O)CCC(=O)O"
+  },
+  {
+    "original": "CCO[11C](=O)C(O)c1ccccc1",
+    "rdkit": "CCO[11C](=O)C(O)c1ccccc1",
+    "pikachu": "CCOC(=O)C(O)c1ccccc1"
+  },
+  {
+    "original": "O=C(O)C[14C](=O)c1ccccc1",
+    "rdkit": "O=C(O)C[14C](=O)c1ccccc1",
+    "pikachu": "O=C(O)CC(=O)c1ccccc1"
+  },
+  {
+    "original": "O=[11C](O)C(O)c1ccccc1Cl",
+    "rdkit": "O=[11C](O)C(O)c1ccccc1Cl",
+    "pikachu": "O=C(O)C(O)c1ccccc1Cl"
+  },
+  {
+    "original": "N=[14C](N)N1CCc2ccccc2C1",
+    "rdkit": "N=[14C](N)N1CCc2ccccc2C1",
+    "pikachu": "N=C(N)N1CCc2ccccc2C1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1cc(O)ccc1F",
+    "rdkit": "N=[11C](N)NCCc1cc(O)ccc1F",
+    "pikachu": "N=C(N)NCCc1cc(O)ccc1F"
+  },
+  {
+    "original": "NCC(O)c1cc(O)c(O)cc1[18F]",
+    "rdkit": "NCC(O)c1cc(O)c(O)cc1[18F]",
+    "pikachu": "NCC(O)c1cc(O)c(O)cc1F"
+  },
+  {
+    "original": "COc1ccc(CCN[11C](=N)N)cc1",
+    "rdkit": "COc1ccc(CCN[11C](=N)N)cc1",
+    "pikachu": "COc1ccc(CCNC(=N)N)cc1"
+  },
+  {
+    "original": "NC1(C(=O)O)CC(=C[123I])C1",
+    "rdkit": "NC1(C(=O)O)CC(=C[123I])C1",
+    "pikachu": "NC1(C(=O)O)CC(=CI)C1"
+  },
+  {
+    "original": "CC1(C)C=C(CO)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)C=C(CO)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)C=C(CO)C(C)(C)N1O"
+  },
+  {
+    "original": "CC1(C)CC(=O)CC(C)(C)N1[O]",
+    "rdkit": "CC1(C)CC(=O)CC(C)(C)N1[O]",
+    "pikachu": "CC1(C)CC(=O)CC(C)(C)N1O"
+  },
+  {
+    "original": "C[C@](N)(C[18F])C(=O)O.Cl",
+    "rdkit": "C[C@](N)(C[18F])C(=O)O.Cl",
+    "pikachu": "C[C@](N)(CF)C(=O)O.Cl"
+  },
+  {
+    "original": "CC(=O)OCC1CCN(CC[18F])CC1",
+    "rdkit": "CC(=O)OCC1CCN(CC[18F])CC1",
+    "pikachu": "CC(=O)OCC1CCN(CCF)CC1"
+  },
+  {
+    "original": "O=C(O)C(S)C(S)C(=O)O.[As]",
+    "rdkit": "O=C(O)C(S)C(S)C(=O)O.[As]",
+    "pikachu": "O=C(O)C(S)C(S)C(=O)O.[AsH3]"
+  },
+  {
+    "original": "CCC(=O)OC1CCN([11CH3])CC1",
+    "rdkit": "CCC(=O)OC1CCN([11CH3])CC1",
+    "pikachu": "CCC(=O)OC1CCN(C)CC1"
+  },
+  {
+    "original": "O=C(O)CN[14C](=O)c1ccccc1",
+    "rdkit": "O=C(O)CN[14C](=O)c1ccccc1",
+    "pikachu": "O=C(O)CNC(=O)c1ccccc1"
+  },
+  {
+    "original": "N#[11C]C(O)c1ccc(O)c(O)c1",
+    "rdkit": "N#[11C]C(O)c1ccc(O)c(O)c1",
+    "pikachu": "N#CC(O)c1ccc(O)c(O)c1"
+  },
+  {
+    "original": "Cc1cccc(C(O)[11C](=O)O)c1",
+    "rdkit": "Cc1cccc(C(O)[11C](=O)O)c1",
+    "pikachu": "Cc1cccc(C(O)C(=O)O)c1"
+  },
+  {
+    "original": "CCCC1(CCC)NC(=O)N[11C]1=O",
+    "rdkit": "CCCC1(CCC)NC(=O)N[11C]1=O",
+    "pikachu": "CCCC1(CCC)NC(=O)NC1=O"
+  },
+  {
+    "original": "[14CH3]SCC[C@@H](N)C(=O)O",
+    "rdkit": "[14CH3]SCC[C@@H](N)C(=O)O",
+    "pikachu": "CSCC[C@@H](N)C(=O)O"
+  },
+  {
+    "original": "C[C@@](N)(C[18F])C(=O)O.Cl",
+    "rdkit": "C[C@@](N)(C[18F])C(=O)O.Cl",
+    "pikachu": "C[C@@](N)(CF)C(=O)O.Cl"
+  },
+  {
+    "original": "[18F]c1ncccc1OC[C@@H]1CCN1",
+    "rdkit": "[18F]c1ncccc1OC[C@@H]1CCN1",
+    "pikachu": "Fc1ncccc1OC[C@@H]1CCN1"
+  },
+  {
+    "original": "CN[C@](C)(C[18F])C(=O)O.Cl",
+    "rdkit": "CN[C@](C)(C[18F])C(=O)O.Cl",
+    "pikachu": "CN[C@](C)(CF)C(=O)O.Cl"
+  },
+  {
+    "original": "CC1(C)C=C(C=O)C(C)(C)N1[O]",
+    "rdkit": "CC1(C)C=C(C=O)C(C)(C)N1[O]",
+    "pikachu": "CC1(C)C=C(C=O)C(C)(C)N1O"
+  },
+  {
+    "original": "C[N+](C)([11CH3])CCO.[Cl-]",
+    "rdkit": "C[N+](C)([11CH3])CCO.[Cl-]",
+    "pikachu": "C[N+](C)(C)CCO.[Cl-]"
+  },
+  {
+    "original": "O=C(O)CCSCCCCCCCCCCCC[18F]",
+    "rdkit": "O=C(O)CCSCCCCCCCCCCCC[18F]",
+    "pikachu": "O=C(O)CCSCCCCCCCCCCCCF"
+  },
+  {
+    "original": "O=[11C](O)C(O)c1ccc(Cl)cc1",
+    "rdkit": "O=[11C](O)C(O)c1ccc(Cl)cc1",
+    "pikachu": "O=C(O)C(O)c1ccc(Cl)cc1"
+  },
+  {
+    "original": "Br.NCCc1cc(O)c(O)cc1[123I]",
+    "rdkit": "Br.NCCc1cc(O)c(O)cc1[123I]",
+    "pikachu": "Br.NCCc1cc(O)c(O)cc1I"
+  },
+  {
+    "original": "O=C1N[11C](=O)C2(CCCCC2)N1",
+    "rdkit": "O=C1N[11C](=O)C2(CCCCC2)N1",
+    "pikachu": "O=C1NC(=O)C2(CCCCC2)N1"
+  },
+  {
+    "original": "Br.NCCc1cc(O)c(O)cc1[131I]",
+    "rdkit": "Br.NCCc1cc(O)c(O)cc1[131I]",
+    "pikachu": "Br.NCCc1cc(O)c(O)cc1I"
+  },
+  {
+    "original": "[CH]=CCc1c[nH]c2ccc(F)cc12",
+    "rdkit": "[CH]=CCc1c[nH]c2ccc(F)cc12",
+    "pikachu": "C=CCc1c[nH]c2ccc(F)cc12"
+  },
+  {
+    "original": "CC1(C)c2ccccc2C(C)(C)N1[O]",
+    "rdkit": "CC1(C)c2ccccc2C(C)(C)N1[O]",
+    "pikachu": "CC1(C)c2ccccc2C(C)(C)N1O"
+  },
+  {
+    "original": "CC(C)(C)N([O])C(O)c1ccccc1",
+    "rdkit": "CC(C)(C)N([O])C(O)c1ccccc1",
+    "pikachu": "CC(C)(C)N(O)C(O)c1ccccc1"
+  },
+  {
+    "original": "N=[11C](N)NCCc1ccc(F)c(O)c1",
+    "rdkit": "N=[11C](N)NCCc1ccc(F)c(O)c1",
+    "pikachu": "N=C(N)NCCc1ccc(F)c(O)c1"
+  },
+  {
+    "original": "N=[11C](N)NCC(O)c1cccc(O)c1",
+    "rdkit": "N=[11C](N)NCC(O)c1cccc(O)c1",
+    "pikachu": "N=C(N)NCC(O)c1cccc(O)c1"
+  },
+  {
+    "original": "C[C@](N)(/C=C/[123I])C(=O)O",
+    "rdkit": "C[C@](N)(/C=C/[123I])C(=O)O",
+    "pikachu": "C[C@](N)(/C=C/I)C(=O)O"
+  },
+  {
+    "original": "CN[C@@](C)(C[18F])C(=O)O.Cl",
+    "rdkit": "CN[C@@](C)(C[18F])C(=O)O.Cl",
+    "pikachu": "CN[C@@](C)(CF)C(=O)O.Cl"
+  },
+  {
+    "original": "CC1(C)C=C(C=O)CC(C)(C)N1[O]",
+    "rdkit": "CC1(C)C=C(C=O)CC(C)(C)N1[O]",
+    "pikachu": "CC1(C)C=C(C=O)CC(C)(C)N1O"
+  },
+  {
+    "original": "CCOCC1=CC(C)(C)N([O])C1(C)C",
+    "rdkit": "CCOCC1=CC(C)(C)N([O])C1(C)C",
+    "pikachu": "CCOCC1=CC(C)(C)N(O)C1(C)C"
+  },
+  {
+    "original": "Clc1[nH]nnc1-c1nn[nH][15n]1",
+    "rdkit": "Clc1[nH]nnc1-c1nn[nH][15n]1",
+    "pikachu": "Clc1[nH]nnc1-c1nn[nH]n1"
+  },
+  {
+    "original": "O=C(O)CCCCCCCCCCCCCCC[123I]",
+    "rdkit": "O=C(O)CCCCCCCCCCCCCCC[123I]",
+    "pikachu": "O=C(O)CCCCCCCCCCCCCCCI"
+  },
+  {
+    "original": "CC(=O)O.NCCCC[C@H](N)C(=O)O",
+    "rdkit": "CC(=O)O.NCCCC[C@H](N)C(=O)O",
+    "pikachu": "CC(=O)O.NCCCC[C@@H](N)C(=O)O"
+  },
+  {
+    "original": "C#CCN(C)[C@H](C[18F])CC(C)C",
+    "rdkit": "C#CCN(C)[C@H](C[18F])CC(C)C",
+    "pikachu": "C#CCN(C)[C@H](CF)CC(C)C"
+  },
+  {
+    "original": "N=C(N)NCCc1ccc([18F])c(O)c1",
+    "rdkit": "N=C(N)NCCc1ccc([18F])c(O)c1",
+    "pikachu": "N=C(N)NCCc1ccc(F)c(O)c1"
+  },
+  {
+    "original": "C#CCN(C)[C@H](C[19F])CC(C)C",
+    "rdkit": "C#CCN(C)[C@H](C[19F])CC(C)C",
+    "pikachu": "C#CCN(C)[C@H](CF)CC(C)C"
+  },
+  {
+    "original": "O=C(O)C(O)[14CH](O)c1ccccc1",
+    "rdkit": "O=C(O)C(O)[14CH](O)c1ccccc1",
+    "pikachu": "O=C(O)C(O)C(O)c1ccccc1"
+  },
+  {
+    "original": "O=C1N[11C](=O)C2(CCCCCC2)N1",
+    "rdkit": "O=C1N[11C](=O)C2(CCCCCC2)N1",
+    "pikachu": "O=C1NC(=O)C2(CCCCCC2)N1"
+  },
+  {
+    "original": "O=C1NC(c2ccccc2)[11C](=O)N1",
+    "rdkit": "O=C1NC(c2ccccc2)[11C](=O)N1",
+    "pikachu": "O=C1NC(=O)C(c2ccccc2)N1"
+  }
+]
