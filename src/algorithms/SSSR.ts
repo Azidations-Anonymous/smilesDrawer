@@ -72,14 +72,8 @@ class SSSR {
             let limited = sssr.slice(0, nSssr);
 
             for (var j = 0; j < limited.length; j++) {
-                let ring = Array(limited[j].size);
-                let index = 0;
-
-                for (let val of limited[j]) {
-                    // Get the original id of the vertex back
-                    ring[index++] = connectedComponent[val];
-                }
-
+                const ordered = SSSR.orderRingVertices(limited[j], ccAdjacencyMatrix);
+                const ring = ordered.map((val) => connectedComponent[val]);
                 rings.push(ring);
             }
         }
@@ -559,6 +553,43 @@ class SSSR {
         }
 
         return true;
+    }
+
+    private static orderRingVertices(vertices: Set<number>, adjacencyMatrix: AdjacencyMatrix): number[] {
+        if (vertices.size === 0) {
+            return [];
+        }
+
+        const ordered: number[] = [];
+        const start = Math.min(...vertices);
+        let current = start;
+        let previous = -1;
+
+        do {
+            ordered.push(current);
+
+            const neighbours: number[] = [];
+            for (const candidate of vertices) {
+                if (candidate !== current && adjacencyMatrix[current][candidate] === 1) {
+                    neighbours.push(candidate);
+                }
+            }
+
+            let next = neighbours.find((n) => n !== previous);
+            if (next === undefined) {
+                // Fallback: try any neighbour not yet used
+                next = neighbours.find((n) => !ordered.includes(n));
+            }
+
+            if (next === undefined) {
+                break;
+            }
+
+            previous = current;
+            current = next;
+        } while (current !== start && ordered.length <= vertices.size);
+
+        return ordered;
     }
 }
 
