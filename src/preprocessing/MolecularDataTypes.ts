@@ -95,6 +95,9 @@ export interface SerializedAtomValue {
   // Pseudo elements
   attachedPseudoElements: Record<string, IAttachedPseudoElement>;
   hasAttachedPseudoElements: boolean;
+
+  // Custom annotations
+  annotations: Record<string, unknown>;
 }
 
 /**

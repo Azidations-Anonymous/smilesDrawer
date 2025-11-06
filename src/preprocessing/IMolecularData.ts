@@ -28,6 +28,13 @@ interface IMolecularData {
   processGraph(): void;
   getTotalOverlapScore(): number;
   getMolecularFormula(data: ParseTree | Graph | null): string;
+  registerAtomAnnotation(name: string, defaultValue?: unknown): void;
+  setAtomAnnotation(vertexId: number, name: string, value: unknown): void;
+  getAtomAnnotation(vertexId: number, name: string): unknown;
+  setAtomAnnotationByAtomIndex(atomIdx: number, name: string, value: unknown): void;
+  getAtomAnnotationByAtomIndex(atomIdx: number, name: string): unknown;
+  listAtomAnnotationNames(): string[];
+  getAtomAnnotations(vertexId: number): Record<string, unknown>;
   getPositionData(): PositionData;
 }
 

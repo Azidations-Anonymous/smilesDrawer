@@ -1,6 +1,7 @@
 import ArrayHelper = require('../utils/ArrayHelper');
 import Vertex = require('./Vertex');
 import Ring = require('./Ring');
+import AtomAnnotations = require('./AtomAnnotations');
 import { BondType, Chirality, SmilesChirality, HydrogenDirection, PlanePosition } from '../types/CommonTypes';
 
 interface Ringbond {
@@ -89,6 +90,7 @@ class Atom {
   subtreeDepth: number;
   hasHydrogen: boolean;
   class: number | undefined;
+  annotations: AtomAnnotations;
 
   /**
    * The constructor of the class Atom.
@@ -126,6 +128,7 @@ class Atom {
     this.subtreeDepth = 1;
     this.hasHydrogen = false;
     this.class = undefined;
+    this.annotations = new AtomAnnotations();
   }
 
   /**
@@ -595,6 +598,7 @@ class Atom {
 // Export types for external use
 namespace Atom {
   export type RingbondType = Ringbond;
+  export type AnnotationContainer = AtomAnnotations;
 }
 
 export = Atom;

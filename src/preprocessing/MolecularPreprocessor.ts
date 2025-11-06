@@ -55,6 +55,8 @@ class MolecularPreprocessor implements IMolecularData {
   data: ParseTree;  // Parse tree data from SMILES parser
   infoOnly: boolean;
   highlight_atoms: AtomHighlight[];
+  atomAnnotationDefaults: Map<string, unknown>;
+  atomAnnotationNames: Set<string>;
 
   /**
    * The constructor for the class SmilesDrawer.
@@ -78,6 +80,8 @@ class MolecularPreprocessor implements IMolecularData {
       this.ringConnectionIdCounter = 0;
       this.canvasWrapper = null;
       this.totalOverlapScore = 0;
+      this.atomAnnotationDefaults = new Map();
+      this.atomAnnotationNames = new Set();
 
       const optionsManager = new OptionsManager(options);
           this.opts = optionsManager.opts;
@@ -293,7 +297,10 @@ class MolecularPreprocessor implements IMolecularData {
 
               // Pseudo elements
               attachedPseudoElements: v.value.attachedPseudoElements ? { ...v.value.attachedPseudoElements } : {},
-              hasAttachedPseudoElements: v.value.hasAttachedPseudoElements
+              hasAttachedPseudoElements: v.value.hasAttachedPseudoElements,
+
+              // Custom annotations
+              annotations: v.value.annotations ? v.value.annotations.toJSON() : {}
           } : null
       }));
 
@@ -336,6 +343,96 @@ class MolecularPreprocessor implements IMolecularData {
       };
   }
 
+  registerAtomAnnotation(name: string, defaultValue: unknown = null): void {
+      const clonedDefault = this.cloneAnnotationValue(defaultValue);
+      this.atomAnnotationDefaults.set(name, clonedDefault);
+      this.atomAnnotationNames.add(name);
+
+      if (!this.graph) {
+          return;
+      }
+
+      for (const vertex of this.graph.vertices) {
+          if (!vertex || !vertex.value) {
+              continue;
+          }
+          const annotations = vertex.value.annotations;
+          if (!annotations.hasAnnotation(name)) {
+              annotations.addAnnotation(name, this.cloneAnnotationValue(clonedDefault));
+          }
+      }
+  }
+
+  setAtomAnnotation(vertexId: number, name: string, value: unknown): void {
+      if (!this.graph) {
+          throw new Error('Cannot set atom annotation before a graph is initialized.');
+      }
+
+      const vertex = this.getVertexById(vertexId);
+      if (!vertex || !vertex.value) {
+          throw new Error(`Vertex with id ${vertexId} does not exist.`);
+      }
+
+      this.atomAnnotationNames.add(name);
+      const annotations = vertex.value.annotations;
+
+      if (!annotations.hasAnnotation(name)) {
+          if (this.atomAnnotationDefaults.has(name)) {
+              annotations.addAnnotation(name, this.cloneAnnotationValue(this.atomAnnotationDefaults.get(name)));
+          } else {
+              annotations.addAnnotation(name, null);
+          }
+      }
+
+      annotations.setAnnotation(name, value);
+  }
+
+  getAtomAnnotation(vertexId: number, name: string): unknown {
+      if (!this.graph) {
+          return undefined;
+      }
+
+      const vertex = this.getVertexById(vertexId);
+      if (!vertex || !vertex.value) {
+          return undefined;
+      }
+
+      return vertex.value.annotations.getAnnotation(name);
+  }
+
+  setAtomAnnotationByAtomIndex(atomIdx: number, name: string, value: unknown): void {
+      const vertexId = this.getVertexIdFromAtomIndex(atomIdx);
+      if (vertexId === null) {
+          throw new Error(`No vertex found for atom index ${atomIdx}.`);
+      }
+      this.setAtomAnnotation(vertexId, name, value);
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx: number, name: string): unknown {
+      const vertexId = this.getVertexIdFromAtomIndex(atomIdx);
+      if (vertexId === null) {
+          return undefined;
+      }
+      return this.getAtomAnnotation(vertexId, name);
+  }
+
+  listAtomAnnotationNames(): string[] {
+      return Array.from(this.atomAnnotationNames.values());
+  }
+
+  getAtomAnnotations(vertexId: number): Record<string, unknown> {
+      if (!this.graph) {
+          return {};
+      }
+
+      const vertex = this.getVertexById(vertexId);
+      if (!vertex || !vertex.value) {
+          return {};
+      }
+
+      return vertex.value.annotations.toJSON();
+  }
+
   /**
    * Returns the type of the ringbond (e.g. '=' for a double bond). The ringbond represents the break in a ring introduced when creating the MST. If the two vertices supplied as arguments are not part of a common ringbond, the method returns null.
    *
@@ -349,6 +446,7 @@ class MolecularPreprocessor implements IMolecularData {
 
   initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
       this.initializationManager.initDraw(data, themeName, infoOnly, highlight_atoms);
+      this.applyAtomAnnotationDefaultsToGraph();
   }
 
   processGraph(): void {
@@ -831,6 +929,62 @@ class MolecularPreprocessor implements IMolecularData {
    */
   initPseudoElements(): void {
       this.pseudoElementManager.initPseudoElements();
+  }
+
+  private applyAtomAnnotationDefaultsToGraph(): void {
+      if (!this.graph) {
+          return;
+      }
+
+      for (const [name, defaultValue] of this.atomAnnotationDefaults.entries()) {
+          this.atomAnnotationNames.add(name);
+          for (const vertex of this.graph.vertices) {
+              if (!vertex || !vertex.value) {
+                  continue;
+              }
+              const annotations = vertex.value.annotations;
+              if (!annotations.hasAnnotation(name)) {
+                  annotations.addAnnotation(name, this.cloneAnnotationValue(defaultValue));
+              }
+          }
+      }
+  }
+
+  private getVertexById(vertexId: number): Vertex | null {
+      if (!this.graph) {
+          return null;
+      }
+
+      if (vertexId < 0 || vertexId >= this.graph.vertices.length) {
+          return null;
+      }
+
+      return this.graph.vertices[vertexId];
+  }
+
+  private getVertexIdFromAtomIndex(atomIdx: number): number | null {
+      if (!this.graph || !this.graph.atomIdxToVertexId) {
+          return null;
+      }
+
+      const vertexId = this.graph.atomIdxToVertexId[atomIdx];
+      if (vertexId === undefined || vertexId === null) {
+          return null;
+      }
+
+      return vertexId;
+  }
+
+  private cloneAnnotationValue<T>(value: T): T {
+      if (value === null || typeof value !== 'object') {
+          return value;
+      }
+
+      if (Array.isArray(value)) {
+          return value.map((entry) => this.cloneAnnotationValue(entry)) as unknown as T;
+      }
+
+      return { ...(value as Record<string, unknown>) } as unknown as T;
   }
 
     private ringManager: RingManager;

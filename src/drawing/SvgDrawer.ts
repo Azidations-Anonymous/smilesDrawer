@@ -181,6 +181,34 @@ class SvgDrawer {
     return this.preprocessor.getMolecularFormula(data);
   }
 
+  registerAtomAnnotation(name: string, defaultValue: unknown = null): void {
+    this.preprocessor.registerAtomAnnotation(name, defaultValue);
+  }
+
+  setAtomAnnotation(vertexId: number, name: string, value: unknown): void {
+    this.preprocessor.setAtomAnnotation(vertexId, name, value);
+  }
+
+  setAtomAnnotationByAtomIndex(atomIdx: number, name: string, value: unknown): void {
+    this.preprocessor.setAtomAnnotationByAtomIndex(atomIdx, name, value);
+  }
+
+  getAtomAnnotation(vertexId: number, name: string): unknown {
+    return this.preprocessor.getAtomAnnotation(vertexId, name);
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx: number, name: string): unknown {
+    return this.preprocessor.getAtomAnnotationByAtomIndex(atomIdx, name);
+  }
+
+  listAtomAnnotationNames(): string[] {
+    return this.preprocessor.listAtomAnnotationNames();
+  }
+
+  getAtomAnnotations(vertexId: number): Record<string, unknown> {
+    return this.preprocessor.getAtomAnnotations(vertexId);
+  }
+
   /**
    * Returns complete positioning and structural data for the loaded molecule.
    * This data includes everything needed to implement custom rendering algorithms:

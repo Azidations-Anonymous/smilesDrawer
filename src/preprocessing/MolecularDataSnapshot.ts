@@ -84,12 +84,77 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.getMolecularFormula(data);
   }
 
+  registerAtomAnnotation(_name: string, _defaultValue: unknown = null): void {
+    throw new Error('MolecularDataSnapshot is read-only. registerAtomAnnotation() cannot be called.');
+  }
+
+  setAtomAnnotation(_vertexId: number, _name: string, _value: unknown): void {
+    throw new Error('MolecularDataSnapshot is read-only. setAtomAnnotation() cannot be called.');
+  }
+
+  getAtomAnnotation(vertexId: number, name: string): unknown {
+    const vertex = this.getSerializedVertex(vertexId);
+    if (!vertex || !vertex.value || !vertex.value.annotations) {
+      return undefined;
+    }
+    return vertex.value.annotations[name];
+  }
+
+  setAtomAnnotationByAtomIndex(_atomIdx: number, _name: string, _value: unknown): void {
+    throw new Error('MolecularDataSnapshot is read-only. setAtomAnnotationByAtomIndex() cannot be called.');
+  }
+
+  getAtomAnnotationByAtomIndex(atomIdx: number, name: string): unknown {
+    const vertexId = this.getVertexIdFromAtomIndex(atomIdx);
+    if (vertexId === null) {
+      return undefined;
+    }
+    return this.getAtomAnnotation(vertexId, name);
+  }
+
+  listAtomAnnotationNames(): string[] {
+    const names = new Set<string>();
+    for (const vertex of this.serializedData.vertices) {
+      if (vertex.value && vertex.value.annotations) {
+        for (const key of Object.keys(vertex.value.annotations)) {
+          names.add(key);
+        }
+      }
+    }
+    return Array.from(names.values());
+  }
+
+  getAtomAnnotations(vertexId: number): Record<string, unknown> {
+    const vertex = this.getSerializedVertex(vertexId);
+    if (!vertex || !vertex.value || !vertex.value.annotations) {
+      return {};
+    }
+    return { ...vertex.value.annotations };
+  }
+
   getPositionData(): PositionData {
     return this.serializedData;
   }
 
   toJSON(): PositionData {
     return this.serializedData;
+  }
+
+  private getSerializedVertex(vertexId: number) {
+    return this.serializedData.vertices.find((vertex) => vertex.id === vertexId);
+  }
+
+  private getVertexIdFromAtomIndex(atomIdx: number): number | null {
+    if (!this.serializedData.metadata.atomIdxToVertexId) {
+      return null;
+    }
+
+    const vertexId = this.serializedData.metadata.atomIdxToVertexId[atomIdx];
+    if (vertexId === undefined || vertexId === null) {
+      return null;
+    }
+
+    return vertexId;
   }
 }
 
