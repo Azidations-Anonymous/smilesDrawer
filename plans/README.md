@@ -1,50 +1,28 @@
 # Plans Directory
 
-This directory contains planning documents for enhancements and amendments to the SmilesDrawer codebase.
+This directory collects the longer-term planning material we use while chasing feature parity with PIKAChU and other roadmap items for SmilesDrawer.
 
-## Structure
+## What’s Here Today
 
-Each subdirectory represents a distinct enhancement or amendment, containing:
+- `*-roadmap.md` documents capture active parity workstreams (for example `cis-trans-parity-roadmap.md` and `sssr-parity-roadmap.md`). Each file summarises the current gaps, references the upstream Python implementation, and lists concrete action items.
+- Subdirectories store artefacts gathered while investigating specific rendering issues. For instance, `anti_crowding/current/*.html` and `nodejs_render_issue/*.html` hold saved output from manual experiments so we can compare before/after behaviour.
+- Older snapshots or abandoned explorations stay in sibling folders such as `anti_crowding/previous` so the historical context is still discoverable.
 
-- **proposal.md** - The initial proposal describing the problem and proposed solution
-- **design.md** - Detailed design decisions, architecture, and approach
-- **implementation.md** - Implementation notes, progress tracking, and blockers
-- **testing.md** - Test strategy, test cases, and validation approach
-- **notes.md** - Miscellaneous notes, research findings, and references
+## Recommended Structure Going Forward
 
-## Naming Convention
+When starting a brand-new plan, prefer creating a dedicated folder that contains:
 
-Use descriptive folder names with hyphens:
-```
-plans/
-├── interface-based-rendering/
-├── performance-optimization/
-├── typescript-migration/
-└── custom-bond-styles/
-```
+- `proposal.md` – problem statement and desired outcome
+- `design.md` – technical approach, alternatives considered, rationale
+- `implementation.md` – ordered task list, open questions, blockers
+- `testing.md` – validation strategy, datasets, regression coverage
+- `notes.md` – research links, scratch calculations, meeting minutes
 
-## Example Structure
-
-```
-plans/custom-bond-styles/
-├── proposal.md          # Problem statement and high-level solution
-├── design.md            # Technical design and architecture
-├── implementation.md    # Step-by-step implementation plan
-├── testing.md           # Test strategy and cases
-└── notes.md             # Research, alternatives considered, etc.
-```
-
-## Lifecycle
-
-1. **Planning** - Create folder with proposal.md
-2. **Design** - Add design.md with technical details
-3. **Implementation** - Use implementation.md to track progress
-4. **Completion** - Archive or mark as complete
+The folder name should describe the topic with hyphenated lowercase words (for example `plans/atom-annotations/`). Sticking to this convention keeps workstreams discoverable even as the collection grows.
 
 ## Guidelines
 
-- Keep plans focused on a single enhancement
-- Update documents as design evolves
-- Link to relevant issues, PRs, or commits
-- Include rationale for decisions
-- Document alternatives considered and why they were rejected
+- Keep each plan focused on a single enhancement or defect class.
+- Update the relevant roadmap or `implementation.md` as work lands so plans stay useful.
+- Link to issues, pull requests, commits, or external references whenever possible.
+- When archiving finished investigations, move supporting artefacts into a clearly labelled `archive/` or `previous/` subfolder instead of deleting them outright.

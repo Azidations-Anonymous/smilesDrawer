@@ -58,6 +58,7 @@ interface IMoleculeOptions {
   compactDrawing: boolean;
   overlapSensitivity: number;
   overlapResolutionIterations: number;
+  finetuneOverlap: boolean;
   experimentalSSSR: boolean;
 
   // Kamada-Kawai force layout parameters

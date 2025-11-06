@@ -97,6 +97,10 @@ class GraphProcessingManager {
               }
             }
           }
+
+          this.drawer.resolveFinetuneOverlaps();
+          overlapScore = this.drawer.getOverlapScore();
+          this.drawer.totalOverlapScore = overlapScore.total;
         }
 
         this.drawer.resolveSecondaryOverlaps(overlapScore.scores);

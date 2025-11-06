@@ -695,6 +695,13 @@ class MolecularPreprocessor implements IMolecularData {
   }
 
   /**
+   * Run the optional finetuning overlap resolution pass.
+   */
+  resolveFinetuneOverlaps(): void {
+      this.overlapResolver.resolveFinetuneOverlaps();
+  }
+
+  /**
    * Resolve secondary overlaps. Those overlaps are due to the structure turning back on itself.
    *
    * @param {Object[]} scores An array of objects sorted descending by score.

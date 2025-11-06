@@ -16,6 +16,7 @@ function getDefaultOptions(): IMoleculeOptions {
       explicitHydrogens: true,
       overlapSensitivity: 0.42,
       overlapResolutionIterations: 1,
+      finetuneOverlap: true,
       compactDrawing: true,
       fontFamily: 'Arial, Helvetica, sans-serif',
       fontSizeLarge: 11,

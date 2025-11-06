@@ -1,6 +1,7 @@
 import MolecularPreprocessor from "./MolecularPreprocessor";
 import Vector2 = require("../graph/Vector2");
 import Vertex = require('../graph/Vertex');
+import Edge = require('../graph/Edge');
 import ArrayHelper = require("../utils/ArrayHelper");
 import MathHelper = require("../utils/MathHelper");
 import { SideChoice, OverlapScore, SubtreeOverlapScore, VertexOverlapScoreEntry } from './MolecularDataTypes';
@@ -202,6 +203,124 @@ class OverlapResolutionManager {
         }
     }
 
+    resolveFinetuneOverlaps(): void {
+        if (!this.drawer.opts.finetuneOverlap) {
+          return;
+        }
+
+        if (this.drawer.totalOverlapScore <= this.drawer.opts.overlapSensitivity) {
+          return;
+        }
+
+        const bondLengthSq = this.drawer.opts.bondLengthSq !== undefined
+          ? this.drawer.opts.bondLengthSq
+          : this.drawer.opts.bondLength * this.drawer.opts.bondLength;
+        const threshold = 0.8 * bondLengthSq;
+        const clashingPairs = this.findClashingVertices(threshold);
+
+        if (clashingPairs.length === 0) {
+          return;
+        }
+
+        const candidateEdgeIds = new Set<number>();
+
+        for (const [vertexA, vertexB] of clashingPairs) {
+          if (vertexA.id === null || vertexB.id === null) {
+            continue;
+          }
+
+          const path = this.findShortestPath(vertexA.id, vertexB.id);
+          if (path.length === 0) {
+            continue;
+          }
+
+          const averageDistance = path.length / 2.0;
+          let bestEdge: Edge | null = null;
+          let bestMetric = Number.POSITIVE_INFINITY;
+
+          for (let i = 0; i < path.length; i++) {
+            const edge = path[i];
+            if (!this.drawer.isEdgeRotatable(edge)) {
+              continue;
+            }
+
+            const distance1 = i;
+            const distance2 = path.length - i;
+            const distanceMetric = Math.abs(averageDistance - distance1) + Math.abs(averageDistance - distance2);
+
+            if (distanceMetric < bestMetric) {
+              bestMetric = distanceMetric;
+              bestEdge = edge;
+            }
+          }
+
+          if (bestEdge && bestEdge.id !== null) {
+            candidateEdgeIds.add(bestEdge.id);
+          }
+        }
+
+        if (candidateEdgeIds.size === 0) {
+          return;
+        }
+
+        const stepAngle = MathHelper.toRad(30);
+
+        for (const edgeId of candidateEdgeIds) {
+          if (this.drawer.totalOverlapScore <= this.drawer.opts.overlapSensitivity) {
+            break;
+          }
+
+          const edge = this.drawer.graph.edges[edgeId];
+
+          if (!edge) {
+            continue;
+          }
+
+          const sourceId = edge.sourceId;
+          const targetId = edge.targetId;
+
+          const subtreeSizeSource = this.getSubgraphSize(sourceId, new Set<number>([targetId]));
+          const subtreeSizeTarget = this.getSubgraphSize(targetId, new Set<number>([sourceId]));
+
+          let rotatingId = sourceId;
+          let parentId = targetId;
+
+          if (subtreeSizeSource >= subtreeSizeTarget) {
+            rotatingId = targetId;
+            parentId = sourceId;
+          }
+
+          const parentVertex = this.drawer.graph.vertices[parentId];
+          const rotatingVertex = this.drawer.graph.vertices[rotatingId];
+
+          if (!parentVertex || !rotatingVertex || !rotatingVertex.value.isDrawn) {
+            continue;
+          }
+
+          const currentScore = this.getOverlapScore().total;
+          let bestScore = currentScore;
+          let bestStep = 0;
+
+          for (let step = 0; step < 12; step++) {
+            this.rotateSubtree(rotatingId, parentId, stepAngle, parentVertex.position);
+            const candidateScore = this.getOverlapScore().total;
+
+            if (candidateScore < bestScore) {
+              bestScore = candidateScore;
+              bestStep = step + 1;
+            }
+          }
+
+          this.rotateSubtree(rotatingId, parentId, -stepAngle * 12, parentVertex.position);
+
+          const finalAngle = MathHelper.toRad(30 * bestStep + 1);
+          this.rotateSubtree(rotatingId, parentId, finalAngle, parentVertex.position);
+
+          const finalScore = this.getOverlapScore();
+          this.drawer.totalOverlapScore = finalScore.total;
+        }
+    }
+
     resolveSecondaryOverlaps(scores: VertexOverlapScoreEntry[]): void {
         for (var i = 0; i < scores.length; i++) {
           if (scores[i].score > this.drawer.opts.overlapSensitivity) {
@@ -311,6 +430,120 @@ class OverlapResolutionManager {
         }
 
         return total.divide(count);
+    }
+
+    private findClashingVertices(threshold: number): Array<[Vertex, Vertex]> {
+        const clashing: Array<[Vertex, Vertex]> = [];
+        const vertices = this.drawer.graph.vertices;
+
+        for (let i = 0; i < vertices.length; i++) {
+          const vertexA = vertices[i];
+          if (!vertexA.value.isDrawn) {
+            continue;
+          }
+
+          for (let j = i + 1; j < vertices.length; j++) {
+            const vertexB = vertices[j];
+            if (!vertexB.value.isDrawn) {
+              continue;
+            }
+
+            if (vertexA.id === null || vertexB.id === null) {
+              continue;
+            }
+
+            if (this.drawer.graph.hasEdge(vertexA.id, vertexB.id)) {
+              continue;
+            }
+
+            const distanceSq = vertexA.position.distanceSq(vertexB.position);
+
+            if (distanceSq < threshold) {
+              clashing.push([vertexA, vertexB]);
+            }
+          }
+        }
+
+        return clashing;
+    }
+
+    private findShortestPath(startId: number, targetId: number): Edge[] {
+        if (startId === targetId) {
+          return [];
+        }
+
+        const graph = this.drawer.graph;
+        const visited = new Set<number>();
+        const previous = new Map<number, number | null>();
+        const queue: number[] = [startId];
+        let front = 0;
+
+        visited.add(startId);
+        previous.set(startId, null);
+
+        while (front < queue.length) {
+          const current = queue[front++];
+
+          if (current === targetId) {
+            break;
+          }
+
+          const neighbours = graph.vertices[current].getNeighbours();
+
+          for (const neighbour of neighbours) {
+            if (!visited.has(neighbour)) {
+              visited.add(neighbour);
+              previous.set(neighbour, current);
+              queue.push(neighbour);
+            }
+          }
+        }
+
+        if (!visited.has(targetId)) {
+          return [];
+        }
+
+        const path: Edge[] = [];
+        let current = targetId;
+
+        while (previous.has(current) && previous.get(current) !== null) {
+          const parent = previous.get(current)!;
+          const edge = graph.getEdge(parent, current);
+
+          if (edge) {
+            path.unshift(edge);
+          }
+
+          current = parent;
+        }
+
+        return path;
+    }
+
+    private getSubgraphSize(vertexId: number, masked: Set<number>): number {
+        const visited = new Set<number>(masked);
+        const startSize = visited.size;
+        const stack: number[] = [vertexId];
+
+        while (stack.length > 0) {
+          const current = stack.pop()!;
+
+          if (visited.has(current)) {
+            continue;
+          }
+
+          visited.add(current);
+
+          const neighbours = this.drawer.graph.vertices[current].getDrawnNeighbours(this.drawer.graph.vertices);
+
+          for (const neighbour of neighbours) {
+            if (!visited.has(neighbour)) {
+              stack.push(neighbour);
+            }
+          }
+        }
+
+        return visited.size - startSize;
     }
 }
 export = OverlapResolutionManager;
