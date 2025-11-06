@@ -12,21 +12,24 @@
  * - Tests all SMILES (with optional fail-early mode)
  * - Generates SVG for both old and new versions (optional with -novisual)
  * - Creates interactive HTML reports showing differences
- * - Saves JSON output to timestamped directories
+ * - Saves JSON output to timestamped directories (optional with -json)
  * - Allows manual visual inspection of changes
  * - Supports regex filtering to limit tested SMILES (-filter)
+ * - Optional PNG snapshots for changed molecules (-image)
  *
  * ## Output
  * - debug/output/regression/[timestamp]/[N].html - Side-by-side SVG comparison (unless -novisual)
- * - debug/output/regression/[timestamp]/[N].json - JSON with {old, new} fields for data comparison
+ * - debug/output/regression/[timestamp]/[N].json - JSON with {old, new} fields for data comparison (requires -json)
+ * - debug/output/regression/[timestamp]/[N]-old.png / [N]-new.png - PNG snapshots (requires -image)
  *
  * ## Usage
- * node debug/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter <regex>]
+ * node debug/regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter <regex>] [-json] [-image]
  *
  * @example
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -all
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -failearly -novisual
+ * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -json -image
  * node debug/regression-runner.js /tmp/baseline /Users/ch/Develop/smilesDrawer -filter "O=O"
  */
 
@@ -37,6 +40,7 @@ const os = require('os');
 const jsondiffpatch = require('jsondiffpatch');
 const htmlFormatter = require('jsondiffpatch/formatters/html');
 const { performance } = require('perf_hooks');
+const { createCanvas, Image } = require('canvas');
 
 /**
  * Get current timestamp in ISO8601 format (without milliseconds)
@@ -148,6 +152,42 @@ function matchesFilter(regex, value) {
     return regex.test(value);
 }
 
+/**
+ * Convert SVG string to PNG buffer using canvas.
+ * @param {string} svgString - SVG content.
+ * @returns {Promise<Buffer>} PNG buffer.
+ */
+async function svgToPng(svgString) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+            const targetSize = 2000;
+            const canvas = createCanvas(targetSize, targetSize);
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, targetSize, targetSize);
+
+            const scale = Math.min(targetSize / img.width, targetSize / img.height);
+            const scaledWidth = img.width * scale;
+            const scaledHeight = img.height * scale;
+
+            const x = (targetSize - scaledWidth) / 2;
+            const y = (targetSize - scaledHeight) / 2;
+
+            ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+            resolve(canvas.toBuffer('image/png'));
+        };
+
+        img.onerror = (err) => {
+            reject(new Error('Failed to load SVG: ' + err));
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + Buffer.from(svgString).toString('base64');
+    });
+}
+
 const fastDatasets = [
     { name: 'fastregression', file: '../test/fastregression.js' }
 ];
@@ -168,6 +208,8 @@ let noVisual = false;
 let bisectMode = false;
 let bisectSmiles = '';
 let filterPattern = null;
+let generateImages = false;
+let generateJsonReports = false;
 const positionalArgs = [];
 
 for (let i = 0; i < args.length; i++) {
@@ -197,6 +239,16 @@ for (let i = 0; i < args.length; i++) {
         continue;
     }
 
+    if (arg === '-image') {
+        generateImages = true;
+        continue;
+    }
+
+    if (arg === '-json') {
+        generateJsonReports = true;
+        continue;
+    }
+
     if (arg === '-bisect') {
         if (i + 1 >= args.length) {
             console.error('ERROR: -bisect flag requires a SMILES string argument');
@@ -221,11 +273,13 @@ const extraArg = positionalArgs[2];
 
 if (!oldCodePath || !newCodePath) {
     console.error('ERROR: Missing arguments');
-    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter "<regex>"] [-bisect "<smiles>"]');
+    console.error('Usage: node regression-runner.js <old-code-path> <new-code-path> [-all] [-failearly] [-novisual] [-filter "<regex>"] [-json] [-image] [-bisect "<smiles>"]');
     console.error('  -all         Test all datasets (default: fastregression only)');
     console.error('  -failearly   Stop at first difference (default: continue)');
     console.error('  -novisual    Skip SVG generation (default: generate visual comparisons)');
     console.error('  -filter      Only test SMILES matching the given regex (JavaScript syntax)');
+    console.error('  -json        Save JSON diff reports (default: skip writing JSON files)');
+    console.error('  -image       Save PNG snapshots for changed molecules (default: skip PNG files)');
     console.error('  -bisect      Test single SMILES and generate comparison report (returns 0=match, 1=difference)');
     console.error('');
     console.error('Example: node regression-runner.js /tmp/smiles-old /Users/ch/Develop/smilesDrawer');
@@ -243,6 +297,11 @@ if (bisectMode && filterPattern !== null) {
     console.warn('WARNING: -filter flag is ignored in -bisect mode');
 }
 
+if (noVisual && generateImages && !bisectMode) {
+    console.warn('WARNING: -image flag is ignored when -novisual is set');
+    generateImages = false;
+}
+
 let filterRegex = null;
 if (filterPattern !== null && !bisectMode) {
     try {
@@ -258,135 +317,151 @@ const timestamp = getTimestamp();
 
 // Bisect mode: test single SMILES, generate comparison report, and exit with 0=match, 1=difference
 if (bisectMode) {
-    const smiles = sanitizeSmiles(bisectSmiles);
+    (async () => {
+        const smiles = sanitizeSmiles(bisectSmiles);
 
-    // Create output directory with timestamp
-    const debugDir = path.join(__dirname, 'output', 'regression', timestamp);
-    fs.mkdirSync(debugDir, { recursive: true });
+        // Create output directory with timestamp
+        const debugDir = path.join(__dirname, 'output', 'regression', timestamp);
+        fs.mkdirSync(debugDir, { recursive: true });
 
-    // Use this as output directory
-    const outputDir = debugDir;
+        // Use this as output directory
+        const outputDir = debugDir;
 
-    // Get git information
-    const oldCommitHash = getCommitHash(oldCodePath);
-    const newCommitHash = getCommitHash(newCodePath);
-    const newHasChanges = hasUncommittedChanges(newCodePath);
-    const newSrcDiff = newHasChanges ? getSrcDiff(newCodePath) : '';
+        // Get git information
+        const oldCommitHash = getCommitHash(oldCodePath);
+        const newCommitHash = getCommitHash(newCodePath);
+        const newHasChanges = hasUncommittedChanges(newCodePath);
+        const newSrcDiff = newHasChanges ? getSrcDiff(newCodePath) : '';
 
-    // Generate SVG files with timing
-    const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.svg');
-    const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.svg');
+        // Generate SVG files with timing
+        const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.svg');
+        const newSvgFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.svg');
 
-    const oldSvgStartTime = performance.now();
-    const oldSvgResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), smiles, oldSvgFile], {
-        cwd: oldCodePath,
-        encoding: 'utf8'
-    });
-    const oldSvgRenderTime = performance.now() - oldSvgStartTime;
+        const oldSvgStartTime = performance.now();
+        const oldSvgResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-svg.js'), smiles, oldSvgFile], {
+            cwd: oldCodePath,
+            encoding: 'utf8'
+        });
+        const oldSvgRenderTime = performance.now() - oldSvgStartTime;
 
-    const newSvgStartTime = performance.now();
-    const newSvgResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), smiles, newSvgFile], {
-        cwd: newCodePath,
-        encoding: 'utf8'
-    });
-    const newSvgRenderTime = performance.now() - newSvgStartTime;
+        const newSvgStartTime = performance.now();
+        const newSvgResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-svg.js'), smiles, newSvgFile], {
+            cwd: newCodePath,
+            encoding: 'utf8'
+        });
+        const newSvgRenderTime = performance.now() - newSvgStartTime;
 
-    if (oldSvgResult.error || oldSvgResult.status !== 0 || newSvgResult.error || newSvgResult.status !== 0) {
-        console.error('ERROR: Failed to generate SVG files');
-        process.exit(1);
-    }
+        if (oldSvgResult.error || oldSvgResult.status !== 0 || newSvgResult.error || newSvgResult.status !== 0) {
+            console.error('ERROR: Failed to generate SVG files');
+            process.exit(1);
+        }
 
-    // Generate JSON files with timing
-    const oldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.json');
-    const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.json');
+        // Generate JSON files with timing
+        const oldJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-old.json');
+        const newJsonFile = path.join(os.tmpdir(), 'smiles-drawer-bisect-new.json');
 
-    const oldJsonStartTime = performance.now();
-    const oldJsonResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-json.js'), smiles, oldJsonFile], {
-        cwd: oldCodePath,
-        encoding: 'utf8'
-    });
-    const oldJsonRenderTime = performance.now() - oldJsonStartTime;
+        const oldJsonStartTime = performance.now();
+        const oldJsonResult = spawnSync('node', [getScriptPath(oldCodePath, 'generate-json.js'), smiles, oldJsonFile], {
+            cwd: oldCodePath,
+            encoding: 'utf8'
+        });
+        const oldJsonRenderTime = performance.now() - oldJsonStartTime;
 
-    const newJsonStartTime = performance.now();
-    const newJsonResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-json.js'), smiles, newJsonFile], {
-        cwd: newCodePath,
-        encoding: 'utf8'
-    });
-    const newJsonRenderTime = performance.now() - newJsonStartTime;
+        const newJsonStartTime = performance.now();
+        const newJsonResult = spawnSync('node', [getScriptPath(newCodePath, 'generate-json.js'), smiles, newJsonFile], {
+            cwd: newCodePath,
+            encoding: 'utf8'
+        });
+        const newJsonRenderTime = performance.now() - newJsonStartTime;
 
-    if (oldJsonResult.error || oldJsonResult.status !== 0 || newJsonResult.error || newJsonResult.status !== 0) {
-        console.error('ERROR: Failed to generate JSON files');
-        process.exit(1);
-    }
+        if (oldJsonResult.error || oldJsonResult.status !== 0 || newJsonResult.error || newJsonResult.status !== 0) {
+            console.error('ERROR: Failed to generate JSON files');
+            process.exit(1);
+        }
 
-    // Read generated files
-    let oldSvg, newSvg, oldJson, newJson;
-    try {
-        oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
-        newSvg = fs.readFileSync(newSvgFile, 'utf8');
-        oldJson = fs.readFileSync(oldJsonFile, 'utf8');
-        newJson = fs.readFileSync(newJsonFile, 'utf8');
+        // Read generated files
+        let oldSvg, newSvg, oldJson, newJson;
+        try {
+            oldSvg = fs.readFileSync(oldSvgFile, 'utf8');
+            newSvg = fs.readFileSync(newSvgFile, 'utf8');
+            oldJson = fs.readFileSync(oldJsonFile, 'utf8');
+            newJson = fs.readFileSync(newJsonFile, 'utf8');
 
-        // Clean up temp files
-        fs.unlinkSync(oldSvgFile);
-        fs.unlinkSync(newSvgFile);
-        fs.unlinkSync(oldJsonFile);
-        fs.unlinkSync(newJsonFile);
-    } catch (err) {
-        console.error('ERROR: Failed to read generated files');
-        process.exit(1);
-    }
+            // Clean up temp files
+            fs.unlinkSync(oldSvgFile);
+            fs.unlinkSync(newSvgFile);
+            fs.unlinkSync(oldJsonFile);
+            fs.unlinkSync(newJsonFile);
+        } catch (err) {
+            console.error('ERROR: Failed to read generated files');
+            process.exit(1);
+        }
 
-    // Parse JSON and generate diff (reusing existing code pattern)
-    const oldJsonObj = JSON.parse(oldJson);
-    const newJsonObj = JSON.parse(newJson);
-    const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
-    const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
-    const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
+        // Parse JSON and generate diff (reusing existing code pattern)
+        const oldJsonObj = JSON.parse(oldJson);
+        const newJsonObj = JSON.parse(newJson);
+        const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
+        const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+        const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
 
-    // Save JSON diff file
-    const jsonFilePath = path.join(outputDir, 'bisect.json');
-    const jsonOutput = {
-        old: oldJsonObj,
-        new: newJsonObj,
-        delta: delta
-    };
-    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+        // Save JSON diff file (optional)
+        if (generateJsonReports) {
+            const jsonFilePath = path.join(outputDir, 'bisect.json');
+            const jsonOutput = {
+                old: oldJsonObj,
+                new: newJsonObj,
+                delta: delta
+            };
+            fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+        }
 
-    // Generate HTML report (reusing existing function)
-    const htmlFilePath = path.join(outputDir, 'bisect.html');
-    const html = generateIndividualHTMLReport({
-        dataset: 'bisect',
-        index: 1,
-        total: 1,
-        smiles: smiles,
-        oldSvg: oldSvg,
-        newSvg: newSvg,
-        oldJsonLength: oldJson.length,
-        newJsonLength: newJson.length,
-        jsonDiffHtml: jsonDiffHtml,
-        diffNumber: 'bisect',
-        oldCommitHash: oldCommitHash,
-        newCommitHash: newCommitHash,
-        newHasChanges: newHasChanges,
-        newSrcDiff: newSrcDiff,
-        oldSvgRenderTime: oldSvgRenderTime,
-        newSvgRenderTime: newSvgRenderTime,
-        oldJsonRenderTime: oldJsonRenderTime,
-        newJsonRenderTime: newJsonRenderTime
-    });
+        // Generate HTML report (reusing existing function)
+        const htmlFilePath = path.join(outputDir, 'bisect.html');
+        const html = generateIndividualHTMLReport({
+            dataset: 'bisect',
+            index: 1,
+            total: 1,
+            smiles: smiles,
+            oldSvg: oldSvg,
+            newSvg: newSvg,
+            oldJsonLength: oldJson.length,
+            newJsonLength: newJson.length,
+            jsonDiffHtml: jsonDiffHtml,
+            diffNumber: 'bisect',
+            oldCommitHash: oldCommitHash,
+            newCommitHash: newCommitHash,
+            newHasChanges: newHasChanges,
+            newSrcDiff: newSrcDiff,
+            oldSvgRenderTime: oldSvgRenderTime,
+            newSvgRenderTime: newSvgRenderTime,
+            oldJsonRenderTime: oldJsonRenderTime,
+            newJsonRenderTime: newJsonRenderTime
+        });
 
-    fs.writeFileSync(htmlFilePath, html, 'utf8');
+        fs.writeFileSync(htmlFilePath, html, 'utf8');
 
-    // Print output directory for shell script to capture
-    console.log(outputDir);
+        if (generateImages) {
+            try {
+                const oldPngBuffer = await svgToPng(oldSvg);
+                const newPngBuffer = await svgToPng(newSvg);
+                fs.writeFileSync(path.join(outputDir, 'bisect-old.png'), oldPngBuffer);
+                fs.writeFileSync(path.join(outputDir, 'bisect-new.png'), newPngBuffer);
+            } catch (err) {
+                console.warn('WARNING: Failed to generate PNG snapshots in bisect mode: ' + err.message);
+            }
+        }
 
-    // Exit 0 if match, 1 if difference
-    if (oldJson === newJson) {
-        process.exit(0);
-    } else {
-        process.exit(1);
-    }
+        // Print output directory for shell script to capture
+        console.log(outputDir);
+
+        // Exit 0 if match, 1 if difference
+        if (oldJson === newJson) {
+            process.exit(0);
+        } else {
+            process.exit(1);
+        }
+    })();
+    return;
 }
 
 // Regular regression test mode
@@ -406,6 +481,7 @@ if (filterRegex) {
     console.log('\x1b[93mFILTER PATTERN:\x1b[0m ' + filterPattern);
 }
 
+async function runRegression() {
 let totalTested = 0;
 let totalDatasets = 0;
 let totalSkipped = 0;
@@ -556,6 +632,7 @@ for (const dataset of datasets) {
 
             console.log('  DIFFERENCE DETECTED' + (noVisual ? '' : ' - Generating SVG comparison'));
 
+            let reportFiles = [];
             if (!noVisual) {
                 // Generate SVG for both versions
                 const oldSvgFile = path.join(os.tmpdir(), 'smiles-drawer-old-svg-' + Date.now() + '-' + Math.random().toString(36).substring(7) + '.svg');
@@ -595,15 +672,6 @@ for (const dataset of datasets) {
                 const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
                 const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
 
-                // Save JSON diff to file
-                const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
-                const jsonOutput = {
-                    old: oldJsonObj,
-                    new: newJsonObj,
-                    delta: delta
-                };
-                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
-
                 // Generate and save individual HTML report immediately
                 const htmlFilePath = path.join(outputDir, totalDifferences + '.html');
                 const html = generateIndividualHTMLReport({
@@ -628,16 +696,48 @@ for (const dataset of datasets) {
                 });
 
                 fs.writeFileSync(htmlFilePath, html, 'utf8');
-                console.log('  Reports saved: ' + totalDifferences + '.html, ' + totalDifferences + '.json');
+                reportFiles.push(totalDifferences + '.html');
+
+                if (generateJsonReports) {
+                    const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
+                    const jsonOutput = {
+                        old: oldJsonObj,
+                        new: newJsonObj,
+                        delta: delta
+                    };
+                    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+                    reportFiles.push(totalDifferences + '.json');
+                }
+
+                if (generateImages) {
+                    try {
+                        const oldPngBuffer = await svgToPng(oldSvg);
+                        const newPngBuffer = await svgToPng(newSvg);
+                        const oldPngPath = path.join(outputDir, totalDifferences + '-old.png');
+                        const newPngPath = path.join(outputDir, totalDifferences + '-new.png');
+                        fs.writeFileSync(oldPngPath, oldPngBuffer);
+                        fs.writeFileSync(newPngPath, newPngBuffer);
+                        reportFiles.push(totalDifferences + '-old.png', totalDifferences + '-new.png');
+                    } catch (err) {
+                        console.warn('  WARNING: Failed to generate PNG snapshots: ' + err.message);
+                    }
+                }
+
+                console.log('  Reports saved: ' + reportFiles.join(', '));
             } else {
                 // Save JSON even when -novisual is used
-                const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
-                const jsonOutput = {
-                    old: JSON.parse(oldJson),
-                    new: JSON.parse(newJson)
-                };
-                fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
-                console.log('  JSON saved: ' + totalDifferences + '.json');
+                if (generateJsonReports) {
+                    const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
+                    const jsonOutput = {
+                        old: JSON.parse(oldJson),
+                        new: JSON.parse(newJson)
+                    };
+                    fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+                    reportFiles.push(totalDifferences + '.json');
+                    console.log('  JSON saved: ' + totalDifferences + '.json');
+                } else {
+                    console.log('  JSON generation disabled - skipping file save');
+                }
             }
 
             // Exit early if -failearly flag is set
@@ -649,11 +749,7 @@ for (const dataset of datasets) {
                 console.error('Index: ' + index + '/' + smilesList.length);
                 console.error('SMILES: ' + smiles);
                 console.error('\nReports saved to: ' + outputDir);
-                if (noVisual) {
-                    console.error('Files: 1.json');
-                } else {
-                    console.error('Files: 1.html, 1.json');
-                }
+                console.error('Files: ' + (reportFiles.length ? reportFiles.join(', ') : '(none)'));
                 console.error('!'.repeat(80));
                 process.exit(1);
             }
@@ -680,11 +776,21 @@ if (totalDifferences > 0) {
     console.log('\x1b[93mTotal tested:\x1b[0m ' + totalTested);
     console.log('\x1b[93mTotal skipped:\x1b[0m ' + totalSkipped);
     console.log('\x1b[93mDifferences found:\x1b[0m ' + totalDifferences);
-    console.log('\n\x1b[93mReports saved to:\x1b[0m ' + outputDir);
-    if (noVisual) {
-        console.log('\x1b[93mFiles:\x1b[0m 1.json through ' + totalDifferences + '.json');
+    const fileSummary = [];
+    if (!noVisual) {
+        fileSummary.push('HTML reports');
+    }
+    if (generateJsonReports) {
+        fileSummary.push('JSON reports');
+    }
+    if (generateImages && !noVisual) {
+        fileSummary.push('PNG snapshots');
+    }
+    if (fileSummary.length > 0) {
+        console.log('\n\x1b[93mReports saved to:\x1b[0m ' + outputDir);
+        console.log('\x1b[93mArtifacts:\x1b[0m ' + fileSummary.join(', '));
     } else {
-        console.log('\x1b[93mFiles:\x1b[0m 1.html, 1.json through ' + totalDifferences + '.html, ' + totalDifferences + '.json');
+        console.log('\n\x1b[93mArtifacts:\x1b[0m (none generated)');
     }
     console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
     process.exit(1);
@@ -696,6 +802,14 @@ if (totalDifferences > 0) {
     console.log('\x1b[1;36m' + '='.repeat(80) + '\x1b[0m');
     process.exit(0);
 }
+
+}
+
+runRegression().catch(err => {
+    console.error('\x1b[1;31mERROR:\x1b[0m Regression runner failed');
+    console.error(err && err.stack ? err.stack : err);
+    process.exit(2);
+});
 
 function sanitizeSmiles(smiles) {
     let cleaned = '';
@@ -858,10 +972,18 @@ function collapseDiff(diffText) {
 
 function generateIndividualHTMLReport(diff) {
     const collapsedDiff = diff.newHasChanges && diff.newSrcDiff ? collapseDiff(diff.newSrcDiff) : '';
+    const oldCommitId = 'old-commit-' + diff.diffNumber;
+    const newCommitId = 'new-commit-' + diff.diffNumber;
+    const smilesFieldId = 'smiles-' + diff.diffNumber;
+    const jsonDiffId = 'json-diff-' + diff.diffNumber;
+    const diffFieldId = 'diff-' + diff.diffNumber;
     const diffSection = diff.newHasChanges && collapsedDiff ? `
         <div class="diff-section">
-            <h3>Uncommitted Changes in src/</h3>
-            <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
+            <div class="section-header">
+                <h3>Uncommitted Changes in src/</h3>
+                <button class="copy-btn" data-copy-target="${diffFieldId}">Copy to Clipboard</button>
+            </div>
+            <pre class="diff-content" id="${diffFieldId}"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
 
     const oldTotalTime = diff.oldSvgRenderTime + diff.oldJsonRenderTime;
@@ -907,20 +1029,40 @@ function generateIndividualHTMLReport(diff) {
             background: #ecf0f1;
             padding: 12px 15px;
             border-radius: 5px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
             font-size: 0.9em;
         }
 
-        .commit-info > div:last-child {
-            text-align: right;
+        .commit-entry {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .commit-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .commit-info .commit-label {
             font-weight: 600;
             color: #2c3e50;
+        }
+
+        .commit-hash-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .commit-info .commit-hash {
@@ -935,7 +1077,35 @@ function generateIndividualHTMLReport(diff) {
             padding: 2px 8px;
             border-radius: 3px;
             font-size: 0.85em;
-            margin-left: 8px;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s ease;
+        }
+
+        .copy-btn:hover:not(:disabled) {
+            background: #2980b9;
+        }
+
+        .copy-btn:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         .smiles-display {
@@ -950,6 +1120,8 @@ function generateIndividualHTMLReport(diff) {
         .smiles-display code {
             font-family: 'Courier New', monospace;
             font-size: 0.95em;
+            display: block;
+            word-break: break-word;
         }
 
         .comparison-container {
@@ -1191,18 +1363,32 @@ function generateIndividualHTMLReport(diff) {
 <body>
     <div class="container">
         <div class="commit-info">
-            <div>
-                <span class="commit-label">Baseline Commit:</span>
-                <span class="commit-hash">${escapeHtml(diff.oldCommitHash)}</span>
+            <div class="commit-entry">
+                <div class="commit-label-row">
+                    <span class="commit-label">Baseline Commit</span>
+                    <button class="copy-btn" data-copy-target="${oldCommitId}">Copy to Clipboard</button>
+                </div>
+                <div class="commit-hash-wrapper">
+                    <span class="commit-hash" id="${oldCommitId}">${escapeHtml(diff.oldCommitHash)}</span>
+                </div>
             </div>
-            <div>
-                <span class="commit-label">Current Commit:</span>
-                <span class="commit-hash">${escapeHtml(diff.newCommitHash)}</span>${diff.newHasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+            <div class="commit-entry">
+                <div class="commit-label-row">
+                    <span class="commit-label">Current Commit</span>
+                    <button class="copy-btn" data-copy-target="${newCommitId}">Copy to Clipboard</button>
+                </div>
+                <div class="commit-hash-wrapper">
+                    <span class="commit-hash" id="${newCommitId}">${escapeHtml(diff.newCommitHash)}</span>${diff.newHasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+                </div>
             </div>
         </div>
 
         <div class="smiles-display">
-            <code>${escapeHtml(diff.smiles)}</code>
+            <div class="section-header">
+                <strong>SMILES</strong>
+                <button class="copy-btn" data-copy-target="${smilesFieldId}">Copy to Clipboard</button>
+            </div>
+            <code id="${smilesFieldId}">${escapeHtml(diff.smiles)}</code>
         </div>
 
         <div class="benchmark-info ${performanceClass}">
@@ -1275,12 +1461,76 @@ function generateIndividualHTMLReport(diff) {
         </div>
 
         <div class="json-diff-section">
-            <h3>JSON Position Data Diff</h3>
-            <div class="json-diff-container">
+            <div class="section-header">
+                <h3>JSON Position Data Diff</h3>
+                <button class="copy-btn" data-copy-target="${jsonDiffId}">Copy to Clipboard</button>
+            </div>
+            <div class="json-diff-container" id="${jsonDiffId}">
                 ${diff.jsonDiffHtml}
             </div>
         </div>${diffSection}
     </div>
+    <script>
+        (function() {
+            const buttons = document.querySelectorAll('.copy-btn');
+
+            async function writeText(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                }
+            }
+
+            function setFeedback(button, message) {
+                const original = button.dataset.originalText || button.textContent;
+                if (!button.dataset.originalText) {
+                    button.dataset.originalText = original;
+                }
+                button.textContent = message;
+                button.disabled = true;
+                setTimeout(() => {
+                    button.textContent = button.dataset.originalText;
+                    button.disabled = false;
+                }, 1500);
+            }
+
+            buttons.forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const targetId = button.getAttribute('data-copy-target');
+                    const target = targetId ? document.getElementById(targetId) : null;
+                    if (!target) {
+                        setFeedback(button, 'Copy failed');
+                        return;
+                    }
+
+                    const text = target.innerText || target.textContent || '';
+                    if (!text) {
+                        setFeedback(button, 'Copy failed');
+                        return;
+                    }
+
+                    try {
+                        await writeText(text);
+                        setFeedback(button, 'Copied!');
+                    } catch (err) {
+                        setFeedback(button, 'Copy failed');
+                    }
+                });
+            });
+        })();
+    </script>
 </body>
 </html>`;
 }

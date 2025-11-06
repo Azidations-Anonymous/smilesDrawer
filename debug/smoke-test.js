@@ -16,13 +16,15 @@
  *
  * ## Output
  * - debug/output/smoke/[timestamp]/[N].html - HTML report with SVG rendering
- * - debug/output/smoke/[timestamp]/[N].json - JSON position data
- * - debug/output/smoke/[timestamp]/[N].png - PNG image of the molecule
+ * - debug/output/smoke/[timestamp]/[N].json - JSON position data (requires -json)
+ * - debug/output/smoke/[timestamp]/[N].png - PNG image of the molecule (requires -image)
  *
  * ## Usage
  * npm run test:smoke                        # Uses fastregression dataset
  * npm run test:smoke -- -dataset chembl    # Uses chembl dataset
  * npm run test:smoke -- -all                # All datasets
+ * npm run test:smoke -- -json              # Save JSON position output
+ * npm run test:smoke -- -image             # Save PNG snapshots
  * npm run test:smoke -- -filter "O=O"       # Only SMILES matching regex
  * npm run test:smoke "C1CCCCC1"             # Single SMILES string
  * npm run test:smoke "C" "[NH4+]" "O=O"     # Multiple SMILES strings
@@ -31,6 +33,7 @@
  * node debug/smoke-test.js
  * node debug/smoke-test.js -dataset chembl
  * node debug/smoke-test.js -all
+ * node debug/smoke-test.js -json -image
  * node debug/smoke-test.js -filter "C=O"
  * node debug/smoke-test.js "C1=CC=CC=C1"
  */
@@ -321,6 +324,8 @@ const manualSmiles = [];
 let allMode = false;
 let datasetName = null;
 let filterPattern = null;
+let includeImages = false;
+let includeJson = false;
 
 for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -345,6 +350,16 @@ for (let i = 0; i < args.length; i++) {
             process.exit(2);
         }
         filterPattern = args[++i];
+        continue;
+    }
+
+    if (arg === '-image') {
+        includeImages = true;
+        continue;
+    }
+
+    if (arg === '-json') {
+        includeJson = true;
         continue;
     }
 
@@ -432,6 +447,8 @@ console.log('OUTPUT DIRECTORY: ' + outputDir);
 if (filterRegex) {
     console.log('FILTER: ' + filterPattern);
 }
+console.log('IMAGES: ' + (includeImages ? 'ENABLED (-image flag)' : 'disabled'));
+console.log('JSON: ' + (includeJson ? 'ENABLED (-json flag)' : 'disabled'));
 console.log('='.repeat(80));
 console.log('');
 
@@ -510,58 +527,90 @@ for (const dataset of datasets) {
                 continue;
             }
 
-            // Convert SVG to PNG
-            let pngBuffer;
-            try {
-                pngBuffer = await svgToPng(svg);
-                const pngPath = path.join(outputDir, outputNum + '.png');
-                fs.writeFileSync(pngPath, pngBuffer);
-            } catch (err) {
-                console.error('  ERROR: Could not convert SVG to PNG');
-                console.error('  ' + err.message);
-                totalErrors++;
-                continue;
+            let pngGenerated = false;
+            if (includeImages) {
+                try {
+                    const pngBuffer = await svgToPng(svg);
+                    const pngPath = path.join(outputDir, outputNum + '.png');
+                    fs.writeFileSync(pngPath, pngBuffer);
+                    pngGenerated = true;
+                } catch (err) {
+                    console.error('  ERROR: Could not convert SVG to PNG');
+                    console.error('  ' + err.message);
+                    totalErrors++;
+                    continue;
+                }
             }
 
-            // Generate JSON to temporary file (avoids stdout buffer issues with large molecules)
-            const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
+            let json = '';
+            let jsonRenderTime = 0;
+            let jsonGenerated = false;
+            if (includeJson) {
+                // Generate JSON to temporary file (avoids stdout buffer issues with large molecules)
+                const tempJsonFile = path.join(outputDir, `temp-${outputNum}.json`);
 
-            const jsonStartTime = performance.now();
-            const jsonResult = spawnSync('node', ['debug/generate-json.js', smiles, tempJsonFile], {
-                cwd: path.join(__dirname, '..'),
-                encoding: 'utf8'
-            });
-            const jsonEndTime = performance.now();
-            const jsonRenderTime = jsonEndTime - jsonStartTime;
+                const jsonStartTime = performance.now();
+                const jsonResult = spawnSync('node', ['debug/generate-json.js', smiles, tempJsonFile], {
+                    cwd: path.join(__dirname, '..'),
+                    encoding: 'utf8'
+                });
+                const jsonEndTime = performance.now();
+                jsonRenderTime = jsonEndTime - jsonStartTime;
 
-            if (jsonResult.error || jsonResult.status !== 0) {
-                console.error('  ERROR: Failed to generate JSON');
-                console.error('  ' + (jsonResult.stderr || jsonResult.error?.message || 'Unknown error'));
-                totalErrors++;
-                continue;
-            }
+                if (jsonResult.error || jsonResult.status !== 0) {
+                    console.error('  ERROR: Failed to generate JSON');
+                    console.error('  ' + (jsonResult.stderr || jsonResult.error?.message || 'Unknown error'));
+                    totalErrors++;
+                    continue;
+                }
 
-            // Read JSON from file
-            let json;
-            try {
-                json = fs.readFileSync(tempJsonFile, 'utf8');
-                fs.unlinkSync(tempJsonFile);
-            } catch (err) {
-                console.error('  ERROR: Could not read JSON file');
-                console.error('  ' + err.message);
-                totalErrors++;
-                continue;
+                try {
+                    json = fs.readFileSync(tempJsonFile, 'utf8');
+                    fs.unlinkSync(tempJsonFile);
+                    jsonGenerated = true;
+                } catch (err) {
+                    console.error('  ERROR: Could not read JSON file');
+                    console.error('  ' + err.message);
+                    totalErrors++;
+                    continue;
+                }
             }
 
             // Generate HTML wrapper
             const collapsedDiff = hasChanges && srcDiff ? collapseDiff(srcDiff) : '';
+            const commitHashId = `commit-hash-${outputNum}`;
+            const smilesFieldId = `smiles-${outputNum}`;
+            const jsonFieldId = `json-${outputNum}`;
+            const diffFieldId = `diff-${outputNum}`;
             const diffSection = hasChanges && collapsedDiff ? `
         <div class="diff-section">
-            <h3>Uncommitted Changes in src/</h3>
-            <pre class="diff-content"><code>${escapeHtml(collapsedDiff)}</code></pre>
+            <div class="section-header">
+                <h3>Uncommitted Changes in src/</h3>
+                <button class="copy-btn" data-copy-target="${diffFieldId}">Copy to Clipboard</button>
+            </div>
+            <pre class="diff-content" id="${diffFieldId}"><code>${escapeHtml(collapsedDiff)}</code></pre>
         </div>` : '';
 
-            const totalRenderTime = svgRenderTime + jsonRenderTime;
+            const totalRenderTime = svgRenderTime + (includeJson ? jsonRenderTime : 0);
+            const benchmarkDetail = includeJson
+                ? `SVG: ${svgRenderTime.toFixed(2)} ms &nbsp;|&nbsp; JSON: ${jsonRenderTime.toFixed(2)} ms`
+                : `SVG: ${svgRenderTime.toFixed(2)} ms &nbsp;|&nbsp; JSON: disabled (-json flag not provided)`;
+            const jsonSection = includeJson
+                ? `<div class="json-section">
+            <div class="section-header">
+                <h3>JSON Position Data</h3>
+                <button class="copy-btn" data-copy-target="${jsonFieldId}">Copy to Clipboard</button>
+            </div>
+            <div class="json-container">
+                <pre id="${jsonFieldId}">${escapeHtml(json)}</pre>
+            </div>
+        </div>`
+                : `<div class="json-section disabled">
+            <div class="section-header">
+                <h3>JSON Position Data</h3>
+            </div>
+            <p>JSON generation disabled (-json flag not provided).</p>
+        </div>`;
 
             const html = `<!DOCTYPE html>
 <html lang="en">
@@ -592,6 +641,17 @@ for (const dataset of datasets) {
             border-radius: 5px;
             margin-bottom: 15px;
             font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .commit-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .commit-info .commit-label {
             font-weight: 600;
@@ -608,7 +668,31 @@ for (const dataset of datasets) {
             padding: 2px 8px;
             border-radius: 3px;
             font-size: 0.85em;
-            margin-left: 8px;
+        }
+        .copy-btn {
+            background: #3498db;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s ease;
+        }
+        .copy-btn:hover:not(:disabled) {
+            background: #2980b9;
+        }
+        .copy-btn:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
         }
         .benchmark-info {
             background: #e8f5e9;
@@ -642,6 +726,8 @@ for (const dataset of datasets) {
         .smiles-display code {
             font-family: 'Courier New', monospace;
             font-size: 0.95em;
+            display: block;
+            word-break: break-word;
         }
         .svg-container {
             background: white;
@@ -680,6 +766,16 @@ for (const dataset of datasets) {
         .json-section {
             margin-top: 30px;
         }
+        .json-section.disabled {
+            background: #f4f6f7;
+            border: 1px dashed #bdc3c7;
+            border-radius: 5px;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        .json-section.disabled p {
+            margin: 0;
+        }
         .json-section h3 {
             color: #2c3e50;
             margin-bottom: 15px;
@@ -705,47 +801,118 @@ for (const dataset of datasets) {
         <h1>Smoke Test #${outputNum}</h1>
 
         <div class="commit-info">
-            <span class="commit-label">Commit:</span>
-            <span class="commit-hash">${escapeHtml(commitHash)}</span>${hasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+            <div class="commit-text">
+                <span class="commit-label">Commit:</span>
+                <span class="commit-hash" id="${commitHashId}">${escapeHtml(commitHash)}</span>${hasChanges ? '<span class="uncommitted-badge">+ uncommitted</span>' : ''}
+            </div>
+            <button class="copy-btn" data-copy-target="${commitHashId}">Copy to Clipboard</button>
         </div>
 
         <div class="benchmark-info">
             <span class="benchmark-label">Total Render Time:</span>
             <span class="benchmark-value">${totalRenderTime.toFixed(2)} ms</span>
             <div class="benchmark-detail">
-                SVG: ${svgRenderTime.toFixed(2)} ms &nbsp;|&nbsp; JSON: ${jsonRenderTime.toFixed(2)} ms
+                ${benchmarkDetail}
             </div>
         </div>
 
         <div class="smiles-display">
-            <strong>SMILES:</strong> <code>${escapeHtml(smiles)}</code>
+            <div class="section-header">
+                <strong>SMILES</strong>
+                <button class="copy-btn" data-copy-target="${smilesFieldId}">Copy to Clipboard</button>
+            </div>
+            <code id="${smilesFieldId}">${escapeHtml(smiles)}</code>
         </div>
 
         <div class="svg-container">
             ${svg}
         </div>
 
-        <div class="json-section">
-            <h3>JSON Position Data</h3>
-            <div class="json-container">
-                <pre>${escapeHtml(json)}</pre>
-            </div>
-        </div>
+        ${jsonSection}
 
         ${diffSection}
     </div>
+    <script>
+        (function() {
+            const buttons = document.querySelectorAll('.copy-btn');
+
+            async function writeText(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                }
+            }
+
+            function setFeedback(button, message) {
+                const original = button.dataset.originalText || button.textContent;
+                if (!button.dataset.originalText) {
+                    button.dataset.originalText = original;
+                }
+                button.textContent = message;
+                button.disabled = true;
+                setTimeout(() => {
+                    button.textContent = button.dataset.originalText;
+                    button.disabled = false;
+                }, 1500);
+            }
+
+            buttons.forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const targetId = button.getAttribute('data-copy-target');
+                    const target = targetId ? document.getElementById(targetId) : null;
+                    if (!target) {
+                        setFeedback(button, 'Copy failed');
+                        return;
+                    }
+
+                    const text = target.innerText || target.textContent || '';
+                    if (!text) {
+                        setFeedback(button, 'Copy failed');
+                        return;
+                    }
+
+                    try {
+                        await writeText(text);
+                        setFeedback(button, 'Copied!');
+                    } catch (err) {
+                        setFeedback(button, 'Copy failed');
+                    }
+                });
+            });
+        })();
+    </script>
 </body>
 </html>`;
 
             // Save outputs
             const htmlPath = path.join(outputDir, outputNum + '.html');
-            const jsonPath = path.join(outputDir, outputNum + '.json');
-
             fs.writeFileSync(htmlPath, html, 'utf8');
-            fs.writeFileSync(jsonPath, json, 'utf8');
+            if (jsonGenerated) {
+                const jsonPath = path.join(outputDir, outputNum + '.json');
+                fs.writeFileSync(jsonPath, json, 'utf8');
+            }
 
-            console.log('  SUCCESS: Saved ' + outputNum + '.html, ' + outputNum + '.json, and ' + outputNum + '.png');
-            console.log('  TIMING: Total ' + totalRenderTime.toFixed(2) + ' ms (SVG: ' + svgRenderTime.toFixed(2) + ' ms, JSON: ' + jsonRenderTime.toFixed(2) + ' ms)');
+            const savedFiles = [outputNum + '.html'];
+            if (jsonGenerated) savedFiles.push(outputNum + '.json');
+            if (pngGenerated) savedFiles.push(outputNum + '.png');
+            console.log('  SUCCESS: Saved ' + savedFiles.join(', '));
+
+            const timingDetail = includeJson
+                ? 'SVG: ' + svgRenderTime.toFixed(2) + ' ms, JSON: ' + jsonRenderTime.toFixed(2) + ' ms'
+                : 'SVG: ' + svgRenderTime.toFixed(2) + ' ms; JSON generation disabled';
+            console.log('  TIMING: Total ' + totalRenderTime.toFixed(2) + ' ms (' + timingDetail + ')');
             totalOutputs++;
 
         } catch (error) {

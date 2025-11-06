@@ -11,6 +11,8 @@ FAIL_EARLY="NO"
 NO_VISUAL="NO"
 FILTER_PATTERN=""
 FILTER_ENABLED="NO"
+IMAGE_ENABLED="NO"
+JSON_ENABLED="NO"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -37,6 +39,16 @@ while [[ $# -gt 0 ]]; do
             fi
             FILTER_PATTERN="$1"
             FILTER_ENABLED="YES"
+            shift
+            ;;
+        -image)
+            IMAGE_ENABLED="YES"
+            FLAG_ARGS+=("$1")
+            shift
+            ;;
+        -json)
+            JSON_ENABLED="YES"
+            FLAG_ARGS+=("$1")
             shift
             ;;
         -bisect)
@@ -131,6 +143,8 @@ if [ "$BISECT_MODE" = "YES" ]; then
     echo -e "\033[93mSMILES:\033[0m ${BISECT_SMILES:0:60}$([ ${#BISECT_SMILES} -gt 60 ] && echo '...')"
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
+    echo -e "\033[93mIMAGES:\033[0m $([ "$IMAGE_ENABLED" = "YES" ] && echo "YES (-image)" || echo "NO")"
+    echo -e "\033[93mJSON:\033[0m $([ "$JSON_ENABLED" = "YES" ] && echo "YES (-json)" || echo "NO")"
     if [ "$FILTER_ENABLED" = "YES" ]; then
         echo -e "\033[93mFILTER:\033[0m ${FILTER_PATTERN} (ignored in bisect mode)"
     fi
@@ -139,6 +153,8 @@ else
     echo -e "\033[93mFAIL-EARLY:\033[0m $([ "$FAIL_EARLY" = "YES" ] && echo "YES (stop at first difference)" || echo "NO (collect all differences)")"
     echo -e "\033[93mVISUAL:\033[0m $([ "$NO_VISUAL" = "YES" ] && echo "NO (skip SVG generation)" || echo "YES (generate side-by-side comparisons)")"
     echo -e "\033[93mFILTER:\033[0m $([ "$FILTER_ENABLED" = "YES" ] && echo "${FILTER_PATTERN}" || echo "(none)")"
+    echo -e "\033[93mIMAGES:\033[0m $([ "$IMAGE_ENABLED" = "YES" ] && echo "YES (-image)" || echo "NO")"
+    echo -e "\033[93mJSON:\033[0m $([ "$JSON_ENABLED" = "YES" ] && echo "YES (-json)" || echo "NO")"
     echo -e "\033[93mBASELINE COMMIT:\033[0m ${BASELINE_COMMIT}"
     echo -e "\033[93mCURRENT COMMIT:\033[0m ${CURRENT_COMMIT}${UNCOMMITTED_CHANGES}"
     echo -e "\033[93mOUTPUT DIRECTORY:\033[0m ${CURRENT_DIR}/debug/output/regression/[timestamp]"
@@ -262,7 +278,7 @@ if [ "$BISECT_MODE" = "YES" ]; then
 
         # Test with single SMILES
         cd "${CURRENT_DIR}/debug"
-        if node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" > /dev/null 2>&1; then
+        if node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" "${FLAG_ARGS[@]}" -bisect "${BISECT_SMILES}" > /dev/null 2>&1; then
             echo -e "  \033[1;32m✓\033[0m Output matches current"
             RIGHT=$MID
         else
@@ -307,7 +323,7 @@ if [ "$BISECT_MODE" = "YES" ]; then
                 if npx gulp build > /dev/null 2>&1; then
                     # Generate comparison report
                     cd "${CURRENT_DIR}/debug"
-                    BISECT_OUTPUT=$(node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" -bisect "${BISECT_SMILES}" 2>/dev/null)
+                    BISECT_OUTPUT=$(node regression-runner.js "${BASELINE_DIR}" "${CURRENT_DIR}" "${FLAG_ARGS[@]}" -bisect "${BISECT_SMILES}" 2>/dev/null)
                     if [ $? -eq 0 ] || [ $? -eq 1 ]; then
                         echo -e "\033[1;32m✓\033[0m Comparison files saved:"
                         echo -e "  ${BISECT_OUTPUT}/bisect.html"
