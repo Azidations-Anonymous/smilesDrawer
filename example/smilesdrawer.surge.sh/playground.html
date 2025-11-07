@@ -111,23 +111,6 @@
 
     <section class="section pt-0">
         <div class="container">
-            <div class="columns">
-                <div class="column">
-                    <h2 class="title is-5">Position Data #1</h2>
-                    <textarea id="position-data-1" class="textarea is-family-monospace" rows="18"
-                        readonly>Render a molecule to view its position data.</textarea>
-                </div>
-                <div class="column">
-                    <h2 class="title is-5">Position Data #2</h2>
-                    <textarea id="position-data-2" class="textarea is-family-monospace" rows="18"
-                        readonly>Render a molecule to view its position data.</textarea>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section pt-0">
-        <div class="container">
             <h2 class="title is-5">Runtime Log</h2>
             <textarea id="runtime-log" class="textarea is-family-monospace" rows="12" readonly>
 [console]
@@ -642,28 +625,13 @@
             }
         }
 
-        function drawAndCollect(smiles, displaySelector, textareaId) {
+        function drawAndCollect(smiles, displaySelector) {
             const sd = new SmiDrawer(moleculeOptions, reactionOptions);
             try {
                 sd.draw(smiles, displaySelector, theme);
                 const data = collectPositionData(sd);
-
-                if (textareaId) {
-                    const output = document.getElementById(textareaId);
-                    if (data) {
-                        output.value = JSON.stringify(data, null, 2);
-                    } else {
-                        output.value = 'No position data available.';
-                    }
-                }
-
                 return data;
             } catch (err) {
-                if (textareaId) {
-                    const output = document.getElementById(textareaId);
-                    output.value = `Error: ${err.message}`;
-                }
-
                 console.error(err);
                 return null;
             }
@@ -675,9 +643,9 @@
             document.getElementById('display-2').style = '';
             document.getElementById('display-3').style = '';
 
-            const data1 = drawAndCollect(input1.value, '#display-1', 'position-data-1');
-            const data2 = drawAndCollect(input2.value, '#display-2', 'position-data-2');
-            drawAndCollect(input3.value, '#display-3', null);
+            const data1 = drawAndCollect(input1.value, '#display-1');
+            const data2 = drawAndCollect(input2.value, '#display-2');
+            drawAndCollect(input3.value, '#display-3');
 
             latestPositionData.display1 = data1;
             latestPositionData.display2 = data2;
