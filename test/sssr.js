@@ -16,6 +16,7 @@ const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocesso
 const SSSR = require('../src/algorithms/SSSR.js');
 
 const TPPP_SMILES = 'C=9C=CC(C7=C1C=CC(=N1)C(C=2C=CC=CC=2)=C3C=CC(N3)=C(C=4C=CC=CC=4)C=5C=CC(N=5)=C(C=6C=CC=CC=6)C8=CC=C7N8)=CC=9';
+const FIGURE_S2_MACROCYCLE = 'C/C/1=C\\CC/C(=C/CC(=C(C)CCC=C(C)C)CC1)/C';
 
 /**
  * Convenience helper – parse SMILES, build the graph, and return the rings.
@@ -172,6 +173,17 @@ describe('SSSR ring detection', () => {
             ordered,
             [5, 5, 5, 15, 15, 16],
             'Ferrioxamine macrocycle SSSR lengths should match PIKAChU expectations'
+        );
+    });
+
+    it('detects the Additional file 2 Fig. S2 macrocycle ring', () => {
+        const rings = detectRings(FIGURE_S2_MACROCYCLE);
+        const ordered = rings.map((ring) => ring.length).sort((a, b) => a - b);
+
+        assert.deepEqual(
+            ordered,
+            [10],
+            'Figure S2 macrocycle should contribute a single 10-membered ring'
         );
     });
 

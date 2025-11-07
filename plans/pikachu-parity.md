@@ -20,7 +20,7 @@ This tracker aggregates the open work needed to keep SmilesDrawer functionally a
 
 ### SSSR & Aromaticity
 
-1. **Documentation/tests** – Update developer docs to describe the new SSSR stack (and removal of the experimental flag) plus add regression fixtures for the paper’s macrocycle example (Additional file 2 Fig. S2) so we lock the behaviour down.
+1. **Documentation/tests** – ✅ README now documents the new SSSR stack and Additional file 2 Fig. S2 is covered in `test/sssr.js`. Keep this section up to date if further regressions emerge.
 
 ### Finetune & Rendering Follow-ups
 

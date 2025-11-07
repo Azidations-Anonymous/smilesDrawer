@@ -92,9 +92,18 @@ Examples showing molecules from different databases:
 
 A very simple JSFiddle example can be found [here](https://jsfiddle.net/zjdtkL57/1/). This example shows the `SmilesDrawer.apply()` functionality which draws the structure for every `canvas` element with a `data-smiles` attribute. E.g. `<canvas data-smiles="C1CCCCC1"></canvas>`
 
-### Experimental Features
+### SSSR Parity (PIKAChU)
 
 SmilesDrawer now always uses the parity-correct SSSR ring detection pipeline (Johnson cycle enumeration plus canonical candidates), so complex ring systems no longer require a separate “experimental” toggle.
+
+#### What changed?
+- **Johnson cycle inventory** – every draw runs the TypeScript port of Johnson’s algorithm so both SSSR selection and aromaticity checks start from the full cycle catalog instead of just Floyd–Warshall paths.
+- **Parity-aware sizing** – candidate ordering mirrors `pikachu/drawing/sssr.py`, storing even/odd length information explicitly (no more `d + 0.5` hack), which keeps sort stability and avoids floating noise.
+- **Set-based deduplication** – bonds/paths are tracked via canonical serialisations, eliminating the nested-array normalisation fix-ups that used to drop macrocycles.
+- **Ordered ring output** – rings are reconstructed along the molecular graph before returning, guaranteeing deterministic layouts and consistent aromaticity overlays.
+- **One-extra guard** – collection stops only after PIKAChU’s “allow one extra candidate” condition (`> nSSSR`), which prevents undercounting fused rings.
+
+Regression tests in `test/sssr.js` cover fused aromatics, adamantane cages, ferrioxamine macrocycles, and the Additional file 2 Fig. S2 macrocycle from the PIKAChU paper so the behaviour stays locked.
 
 ### "Installation"
 
