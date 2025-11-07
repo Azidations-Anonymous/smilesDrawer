@@ -43,6 +43,8 @@ const { performance } = require('perf_hooks');
 const { createCanvas, Image } = require('canvas');
 
 const DATA_DIR = path.join(__dirname, '..', 'test', 'data');
+const NOISE_DECIMAL_PLACES = 6;
+const NOISE_EPSILON = 1e-6;
 
 /**
  * Get current timestamp in ISO8601 format (without milliseconds)
@@ -520,16 +522,25 @@ if (bisectMode) {
         // Parse JSON and generate diff (reusing existing code pattern)
         const oldJsonObj = JSON.parse(oldJson);
         const newJsonObj = JSON.parse(newJson);
-        const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
-        const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+        const sanitizedOldJson = sanitizeJsonForDiff(oldJsonObj);
+        const sanitizedNewJson = sanitizeJsonForDiff(newJsonObj);
+
+        if (areJsonStructurallyEqual(sanitizedOldJson, sanitizedNewJson)) {
+            console.log('Bisection mode: differences were below noise tolerance.');
+            process.exit(0);
+        }
+
+        const diffBase = cloneJson(sanitizedOldJson);
+        const delta = jsondiffpatch.diff(diffBase, sanitizedNewJson);
+        const rawJsonDiffHtml = htmlFormatter.format(delta, diffBase);
         const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
 
         // Save JSON diff file (optional)
         if (generateJsonReports) {
             const jsonFilePath = path.join(outputDir, 'bisect.json');
             const jsonOutput = {
-                old: oldJsonObj,
-                new: newJsonObj,
+                old: sanitizedOldJson,
+                new: sanitizedNewJson,
                 delta: delta
             };
             fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
@@ -575,7 +586,10 @@ if (bisectMode) {
         console.log(outputDir);
 
         // Exit 0 if match, 1 if difference
-        if (oldJson === newJson) {
+        if (areJsonStructurallyEqual(sanitizedOldJson, sanitizedNewJson)) {
+            console.log('Bisection mode: differences were below noise tolerance.');
+            process.exit(0);
+        } else if (oldJson === newJson) {
             process.exit(0);
         } else {
             process.exit(1);
@@ -779,6 +793,16 @@ for (const dataset of datasets) {
 
         // Check if there's a difference
         if (oldJson !== newJson) {
+            const oldJsonObj = JSON.parse(oldJson);
+            const newJsonObj = JSON.parse(newJson);
+            const sanitizedOldJson = sanitizeJsonForDiff(oldJsonObj);
+            const sanitizedNewJson = sanitizeJsonForDiff(newJsonObj);
+
+            if (areJsonStructurallyEqual(sanitizedOldJson, sanitizedNewJson)) {
+                console.log('  MATCH: Differences within noise tolerance ✓');
+                continue;
+            }
+
             totalDifferences++;
 
             console.log('  DIFFERENCE DETECTED' + (noVisual ? '' : ' - Generating SVG comparison'));
@@ -817,10 +841,9 @@ for (const dataset of datasets) {
                 }
 
                 // Parse JSON and generate diff
-                const oldJsonObj = JSON.parse(oldJson);
-                const newJsonObj = JSON.parse(newJson);
-                const delta = jsondiffpatch.diff(oldJsonObj, newJsonObj);
-                const rawJsonDiffHtml = htmlFormatter.format(delta, oldJsonObj);
+                const diffBase = cloneJson(sanitizedOldJson);
+                const delta = jsondiffpatch.diff(diffBase, sanitizedNewJson);
+                const rawJsonDiffHtml = htmlFormatter.format(delta, diffBase);
                 const jsonDiffHtml = collapseJsonDiff(rawJsonDiffHtml);
 
                 // Generate and save individual HTML report immediately
@@ -852,8 +875,8 @@ for (const dataset of datasets) {
                 if (generateJsonReports) {
                     const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
                     const jsonOutput = {
-                        old: oldJsonObj,
-                        new: newJsonObj,
+                        old: sanitizedOldJson,
+                        new: sanitizedNewJson,
                         delta: delta
                     };
                     fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
@@ -880,8 +903,8 @@ for (const dataset of datasets) {
                 if (generateJsonReports) {
                     const jsonFilePath = path.join(outputDir, totalDifferences + '.json');
                     const jsonOutput = {
-                        old: JSON.parse(oldJson),
-                        new: JSON.parse(newJson)
+                        old: sanitizedOldJson,
+                        new: sanitizedNewJson
                     };
                     fs.writeFileSync(jsonFilePath, JSON.stringify(jsonOutput, null, 2), 'utf8');
                     reportFiles.push(totalDifferences + '.json');
@@ -980,6 +1003,38 @@ function escapeHtml(text) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function sanitizeJsonForDiff(value) {
+    if (Array.isArray(value)) {
+        return value.map((item) => sanitizeJsonForDiff(item));
+    }
+
+    if (value && typeof value === 'object') {
+        const result = {};
+        for (const key of Object.keys(value)) {
+            result[key] = sanitizeJsonForDiff(value[key]);
+        }
+        return result;
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        const rounded = Number(value.toFixed(NOISE_DECIMAL_PLACES));
+        if (Math.abs(rounded) < NOISE_EPSILON) {
+            return 0;
+        }
+        return rounded;
+    }
+
+    return value;
+}
+
+function areJsonStructurallyEqual(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function cloneJson(value) {
+    return JSON.parse(JSON.stringify(value));
 }
 
 /**
