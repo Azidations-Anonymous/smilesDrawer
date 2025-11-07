@@ -1197,9 +1197,10 @@ function generateIndividualHTMLReport(diff) {
     const newTotalTime = diff.newSvgRenderTime + diff.newJsonRenderTime;
     const rawTimeDiff = newTotalTime - oldTotalTime;
     const isNoise = Math.abs(rawTimeDiff) < PERFORMANCE_EPSILON;
-    const timeDiff = isNoise ? 0 : rawTimeDiff;
-    const percentChange = oldTotalTime > 0 ? ((timeDiff / oldTotalTime) * 100) : 0;
-    const isFaster = timeDiff < 0;
+    const percentChange = oldTotalTime > 0 ? ((rawTimeDiff / oldTotalTime) * 100) : 0;
+    const percentChangeAbs = Math.abs(percentChange);
+    const isFaster = rawTimeDiff <= -PERFORMANCE_EPSILON;
+    const displayTimeDiff = rawTimeDiff;
     const performanceClass = isNoise ? 'performance-neutral' : (isFaster ? 'performance-improvement' : 'performance-regression');
 
     return `<!DOCTYPE html>
@@ -1610,14 +1611,18 @@ function generateIndividualHTMLReport(diff) {
                 </div>
                 <div class="benchmark-column">
                     <span class="benchmark-label">Change</span>
-                    <span class="benchmark-value benchmark-delta">${timeDiff >= 0 ? '+' : ''}${timeDiff.toFixed(2)} ms</span>
+                    <span class="benchmark-value benchmark-delta">${displayTimeDiff >= 0 ? '+' : ''}${displayTimeDiff.toFixed(2)} ms</span>
                     <div class="benchmark-detail">
-                        ${Math.abs(percentChange).toFixed(1)}% ${isFaster ? 'faster' : 'slower'}
+                        ${isNoise
+                            ? `|Δ| < ${PERFORMANCE_EPSILON} ms (ignored)`
+                            : `${percentChangeAbs.toFixed(1)}% ${isFaster ? 'faster' : 'slower'}`}
                     </div>
                 </div>
             </div>
             <div class="performance-summary ${isNoise ? 'neutral' : (isFaster ? 'faster' : 'slower')}">
-                ${isNoise ? '\u2713 Within noise (no significant change)' : (isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression')}
+                ${isNoise
+                    ? `\u2713 Change ${displayTimeDiff.toFixed(2)} ms (within ±${PERFORMANCE_EPSILON} ms noise)`
+                    : (isFaster ? '\u2713 Performance Improvement' : '\u26A0 Performance Regression')}
             </div>
         </div>
 
