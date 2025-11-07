@@ -104,7 +104,7 @@ gulp.task("doc", function(cb) {
     }
     var docSources = [
       "README.md",
-      "./src/*.js",
+      "./src/**/*.js",
       "./debug/generate-json.js",
       "./test/generate-json.js",
       "./test/regression-runner.js"
