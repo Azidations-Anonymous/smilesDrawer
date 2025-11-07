@@ -15,7 +15,6 @@ All notable changes to this project will be documented in this file.
 - Regression reporting now filters numeric noise, treats deltas below 50 ms as neutral, repositions performance panels, and collapses JSON diffs for easier triage while smoke/regression scripts gained clearer CLI ergonomics.
 - Playground and packaging updates now consume the dist bundle directly, restore the `smiles-drawer.js` symlink, and remove legacy position-data panels in favor of the runtime API.
 - Atom annotations now have first-class rendering support via `showAtomAnnotations`, a customizable formatter, and styling knobs for color/offset/font size.
-- SSSR parity is now the default: the experimental flag was removed, the collector guard matches PIKAChU’s “one extra candidate” rule, and aromatic indicators leverage the Johnson cycle inventory so fused/macrocyclic aromatics render correctly.
 
 ### Fixed
 - Stereochemical accuracy improved via cis/trans stereobond corrections, additional SSSR parity tests, deterministic neighbour ordering, and refactored cycle candidate handling.

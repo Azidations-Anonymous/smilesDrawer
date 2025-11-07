@@ -69,12 +69,10 @@ This document captures the work required to bring SmilesDrawer’s smallest set 
 3. Extend tests to confirm clockwise/anticlockwise consistency for symmetric rings.
 
 ### 3.7 Remove the Legacy Experimental Flag
-*Status: ✅ completed – the experimental toggle was removed and the collector now matches the PIKAChU guard.*
 1. After the fixes above, remove the `experimental` branch (`src/algorithms/SSSR.ts:61`-`63`) and any UI toggle that exposes it.
 2. Document the behaviour change in release notes.
 
 ### 3.8 Integrate with Aromaticity Detection
-*Status: ✅ `RingManager.getAromaticRings()` now exposes Johnson-derived aromatic cycles for drawing and downstream consumers.*
 1. Review SmilesDrawer’s aromaticity workflow (entry point `src/DrawerBase.ts` or related) and ensure it can consume the richer cycle inventory when available.
 2. Replica tests: reproduce the macrocycle example from Additional file 2 Fig. S2 to confirm corrected behaviour.
 

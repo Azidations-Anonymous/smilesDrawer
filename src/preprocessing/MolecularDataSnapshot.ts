@@ -68,10 +68,6 @@ class MolecularDataSnapshot implements IMolecularData {
     return this.source.getLargestOrAromaticCommonRing(vertexA, vertexB);
   }
 
-  getAromaticRings(): Ring[] {
-    return this.source.getAromaticRings();
-  }
-
   initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void {
     throw new Error('MolecularDataSnapshot is read-only. initDraw() cannot be called.');
   }

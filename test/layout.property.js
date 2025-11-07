@@ -417,7 +417,7 @@ describe('Kamada-Kawai robustness properties', () => {
     it('converges to similar energy regardless of rotation perturbation', () => {
         const property = fc.property(
             fc.integer({ min: 3, max: 10 }),
-            fc.double({ min: -Math.PI, max: Math.PI }).filter(Number.isFinite),
+            fc.double({ min: -Math.PI, max: Math.PI }),
             (ringSize, angle) => {
                 const smiles = ringSmiles(ringSize);
                 const parseTree = Parser.parse(smiles, {});
@@ -472,9 +472,9 @@ describe('Kamada-Kawai robustness properties', () => {
     it('layouts remain congruent after translation and rotation', () => {
         const property = fc.property(
             fc.integer({ min: 3, max: 10 }),
-            fc.double({ min: -Math.PI, max: Math.PI }).filter(Number.isFinite),
-            fc.double({ min: -20, max: 20 }).filter(Number.isFinite),
-            fc.double({ min: -20, max: 20 }).filter(Number.isFinite),
+            fc.double({ min: -Math.PI, max: Math.PI }),
+            fc.double({ min: -20, max: 20 }),
+            fc.double({ min: -20, max: 20 }),
             (ringSize, angle, dx, dy) => {
                 const smiles = ringSmiles(ringSize);
                 const parseTree = Parser.parse(smiles, {});

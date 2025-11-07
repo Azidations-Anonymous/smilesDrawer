@@ -174,7 +174,7 @@ class RingManager {
 
         // Get the rings in the graph (the SSSR)
         this.drawer.graph.cycles = this.drawer.graph.getAllCycles();
-        let rings = SSSR.getRings(this.drawer.graph);
+        let rings = SSSR.getRings(this.drawer.graph, this.drawer.opts.experimentalSSSR);
 
         if (rings === null) {
             return;
@@ -189,8 +189,6 @@ class RingManager {
             this.drawer.graph.vertices[ringVertices[j]].value.rings.push(ringId);
           }
         }
-
-        this.addInventoryRingsForUnassignedVertices();
 
         // Find connection between rings
         // Check for common vertices and create ring connections. This is a bit
@@ -648,40 +646,6 @@ class RingManager {
         return this.areVerticesInSameRing(source, target);
     }
 
-    getAromaticRings(): Ring[] {
-        const aromatic: Ring[] = [];
-        const seen = new Set<string>();
-        const pushRing = (ring: Ring): void => {
-            aromatic.push(ring);
-            seen.add(this.serializeMembers(ring.members));
-        };
-
-        for (const ring of this.rings) {
-            if (this.isRingAromatic(ring)) {
-                pushRing(ring);
-            }
-        }
-
-        const inventory = this.drawer.graph.cycles ?? [];
-        for (const cycle of inventory) {
-            if (cycle.length < 3) {
-                continue;
-            }
-
-            const key = this.serializeMembers(cycle);
-            if (seen.has(key) || !this.isCycleAromatic(cycle)) {
-                continue;
-            }
-
-            const ring = new Ring(cycle.slice());
-            ring.positioned = true;
-            this.setRingCenter(ring);
-            pushRing(ring);
-        }
-
-        return aromatic;
-    }
-
     isRingAromatic(ring: Ring): boolean {
         for (var i = 0; i < ring.members.length; i++) {
           let vertex = this.drawer.graph.vertices[ring.members[i]];
@@ -692,78 +656,6 @@ class RingManager {
         }
 
         return true;
-    }
-
-    private serializeMembers(members: number[]): string {
-        return members.slice().sort((a, b) => a - b).join('-');
-    }
-
-    private isCycleAromatic(cycle: number[]): boolean {
-        for (const vertexId of cycle) {
-            const vertex = this.drawer.graph.vertices[vertexId];
-            if (!vertex || !vertex.value.isPartOfAromaticRing) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private addInventoryRingsForUnassignedVertices(): void {
-        const inventory = this.drawer.graph.cycles ?? [];
-        if (inventory.length === 0) {
-            return;
-        }
-
-        const existingKeys = new Set<string>();
-        for (const ring of this.rings) {
-            existingKeys.add(this.serializeMembers(ring.members));
-        }
-
-        const missing = new Set<number>();
-        for (const vertex of this.drawer.graph.vertices) {
-            if (!vertex) {
-                continue;
-            }
-            if (vertex.value.rings.length === 0) {
-                missing.add(vertex.id);
-            }
-        }
-
-        for (const cycle of inventory) {
-            if (missing.size === 0) {
-                break;
-            }
-
-            const key = this.serializeMembers(cycle);
-            if (existingKeys.has(key)) {
-                continue;
-            }
-
-            let coversMissing = false;
-            for (const vertexId of cycle) {
-                if (missing.has(vertexId)) {
-                    coversMissing = true;
-                    break;
-                }
-            }
-
-            if (!coversMissing) {
-                continue;
-            }
-
-            const ring = new Ring(cycle.slice());
-            const ringId = this.addRing(ring);
-            existingKeys.add(key);
-
-            for (const vertexId of cycle) {
-                const vertex = this.drawer.graph.vertices[vertexId];
-                if (!vertex) {
-                    continue;
-                }
-                vertex.value.rings.push(ringId);
-                missing.delete(vertexId);
-            }
-        }
     }
 }
 export = RingManager;

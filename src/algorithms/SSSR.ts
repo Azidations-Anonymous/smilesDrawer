@@ -18,9 +18,10 @@ class SSSR {
      * Returns an array containing arrays, each representing a ring from the smallest set of smallest rings in the graph.
      *
      * @param {Graph} graph A Graph object.
+     * @param {Boolean} [experimental=false] Whether or not to use experimental SSSR.
      * @returns {Array[]} An array containing arrays, each representing a ring from the smallest set of smallest rings in the group.
      */
-    static getRings(graph: Graph): number[][] | null {
+    static getRings(graph: Graph, experimental: boolean = false): number[][] | null {
         let adjacencyMatrix = graph.getComponentsAdjacencyMatrix();
         if (adjacencyMatrix.length === 0) {
             return null;
@@ -61,6 +62,10 @@ class SSSR {
                 continue;
             }
             
+            if (experimental) {
+                nSssr = 999;
+            }
+
             let { d, pe, pe_prime } = SSSR.getPathIncludedDistanceMatrices(ccAdjacencyMatrix);
             let candidates = SSSR.getRingCandidates(d, pe, pe_prime);
             let sssr = SSSR.getSSSR(candidates, ccAdjacencyMatrix, arrBondCount, arrRingCount, nSssr);
@@ -310,7 +315,7 @@ class SSSR {
                         }
                     }
 
-                    if (cSssr.length > nsssr) {
+                    if (cSssr.length >= nsssr) {
                         return cSssr.slice(0, nsssr);
                     }
                 }
@@ -332,7 +337,7 @@ class SSSR {
                         }
                     }
 
-                    if (cSssr.length > nsssr) {
+                    if (cSssr.length >= nsssr) {
                         return cSssr.slice(0, nsssr);
                     }
                 }

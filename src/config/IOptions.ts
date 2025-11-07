@@ -72,6 +72,7 @@ interface IMoleculeOptions {
   atomAnnotationFontSize: number;
   atomAnnotationOffset: number;
   atomAnnotationFormatter?: AtomAnnotationFormatter | null;
+  experimentalSSSR: boolean;
 
   // Kamada-Kawai force layout parameters
   kkThreshold: number;

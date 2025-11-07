@@ -94,7 +94,7 @@ A very simple JSFiddle example can be found [here](https://jsfiddle.net/zjdtkL57
 
 ### SSSR Parity (PIKAChU)
 
-SmilesDrawer now always uses the parity-correct SSSR ring detection pipeline (Johnson cycle enumeration plus canonical candidates), so complex ring systems no longer require a separate “experimental” toggle.
+If you experience problems with the drawing of complex ring systems (including very long bonds), please enable experimental SSSR ring detection (see `experimentalSSSR` option).
 
 #### What changed?
 - **Johnson cycle inventory** – every draw runs the TypeScript port of Johnson’s algorithm so both SSSR selection and aromaticity checks start from the full cycle catalog instead of just Floyd–Warshall paths.
@@ -298,6 +298,7 @@ The following options are available:
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
 | Padding                                                         | padding                     | number                              | 20.0          |
+| Use experimental SSSR ring detection                            | experimentalSSSR            | boolean                             | false         |
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
 | Overlap sensitivity                                             | overlapSensitivity          | number                              | 0.42          |
@@ -339,6 +340,7 @@ The default options are defined as follows:
     fontSizeLarge: 5,
     fontSizeSmall: 3,
     padding: 20.0,
+    experimentalSSSR: false,
     themes: {
         dark: {
             C: '#fff',
