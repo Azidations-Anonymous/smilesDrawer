@@ -14,6 +14,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.3/beautify.min.js"
         integrity="sha512-16ZUuuM/OceXU7i8U6zQqtDsG+PCKcWX9XlmNN0z+lqUlBMzDmIzrKt6TOmW48EAU47XIU6Spaelz8tM9LgGKQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        .svg-wrapper {
+            position: relative;
+        }
+
+        .download-button {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+        }
+    </style>
 </head>
 
 <body>
@@ -77,8 +88,13 @@
                                 <input id="input-1" class="input" type="text" placeholder="Custom SMILES"
                                     value="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1">
                                 <div class="content" style="overflow-x: auto; overflow-y: auto">
-                                    <svg id="display-1"
-                                        data-smiles="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1" />
+                                    <div class="svg-wrapper">
+                                        <svg id="display-1"
+                                            data-smiles="OC(C(=O)O[C@H]1C[N+]2(CCCOC3=CC=CC=C3)CCC1CC2)(C1=CC=CS1)C1=CC=CS1"></svg>
+                                        <button class="button is-small download-button" data-download-target="#display-1">
+                                            Download
+                                        </button>
+                                    </div>
                                 </div>
                             </article>
                         </div>
@@ -88,7 +104,13 @@
                                 <input id="input-2" class="input" type="text" placeholder="Custom SMILES"
                                     value="CC1=[O][Fe]2345ON1CCC[C@H]1NC(=O)CNC(=O)[C@H](CO)NC(=O)CNC(=O)[C@@H](CCCN(O2)C(C)=[O]3)NC(=O)[C@@H](CCCN(O4)C(C)=[O]5)NC1=O">
                                 <div class="content" style="overflow-x: auto; overflow-y: auto">
-                                    <svg id="display-2" data-smiles="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1" />
+                                    <div class="svg-wrapper">
+                                        <svg id="display-2"
+                                            data-smiles="NC1=C(Br)C=C(Br)C=C1CN[C@]1CC[C@](O)CC1"></svg>
+                                        <button class="button is-small download-button" data-download-target="#display-2">
+                                            Download
+                                        </button>
+                                    </div>
                                 </div>
                             </article>
                         </div>
@@ -99,8 +121,13 @@
                             <input id="input-3" class="input" type="text" placeholder="Custom SMILES"
                                 value="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__">
                             <div class="content" style="overflow-x: auto">
-                                <svg id="display-3"
-                                    data-smiles="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__" />
+                                <div class="svg-wrapper">
+                                    <svg id="display-3"
+                                        data-smiles="C=CCBr.[Na+].[I-]>CC(=O)C>C=CCI.[Na+].[Br-]  __{'textBelowArrow': '90%'}__"></svg>
+                                    <button class="button is-small download-button" data-download-target="#display-3">
+                                        Download
+                                    </button>
+                                </div>
                             </div>
                         </article>
                     </div>
@@ -612,6 +639,58 @@
             };
         };
 
+        function downloadSvg(svgElement, fileName) {
+            if (!svgElement) {
+                console.warn('downloadSvg: missing svg element');
+                return;
+            }
+
+            const clone = svgElement.cloneNode(true);
+
+            if (!clone.getAttribute('xmlns')) {
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            }
+
+            if (!clone.getAttribute('xmlns:xlink')) {
+                clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            }
+
+            const svgContent = `<?xml version="1.0" encoding="UTF-8"?>\n${clone.outerHTML}`;
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+
+        function setupDownloadButtons() {
+            document.querySelectorAll('.download-button').forEach((button) => {
+                const targetSelector = button.getAttribute('data-download-target');
+
+                button.addEventListener('click', () => {
+                    if (!targetSelector) {
+                        console.warn('download button missing data-download-target attribute');
+                        return;
+                    }
+
+                    const svg = document.querySelector(targetSelector);
+
+                    if (!svg) {
+                        console.warn('download button missing target', targetSelector);
+                        return;
+                    }
+
+                    const slug = targetSelector.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
+                    const filename = `${slug || 'diagram'}.svg`;
+                    downloadSvg(svg, filename);
+                });
+            });
+        }
+
         function collectPositionData(drawerInstance) {
             if (!drawerInstance || !drawerInstance.drawer || typeof drawerInstance.drawer.getPositionData !== 'function') {
                 return null;
@@ -662,6 +741,7 @@
         }
 
         redraw();
+        setupDownloadButtons();
 
         // Close modals
         (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach((close) => {
