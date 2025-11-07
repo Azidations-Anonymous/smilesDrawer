@@ -162,4 +162,16 @@ describe('SSSR ring detection', () => {
             'Macrocycle SSSR lengths should match PIKAChU expectations'
         );
     });
+
+    it('matches PIKAChU ferrioxamine-like macrocycle SSSR', () => {
+        const ferrioxamine = 'CC1=[O][Fe]2345ON1CCC[C@H]1NC(=O)CNC(=O)[C@H](CO)NC(=O)CNC(=O)[C@@H](CCCN(O2)C(C)=[O]3)NC(=O)[C@@H](CCCN(O4)C(C)=[O]5)NC1=O';
+        const rings = detectRings(ferrioxamine);
+        const ordered = rings.map((ring) => ring.length).sort((a, b) => a - b);
+
+        assert.deepEqual(
+            ordered,
+            [5, 5, 5, 15, 15, 16],
+            'Ferrioxamine macrocycle SSSR lengths should match PIKAChU expectations'
+        );
+    });
 });
