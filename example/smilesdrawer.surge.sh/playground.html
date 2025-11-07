@@ -629,39 +629,6 @@
             };
         };
 
-        function patchRingManager(ringManager) {
-            if (ringManager.__debugPatched) {
-                return;
-            }
-
-            const originalInitRings = ringManager.initRings;
-            ringManager.initRings = function (...args) {
-                console.log('[browser initRings] start', this.rings.map((r) => r.id));
-                const result = originalInitRings.apply(this, args);
-                console.log('[browser initRings] after', this.rings.map((r) => r.id));
-                return result;
-            };
-
-            const handler = ringManager.bridgedRingHandler;
-            const originalProcess = handler.processBridgedRingsInInitRings;
-            handler.processBridgedRingsInInitRings = function (...args) {
-                console.log('[browser processBridgedRingsInInitRings] rings before', this.ringManager.rings.map((r) => r.id));
-                const result = originalProcess.apply(this, args);
-                console.log('[browser processBridgedRingsInInitRings] rings after', this.ringManager.rings.map((r) => ({ id: r.id, isBridged: r.isBridged, members: r.members.length })));
-                return result;
-            };
-
-            const originalCreate = handler.createBridgedRing;
-            handler.createBridgedRing = function (ringIds, sourceVertexId) {
-                console.log('[browser createBridgedRing] start', { ringIds, sourceVertexId });
-                const result = originalCreate.call(this, ringIds, sourceVertexId);
-                console.log('[browser createBridgedRing] created', { id: result.id, members: result.members.length });
-                return result;
-            };
-
-            ringManager.__debugPatched = true;
-        }
-
         function collectPositionData(drawerInstance) {
             if (!drawerInstance || !drawerInstance.drawer || typeof drawerInstance.drawer.getPositionData !== 'function') {
                 return null;
@@ -677,7 +644,6 @@
 
         function drawAndCollect(smiles, displaySelector, textareaId) {
             const sd = new SmiDrawer(moleculeOptions, reactionOptions);
-            patchRingManager(sd.drawer.preprocessor.ringManager);
             try {
                 sd.draw(smiles, displaySelector, theme);
                 const data = collectPositionData(sd);

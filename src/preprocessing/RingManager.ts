@@ -225,11 +225,8 @@ class RingManager {
         // rings that are member of the superring.
         this.backupRingInformation();
 
-        console.log('[initRings] rings after SSSR', this.rings.map(r => r.id));
-
         // Replace rings contained by a larger bridged ring with a bridged ring
         this.bridgedRingHandler.processBridgedRingsInInitRings();
-        console.log('[initRings] rings after bridged processing', this.rings.map(r => ({ id: r.id, isBridged: r.isBridged, size: r.members.length })));
     }
 
     areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean {
