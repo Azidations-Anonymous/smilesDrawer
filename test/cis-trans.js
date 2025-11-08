@@ -13,6 +13,8 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const Parser = require('../src/parsing/Parser.js');
 const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocessor.js');
@@ -231,5 +233,26 @@ describe('Cis/trans stereobond corrections', () => {
         const first = payload.doubleBonds[0];
         assert.ok(first.chiralDict && Object.keys(first.chiralDict).length > 0, 'CLI output should include chiralDict entries');
         assert.ok(Array.isArray(payload.cisTransDiagnostics) && payload.cisTransDiagnostics.length > 0, 'CLI output should include diagnostics');
+    });
+
+    it('round-trips chiralDict via debug/generate-json.js', () => {
+        const smiles = 'F/C=C/F';
+        const script = path.resolve(__dirname, '..', 'debug', 'generate-json.js');
+        const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cis-trans-json-'));
+        const outputPath = path.join(tmpDir, 'out.json');
+
+        try {
+            const result = spawnSync('node', [script, smiles, outputPath], { encoding: 'utf8' });
+            assert.equal(result.status, 0, `generate-json failed: ${result.stderr}`);
+
+            const payload = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+            const edges = payload.serializedData ? payload.serializedData.edges : payload.edges;
+            assert.ok(Array.isArray(edges) && edges.length > 0, 'JSON output should contain edges');
+            const stereobond = edges.find((edge) => edge && edge.cisTrans);
+            assert.ok(stereobond, 'expected at least one stereogenic edge in JSON output');
+            assert.ok(stereobond.chiralDict && Object.keys(stereobond.chiralDict).length > 0, 'serialized edge should include chiralDict');
+        } finally {
+            fs.rmSync(tmpDir, { recursive: true, force: true });
+        }
     });
 });
