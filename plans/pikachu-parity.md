@@ -50,6 +50,53 @@ This document tracks the work required to align SmilesDrawer with the stereochem
 2. Extend `npm run test:regression` harness to surface when only stereochemistry differs (e.g., highlight mismatched bond ids in JSON).
 3. Document a manual checklist for future regressions (ring inventory matches, `CisTransManager.buildMetadata` emits identical maps, etc.).
 
+### 5. Final Parity Push (current branch: `pikachu-parity-final`)
+
+#### 5.1 Double-bond sequence resolution
+Goal: Port Pikachu’s sequence-aware stereobond fixer so alternating double bonds (especially in macrocycles) are corrected as a group.
+
+Steps:
+1. **Instrumentation**
+   - Mirror `structure.find_double_bond_sequences` from `pikachu/chem/structure.py:816-872` inside `CisTransManager`. The local helper should walk alternating single/double paths, merging fragments until no more joins are possible.
+   - Extend the regression diagnostics (`cisTransDiagnostics`) to note the sequence ID each double bond belongs to for easier debugging.
+2. **Port core logic**
+   - Track sequences in `correctBondOrientations()`: loop over each sequence first, exactly like Pikachu’s `_fix_chiral_bonds_in_rings` (drawing/drawing.py:2088-2145). Only after all sequences are processed should we fall back to isolated stereobonds.
+   - Add an explicit `fixedStereoBonds` check before every correction so a later pass never undoes a successful flip (Pikachu’s `fixed_chiral_bonds` is authoritative).
+3. **Parity of `_flip_stereobond_in_ring`**
+   - Compare our flow (branch selection, preference for already-fixed neighbours) with Pikachu’s implementation and close any gaps (e.g., separate handling when both adjacent branches are already in sequences). Update the helper comments to document the decision tree.
+4. **Tests**
+   - Create a targeted Jest/snapshot test that feeds the problematic macrocycle through `SvgDrawer` and inspects the `cisTransDiagnostics` block to ensure every evaluation reports “cis/trans” rather than “collinear” after correction.
+   - Add two more molecules from Pikachu’s examples where sequences span >2 bonds to guard against regressions.
+
+#### 5.2 Aromatic cycle inventory parity
+Goal: Ensure aromatic overlays and branch decisions use the same inventory as Pikachu’s `Drawer`, without redundant circles.
+
+Steps:
+1. **Inventory coverage audit**
+   - Compare `RingManager.getAromaticRings()` output against `drawer.rings` in Pikachu for the regression SMILES. Note which cycles Pikachu actually draws (from `drawer.aromatic_cycles`).
+   - Record whether those inventory-only cycles map to specific atoms (IDs) not present in SSSR; this becomes the coverage criterion.
+2. **Shared accessor**
+   - Add a cached `this.aromaticInventory` field to `RingManager` that deduplicates cycles by sorted member set and keeps track of the vertices each cycle covers.
+   - Update both `DrawingManager` and `SvgEdgeDrawer` to accept an optional filter predicate (e.g., “only draw inventory cycles containing uncovered atoms”) so future tooling can opt into more aggressive overlays.
+3. **Neighbour helpers**
+   - Expose a method similar to Pikachu’s `_find_ring_neighbour` (drawing.py:700-760) at the RingManager level so `CisTransManager` and future layout code can reason about inventory-only cycles when choosing flip anchors.
+4. **Regression guard**
+   - Extend `debug/ring-diagnostics.js` to log which aromatic cycles were actually drawn (IDs + member sets). Add a regression test that asserts the macrocycle now produces only four circles.
+
+#### 5.3 Chiral dict persistence & consumers
+Goal: Treat `edge.chiralDict` as first-class data: serialize it everywhere, expose via diagnostics, and use it to drive layout decisions.
+
+Steps:
+1. **Serialization**
+   - Confirm `graphData.serializedData.edges[].chiralDict` is present in every code path (`MolecularDataSnapshot`, `SvgDrawer.getPositionData`). Add smoke tests asserting that dumping JSON via `debug/generate-json.js` yields the dict for the macrocycle.
+2. **Runtime consumers**
+   - Update `CisTransManager.buildMetadata()` to read the dict back when available (e.g., when the graph is loaded from JSON) so repeated runs/states keep the original SMILES intent without re-parsing.
+   - Introduce a helper `getChiralExpectation(atomA, atomB)` that returns the stored orientation if it exists, falling back to `cisTransNeighbours` otherwise. Use this everywhere we currently re-derive orientation from directional bonds.
+3. **Diagnostics**
+   - Extend `cisTransDiagnostics` to include whether the expectation came from the SMILES parser or from persisted metadata; this will help cross-check with Pikachu.
+4. **Tooling**
+   - Update `scripts/dump-cis-trans.js` and `pikachu-ring-dump` comparisons to highlight mismatched pairs (e.g., “expected cis, actual trans”) so we can mirror Pikachu’s `bond.chiral_dict` structure one-to-one.
+
 ## Verification Checklist
 
 - [ ] `npm run test:regression -- -smiles '…macrocycle…' -json` reports no differences.
