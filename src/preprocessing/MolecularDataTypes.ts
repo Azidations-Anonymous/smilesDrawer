@@ -141,6 +141,7 @@ export interface SerializedEdge {
   stereoSourceId: number | null;
   cisTrans: boolean;
   cisTransNeighbours: Record<number, Record<number, CisTransOrientation>>;
+  chiralDict: Record<number, Record<number, CisTransOrientation>>;
 }
 
 /**

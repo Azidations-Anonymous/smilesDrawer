@@ -1,6 +1,4 @@
-const BASE_MOLECULE_OPTIONS = Object.freeze({
-    experimentalSSSR: true,
-});
+const BASE_MOLECULE_OPTIONS = Object.freeze({});
 
 function createMoleculeOptions(overrides = {}) {
     return Object.assign({}, BASE_MOLECULE_OPTIONS, overrides);

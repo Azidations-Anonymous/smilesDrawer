@@ -330,15 +330,19 @@ class MolecularPreprocessor implements IMolecularData {
           bondType: e.bondType,
           isPartOfAromaticRing: e.isPartOfAromaticRing,
           center: e.center,
-          wedge: e.wedge,
-          stereoSymbol: e.stereoSymbol,
-          stereoSourceId: e.stereoSourceId,
-          cisTrans: e.cisTrans,
-          cisTransNeighbours: Object.entries(e.cisTransNeighbours || {}).reduce((acc, [key, value]) => {
-              acc[Number(key)] = { ...value };
-              return acc;
-          }, {} as Record<number, Record<number, CisTransOrientation>>)
-      }));
+      wedge: e.wedge,
+      stereoSymbol: e.stereoSymbol,
+      stereoSourceId: e.stereoSourceId,
+      cisTrans: e.cisTrans,
+      cisTransNeighbours: Object.entries(e.cisTransNeighbours || {}).reduce((acc, [key, value]) => {
+          acc[Number(key)] = { ...value };
+          return acc;
+      }, {} as Record<number, Record<number, CisTransOrientation>>),
+      chiralDict: Object.entries(e.chiralDict || {}).reduce((acc, [key, value]) => {
+          acc[Number(key)] = { ...value };
+          return acc;
+      }, {} as Record<number, Record<number, CisTransOrientation>>)
+  }));
 
       // Serialize ring data
       const rings = this.rings ? this.rings.map((ring) => ({
@@ -904,6 +908,10 @@ class MolecularPreprocessor implements IMolecularData {
    */
   isRingAromatic(ring: Ring): boolean {
       return this.ringManager.isRingAromatic(ring);
+  }
+
+  getAromaticRings(): Ring[] {
+      return this.ringManager.getAromaticRings();
   }
 
   /**

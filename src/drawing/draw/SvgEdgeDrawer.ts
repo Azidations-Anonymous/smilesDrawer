@@ -29,7 +29,6 @@ class SvgEdgeDrawer {
   drawEdges(debug: boolean): void {
     let preprocessor = this.drawer.preprocessor,
       graph = preprocessor.graph,
-      rings = preprocessor.rings,
       drawn = Array(this.drawer.preprocessor.graph.edges.length);
 
     drawn.fill(false);
@@ -47,13 +46,9 @@ class SvgEdgeDrawer {
 
     // Draw ring for implicitly defined aromatic rings
     if (!this.drawer.bridgedRing) {
-      for (var i = 0; i < rings.length; i++) {
-        let ring = rings[i];
-
-        //TODO: uses canvas ctx to draw... need to update this to SVG
-        if (preprocessor.isRingAromatic(ring)) {
-          this.drawAromaticityRing(ring);
-        }
+      const aromaticRings = preprocessor.getAromaticRings();
+      for (const ring of aromaticRings) {
+        this.drawAromaticityRing(ring);
       }
     }
   }

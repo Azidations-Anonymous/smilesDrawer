@@ -62,12 +62,9 @@ class DrawingManager {
 
         // Draw ring for implicitly defined aromatic rings
         if (!this.drawer.bridgedRing) {
-          for (var i = 0; i < this.drawer.rings.length; i++) {
-            let ring = this.drawer.rings[i];
-
-            if (this.drawer.isRingAromatic(ring)) {
-              this.drawer.canvasWrapper.drawAromaticityRing(ring);
-            }
+          const aromaticRings = this.drawer.getAromaticRings();
+          for (const ring of aromaticRings) {
+            this.drawer.canvasWrapper.drawAromaticityRing(ring);
           }
         }
     }

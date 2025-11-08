@@ -24,6 +24,7 @@ interface IMolecularData {
   areVerticesInSameRing(vertexA: Vertex, vertexB: Vertex): boolean;
   chooseSide(vertexA: Vertex, vertexB: Vertex, sides: Vector2[]): SideChoice;
   getLargestOrAromaticCommonRing(vertexA: Vertex, vertexB: Vertex): Ring | null;
+  getAromaticRings(): Ring[];
   initDraw(data: ParseTree, themeName: string, infoOnly: boolean, highlight_atoms: AtomHighlight[]): void;
   processGraph(): void;
   getTotalOverlapScore(): number;
