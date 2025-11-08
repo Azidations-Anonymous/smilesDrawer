@@ -12,6 +12,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
+const { spawnSync } = require('node:child_process');
+const path = require('node:path');
 const Parser = require('../src/parsing/Parser.js');
 const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocessor.js');
 const { collectCisTransDiagnostics } = require('../debug/cis-trans-diagnostics.js');
@@ -195,5 +197,39 @@ describe('Cis/trans stereobond corrections', () => {
         }
 
         assert(sequenceIds.size <= 1, 'all alternating bonds should share the same sequence id');
+    });
+
+    it('exposes fallback ring plans for constrained stereobonds', () => {
+        const smiles = 'C1/C=C/C=C\\1';
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const graph = preprocessor.graph;
+        const edge = graph.edges.find((e) => e.bondType === '=' && e.cisTrans && graph.vertices[e.sourceId].value.rings.length && graph.vertices[e.targetId].value.rings.length);
+        assert.ok(edge, 'expected a ring-embedded stereogenic bond');
+
+        const manager = preprocessor.cisTransManager;
+        const plans = manager['generateFallbackRingPlans'](edge);
+        assert.ok(Array.isArray(plans) && plans.length >= 2, 'should expose at least two fallback ring plans');
+
+        for (const plan of plans) {
+            assert(plan.central.value.rings.length > 0, 'central atom must belong to a ring');
+            const shared = plan.central.value.rings.filter((ringId) => plan.flanking[0].value.rings.includes(ringId) && plan.flanking[1].value.rings.includes(ringId));
+            assert.ok(shared.length > 0, 'flanking atoms should share a ring with the central atom');
+        }
+    });
+
+    it('serialises chiral metadata via dump-cis-trans CLI', () => {
+        const smiles = 'F/C=C/F';
+        const script = path.resolve(__dirname, '..', 'scripts', 'dump-cis-trans.js');
+        const result = spawnSync('node', [script, '--smiles', smiles], { encoding: 'utf8' });
+        assert.equal(result.status, 0, `CLI failed: ${result.stderr}`);
+
+        const payload = JSON.parse(result.stdout);
+        assert.ok(payload.doubleBondCount >= 1, 'expected at least one stereogenic bond in CLI output');
+        const first = payload.doubleBonds[0];
+        assert.ok(first.chiralDict && Object.keys(first.chiralDict).length > 0, 'CLI output should include chiralDict entries');
+        assert.ok(Array.isArray(payload.cisTransDiagnostics) && payload.cisTransDiagnostics.length > 0, 'CLI output should include diagnostics');
     });
 });
