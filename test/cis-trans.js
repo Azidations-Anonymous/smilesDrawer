@@ -158,4 +158,23 @@ describe('Cis/trans stereobond corrections', () => {
         assert.ok(annotated, 'expected diagnostics entry with a numeric sequence id');
         assert.ok(Array.isArray(annotated.evaluations) && annotated.evaluations.length > 0, 'diagnostics entry should retain evaluations');
     });
+
+    it('reuses existing chiral dicts when rebuilding metadata', () => {
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse('F/C=C/F', {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const graph = preprocessor.graph;
+        const edge = graph.edges.find((e) => e.bondType === '=' && e.cisTrans);
+        assert.ok(edge, 'expected stereogenic double bond');
+
+        const originalDict = JSON.stringify(edge.chiralDict || {});
+        edge.cisTrans = false;
+        edge.cisTransNeighbours = {};
+
+        preprocessor.buildCisTransMetadata();
+
+        assert.equal(JSON.stringify(edge.chiralDict || {}), originalDict, 'chiral dict should persist across rebuilds');
+        assert.equal(JSON.stringify(edge.cisTransNeighbours || {}), originalDict, 'cisTransNeighbours should be restored from persisted chiral dict');
+    });
 });

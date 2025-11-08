@@ -53,7 +53,9 @@ class CisTransManager {
         for (const edge of this.drawer.graph.edges) {
             edge.cisTrans = false;
             edge.cisTransNeighbours = {};
-            edge.chiralDict = {};
+            if (!edge.chiralDict) {
+                edge.chiralDict = {};
+            }
         }
 
         for (const edge of this.drawer.graph.edges) {
@@ -61,7 +63,13 @@ class CisTransManager {
                 continue;
             }
 
-            const mapping = this.resolveCisTrans(edge);
+            let mapping: Record<number, Record<number, CisTransOrientation>> | null = null;
+            if (edge.chiralDict && Object.keys(edge.chiralDict).length > 0) {
+                mapping = this.cloneOrientationMap(edge.chiralDict);
+            } else {
+                mapping = this.resolveCisTrans(edge);
+            }
+
             if (mapping && Object.keys(mapping).length > 0) {
                 edge.cisTrans = true;
                 this.assignChiralMetadata(edge, mapping);
