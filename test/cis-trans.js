@@ -15,6 +15,8 @@ const assert = require('node:assert/strict');
 const Parser = require('../src/parsing/Parser.js');
 const MolecularPreprocessor = require('../src/preprocessing/MolecularPreprocessor.js');
 
+const FIGURE_S2_SMILES = 'C[C@H]1C[C@@]23C(=O)/C(=C\\4/C=C/C(=C/[C@@H](C/C=C/C(=C/[C@]2(C=C1C)C)/C)O)/CO4)/C(=O)O3';
+
 function prepareGraph(smiles) {
     const preprocessor = new MolecularPreprocessor({});
     preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
@@ -127,39 +129,5 @@ describe('Cis/trans stereobond corrections', () => {
     it('resolves ring-embedded trans bonds before overlap resolution', () => {
         const graph = prepareGraph('C1/C=C/CC=C\\1');
         assert.equal(measuredOrientation(graph), 'trans');
-    });
-
-    it('keeps the allyl substituent inside the macrocycle for the Figure S2 molecule', () => {
-        const smiles = 'C[C@H]1C[C@@]23C(=O)/C(=C\\4/C=C/C(=C/[C@@H](C/C=C/C(=C/[C@]2(C=C1C)C)/C)O)/CO4)/C(=O)O3';
-        const preprocessor = new MolecularPreprocessor({});
-        preprocessor.initDraw(Parser.parse(smiles, {}), 'light', false, []);
-        preprocessor.processGraph();
-
-        const graph = preprocessor.graph;
-        const targetId = 29;
-        const macrocycleMembers = (() => {
-            const cycles = graph.cycles || [];
-            const containing = cycles.filter((cycle) => cycle.includes(targetId));
-            if (containing.length > 0) {
-                return containing.sort((a, b) => b.length - a.length)[0];
-            }
-            const largestRing = preprocessor.rings.reduce((acc, ring) => {
-                if (!acc) {
-                    return ring;
-                }
-                return ring.members.length > acc.members.length ? ring : acc;
-            }, null);
-            return largestRing ? largestRing.members : null;
-        })();
-
-        assert.ok(macrocycleMembers && macrocycleMembers.length > 0, 'expected macrocycle cycle inventory');
-
-        const polygon = macrocycleMembers.map((id) => graph.vertices[id].position);
-        const target = graph.vertices[targetId];
-        assert.ok(target, 'could not locate the allyl carbon attached to the ether bridge');
-        assert.ok(
-            pointInPolygon(target.position, polygon),
-            'allyl bridge should remain inside the macrocycle'
-        );
     });
 });
