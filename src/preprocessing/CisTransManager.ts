@@ -24,6 +24,7 @@ export interface BondOrientationAnalysis {
     edgeId: number | null;
     isCorrect: boolean;
     evaluations: BondOrientationEvaluation[];
+    source: 'chiralDict' | 'inferred';
 }
 
 interface RingFlipPlan {
@@ -56,6 +57,7 @@ class CisTransManager {
             if (!edge.chiralDict) {
                 edge.chiralDict = {};
             }
+            edge.cisTransSource = null;
         }
 
         for (const edge of this.drawer.graph.edges) {
@@ -64,15 +66,17 @@ class CisTransManager {
             }
 
             let mapping: Record<number, Record<number, CisTransOrientation>> | null = null;
+            let source: 'chiralDict' | 'inferred' = 'inferred';
             if (edge.chiralDict && Object.keys(edge.chiralDict).length > 0) {
                 mapping = this.cloneOrientationMap(edge.chiralDict);
+                source = 'chiralDict';
             } else {
                 mapping = this.resolveCisTrans(edge);
             }
 
             if (mapping && Object.keys(mapping).length > 0) {
                 edge.cisTrans = true;
-                this.assignChiralMetadata(edge, mapping);
+                this.assignChiralMetadata(edge, mapping, source);
             }
         }
     }
@@ -366,11 +370,12 @@ class CisTransManager {
 
         const vertexA = this.drawer.graph.vertices[edge.sourceId];
         const vertexB = this.drawer.graph.vertices[edge.targetId];
+        const { mapping: orientationMap, source } = this.getOrientationMap(edge);
         const evaluatedPairs = new Set<string>();
         const evaluations: BondOrientationEvaluation[] = [];
         let isCorrect = true;
 
-        for (const [sourceKey, mapping] of Object.entries(edge.cisTransNeighbours)) {
+        for (const [sourceKey, mapping] of Object.entries(orientationMap)) {
             const sourceId = Number(sourceKey);
             const sourceVertex = this.drawer.graph.vertices[sourceId];
 
@@ -441,8 +446,17 @@ class CisTransManager {
         return {
             edgeId: edge.id,
             isCorrect,
-            evaluations
+            evaluations,
+            source
         };
+    }
+
+    private getOrientationMap(edge: Edge): { mapping: Record<number, Record<number, CisTransOrientation>>; source: 'chiralDict' | 'inferred'; } {
+        const source = edge.cisTransSource ?? 'inferred';
+        if (source === 'chiralDict' && edge.chiralDict && Object.keys(edge.chiralDict).length > 0) {
+            return { mapping: edge.chiralDict, source };
+        }
+        return { mapping: edge.cisTransNeighbours || {}, source };
     }
 
     private isBondDrawnCorrectly(edge: Edge): boolean {
@@ -904,9 +918,10 @@ class CisTransManager {
         return (a1.id === b1.id && a2.id === b2.id) || (a1.id === b2.id && a2.id === b1.id);
     }
 
-    private assignChiralMetadata(edge: Edge, mapping: Record<number, Record<number, CisTransOrientation>>): void {
+    private assignChiralMetadata(edge: Edge, mapping: Record<number, Record<number, CisTransOrientation>>, source: 'chiralDict' | 'inferred' = 'inferred'): void {
         edge.cisTransNeighbours = this.cloneOrientationMap(mapping);
         edge.chiralDict = this.cloneOrientationMap(mapping);
+        edge.cisTransSource = source;
     }
 
     private cloneOrientationMap(source: Record<number, Record<number, CisTransOrientation>>): Record<number, Record<number, CisTransOrientation>> {

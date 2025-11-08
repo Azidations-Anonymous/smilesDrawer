@@ -25,6 +25,7 @@ class Edge {
     stereoSourceId: number | null;
     cisTrans: boolean;
     cisTransNeighbours: Record<number, Record<number, CisTransOrientation>>;
+    cisTransSource: 'chiralDict' | 'inferred' | null;
     chiralDict: Record<number, Record<number, CisTransOrientation>>;
 
     /**
@@ -47,6 +48,7 @@ class Edge {
         this.stereoSourceId = null;
         this.cisTrans = false;
         this.cisTransNeighbours = {};
+        this.cisTransSource = null;
         this.chiralDict = {};
     }
 

@@ -34,6 +34,9 @@ function collectCisTransDiagnostics(preprocessor) {
         const analysis = typeof preprocessor.cisTransManager.getBondOrientationAnalysis === 'function'
             ? preprocessor.cisTransManager.getBondOrientationAnalysis(edge)
             : null;
+        const orientationSource = analysis
+            ? analysis.source
+            : (edge.cisTransSource ?? (edge.chiralDict && Object.keys(edge.chiralDict).length > 0 ? 'chiralDict' : 'inferred'));
 
         diagnostics.push({
             edgeId: edge.id,
@@ -42,6 +45,7 @@ function collectCisTransDiagnostics(preprocessor) {
             cisTransNeighbours: cloneOrientationMap(edge.cisTransNeighbours),
             sequenceId: getSequenceId(edge.id ?? null),
             isDrawnCorrectly: analysis ? analysis.isCorrect : null,
+            orientationSource,
             evaluations: analysis ? analysis.evaluations.map((entry) => ({
                 leftAtomId: entry.leftAtomId,
                 rightAtomId: entry.rightAtomId,

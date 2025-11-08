@@ -163,6 +163,23 @@ describe('Cis/trans stereobond corrections', () => {
         assert.ok(Array.isArray(annotated.evaluations) && annotated.evaluations.length > 0, 'diagnostics entry should retain evaluations');
     });
 
+    it('flags inferred orientation source when no chiral dict exists', () => {
+        const preprocessor = new MolecularPreprocessor({});
+        preprocessor.initDraw(Parser.parse('C/C=C/C', {}), 'light', false, []);
+        preprocessor.processGraph();
+
+        const edge = preprocessor.graph.edges.find((e) => e.bondType === '=' && e.cisTrans);
+        assert.ok(edge, 'expected stereogenic bond');
+        edge.chiralDict = {};
+        edge.cisTransNeighbours = {};
+        edge.cisTrans = true;
+        preprocessor.buildCisTransMetadata();
+
+        const diagnostics = collectCisTransDiagnostics(preprocessor);
+        const inferred = diagnostics.find((entry) => entry.orientationSource === 'inferred');
+        assert.ok(inferred, 'expected at least one diagnostics entry marked as inferred');
+    });
+
     it('reuses existing chiral dicts when rebuilding metadata', () => {
         const preprocessor = new MolecularPreprocessor({});
         preprocessor.initDraw(Parser.parse('F/C=C/F', {}), 'light', false, []);
@@ -233,6 +250,7 @@ describe('Cis/trans stereobond corrections', () => {
         const first = payload.doubleBonds[0];
         assert.ok(first.chiralDict && Object.keys(first.chiralDict).length > 0, 'CLI output should include chiralDict entries');
         assert.ok(Array.isArray(payload.cisTransDiagnostics) && payload.cisTransDiagnostics.length > 0, 'CLI output should include diagnostics');
+        assert.ok(payload.cisTransDiagnostics[0].orientationSource, 'diagnostics should record orientation source');
     });
 
     it('round-trips chiralDict via debug/generate-json.js', () => {

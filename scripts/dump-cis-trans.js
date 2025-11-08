@@ -84,6 +84,9 @@ function buildReport(smiles, theme) {
             const analysis = typeof preprocessor.cisTransManager.getBondOrientationAnalysis === 'function'
                 ? preprocessor.cisTransManager.getBondOrientationAnalysis(edge)
                 : null;
+            const orientationSource = analysis
+                ? analysis.source
+                : (edge.cisTransSource ?? (edge.chiralDict && Object.keys(edge.chiralDict).length > 0 ? 'chiralDict' : 'inferred'));
 
             return {
                 id: edge.id,
@@ -101,8 +104,13 @@ function buildReport(smiles, theme) {
                 sequenceId: getSequenceId(edge.id ?? null),
                 analysis: analysis ? {
                     isDrawnCorrectly: analysis.isCorrect,
-                    evaluations: analysis.evaluations
-                } : null,
+                    evaluations: analysis.evaluations,
+                    source: analysis.source
+                } : {
+                    isDrawnCorrectly: null,
+                    evaluations: [],
+                    source: orientationSource
+                },
             };
         });
 
