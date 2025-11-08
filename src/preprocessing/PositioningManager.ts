@@ -343,20 +343,6 @@ class PositioningManager {
             // TODO: Maybe try to balance this better?
             vertices.sort((a, b) => b.value.subtreeDepth - a.value.subtreeDepth)
 
-            if (neighbours.length === 3 && previousVertex) {
-              const signatures = vertices.map((child) => this.getBranchSignature(vertex, child));
-              const signatureCounts = signatures.reduce((map, signature) => {
-                map.set(signature, (map.get(signature) || 0) + 1);
-                return map;
-              }, new Map<string, number>());
-
-              const uniqueIndex = signatures.findIndex((signature) => signatureCounts.get(signature) === 1);
-              if (uniqueIndex > 0) {
-                const [uniqueVertex] = vertices.splice(uniqueIndex, 1);
-                vertices.unshift(uniqueVertex);
-              }
-            }
-
             if (neighbours.length === 3 &&
               previousVertex &&
               previousVertex.value.rings.length < 1 &&
@@ -384,6 +370,20 @@ class PositioningManager {
             }
             else {
               // Divide the remaining space evenly among all neighbors...
+              if (neighbours.length === 3 && previousVertex) {
+                const signatures = vertices.map((child) => this.getBranchSignature(vertex, child));
+                const signatureCounts = signatures.reduce((map, signature) => {
+                  map.set(signature, (map.get(signature) || 0) + 1);
+                  return map;
+                }, new Map<string, number>());
+
+                const uniqueIndex = signatures.findIndex((signature) => signatureCounts.get(signature) === 1);
+                if (uniqueIndex > 0) {
+                  const [uniqueVertex] = vertices.splice(uniqueIndex, 1);
+                  vertices.unshift(uniqueVertex);
+                }
+              }
+
               const totalNeighbors = neighbours.length + (previousVertex? 1 : 0);
               const angleDelta = 2 * Math.PI / totalNeighbors;
               let angle = angleDelta;
