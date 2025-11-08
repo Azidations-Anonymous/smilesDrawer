@@ -68,6 +68,11 @@ function buildReport(smiles, theme) {
         throw new Error('Graph not initialized');
     }
 
+    const manager = preprocessor.cisTransManager;
+    const getSequenceId = manager && typeof manager.getSequenceId === 'function'
+        ? (edgeId) => manager.getSequenceId(edgeId)
+        : () => null;
+
     const bonds = graph.edges
         .filter((edge) => edge && edge.bondType === '=' && edge.cisTrans)
         .map((edge) => {
@@ -93,6 +98,7 @@ function buildReport(smiles, theme) {
                 sourceNeighbours: source ? source.neighbours.slice() : [],
                 targetNeighbours: target ? target.neighbours.slice() : [],
                 sharedRings,
+                sequenceId: getSequenceId(edge.id ?? null),
                 analysis: analysis ? {
                     isDrawnCorrectly: analysis.isCorrect,
                     evaluations: analysis.evaluations

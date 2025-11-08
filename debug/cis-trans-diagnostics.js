@@ -21,6 +21,10 @@ function collectCisTransDiagnostics(preprocessor) {
         return [];
     }
 
+    const getSequenceId = typeof preprocessor.cisTransManager.getSequenceId === 'function'
+        ? (edgeId) => preprocessor.cisTransManager.getSequenceId(edgeId)
+        : () => null;
+
     const diagnostics = [];
     for (const edge of preprocessor.graph.edges) {
         if (!edge || edge.bondType !== '=' || !edge.cisTrans) {
@@ -36,6 +40,7 @@ function collectCisTransDiagnostics(preprocessor) {
             atoms: [edge.sourceId, edge.targetId],
             chiralDict: cloneOrientationMap(edge.chiralDict),
             cisTransNeighbours: cloneOrientationMap(edge.cisTransNeighbours),
+            sequenceId: getSequenceId(edge.id ?? null),
             isDrawnCorrectly: analysis ? analysis.isCorrect : null,
             evaluations: analysis ? analysis.evaluations.map((entry) => ({
                 leftAtomId: entry.leftAtomId,

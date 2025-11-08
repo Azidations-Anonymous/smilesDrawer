@@ -34,10 +34,12 @@ interface RingFlipPlan {
 class CisTransManager {
     private drawer: MolecularPreprocessor;
     private fixedStereoBonds: Set<number>;
+    private sequenceAssignments: Map<number, number>;
 
     constructor(drawer: MolecularPreprocessor) {
         this.drawer = drawer;
         this.fixedStereoBonds = new Set<number>();
+        this.sequenceAssignments = new Map<number, number>();
     }
 
     /**
@@ -75,6 +77,7 @@ class CisTransManager {
         this.fixedStereoBonds.clear();
 
         const sequences = this.findDoubleBondSequences();
+        this.assignSequenceIds(sequences);
         for (const sequence of sequences) {
             for (const bond of sequence) {
                 if (!bond.cisTrans) {
@@ -316,6 +319,32 @@ class CisTransManager {
         }
 
         return null;
+    }
+
+    private assignSequenceIds(sequences: Edge[][]): void {
+        this.sequenceAssignments.clear();
+        let index = 1;
+        for (const sequence of sequences) {
+            for (const bond of sequence) {
+                if (bond.id !== null) {
+                    this.sequenceAssignments.set(bond.id, index);
+                }
+            }
+            index++;
+        }
+    }
+
+    getSequenceId(edgeOrId: Edge | number | null | undefined): number | null {
+        if (edgeOrId === null || edgeOrId === undefined) {
+            return null;
+        }
+
+        const id = typeof edgeOrId === 'number' ? edgeOrId : edgeOrId.id;
+        if (id === null || id === undefined) {
+            return null;
+        }
+
+        return this.sequenceAssignments.get(id) ?? null;
     }
 
     public getBondOrientationAnalysis(edge: Edge): BondOrientationAnalysis | null {
