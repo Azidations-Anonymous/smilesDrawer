@@ -80,28 +80,12 @@ class CisTransManager {
         this.assignSequenceIds(sequences);
         for (const sequence of sequences) {
             for (const bond of sequence) {
-                if (!bond.cisTrans) {
-                    continue;
-                }
-
-                if (this.isBondDrawnCorrectly(bond)) {
-                    this.fixedStereoBonds.add(bond.id);
-                } else {
-                    this.fixChiralBond(bond);
-                }
+                this.ensureBondOrientation(bond);
             }
         }
 
         for (const edge of this.drawer.graph.edges) {
-            if (edge.bondType !== '=' || !edge.cisTrans || this.fixedStereoBonds.has(edge.id)) {
-                continue;
-            }
-
-            if (this.isBondDrawnCorrectly(edge)) {
-                this.fixedStereoBonds.add(edge.id);
-            } else {
-                this.fixChiralBond(edge);
-            }
+            this.ensureBondOrientation(edge);
         }
     }
 
@@ -347,6 +331,22 @@ class CisTransManager {
         return this.sequenceAssignments.get(id) ?? null;
     }
 
+    private ensureBondOrientation(edge: Edge | null | undefined): void {
+        if (!edge || edge.bondType !== '=' || !edge.cisTrans || edge.id === null || this.fixedStereoBonds.has(edge.id)) {
+            return;
+        }
+
+        if (this.isBondDrawnCorrectly(edge)) {
+            this.fixedStereoBonds.add(edge.id);
+            return;
+        }
+
+        const corrected = this.fixChiralBond(edge);
+        if (corrected && this.isBondDrawnCorrectly(edge)) {
+            this.fixedStereoBonds.add(edge.id);
+        }
+    }
+
     public getBondOrientationAnalysis(edge: Edge): BondOrientationAnalysis | null {
         return this.analyzeBondOrientation(edge);
     }
@@ -481,9 +481,9 @@ class CisTransManager {
         return a.value.rings.some((ringId) => b.value.rings.includes(ringId));
     }
 
-    private fixChiralBond(edge: Edge): void {
+    private fixChiralBond(edge: Edge): boolean {
         if (!this.drawer.graph) {
-            return;
+            return false;
         }
 
         const vertexA = this.drawer.graph.vertices[edge.sourceId];
@@ -501,10 +501,10 @@ class CisTransManager {
 
         if (!corrected) {
             console.warn('Warning! Cis/trans stereochemistry could not be resolved for bond ' + edge.id);
-            return;
+            return false;
         }
 
-        this.fixedStereoBonds.add(edge.id);
+        return true;
     }
 
     private isVertexAdjacentToStereoBond(vertex: Vertex, excludeEdgeId: number, requireFixed: boolean = false): boolean {
