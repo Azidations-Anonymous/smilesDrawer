@@ -18,10 +18,9 @@ class SSSR {
      * Returns an array containing arrays, each representing a ring from the smallest set of smallest rings in the graph.
      *
      * @param {Graph} graph A Graph object.
-     * @param {Boolean} [experimental=false] Whether or not to use experimental SSSR.
      * @returns {Array[]} An array containing arrays, each representing a ring from the smallest set of smallest rings in the group.
      */
-    static getRings(graph: Graph, experimental: boolean = false): number[][] | null {
+    static getRings(graph: Graph): number[][] | null {
         let adjacencyMatrix = graph.getComponentsAdjacencyMatrix();
         if (adjacencyMatrix.length === 0) {
             return null;
@@ -29,6 +28,8 @@ class SSSR {
 
         let connectedComponents = Graph.getConnectedComponents(adjacencyMatrix);
         let rings = Array();
+
+        const allCycles = Array.isArray((graph as any).cycles) ? (graph as any).cycles as number[][] : [];
 
         for (var i = 0; i < connectedComponents.length; i++) {
             let connectedComponent = connectedComponents[i];
@@ -62,14 +63,18 @@ class SSSR {
                 continue;
             }
             
-            if (experimental) {
-                nSssr = 999;
-            }
-
             let { d, pe, pe_prime } = SSSR.getPathIncludedDistanceMatrices(ccAdjacencyMatrix);
             let candidates = SSSR.getRingCandidates(d, pe, pe_prime);
             let sssr = SSSR.getSSSR(candidates, ccAdjacencyMatrix, arrBondCount, arrRingCount, nSssr);
             let limited = sssr.slice(0, nSssr);
+
+            const componentInventory = SSSR.getComponentInventory(connectedComponent, allCycles);
+            if (componentInventory.length > 0) {
+                const adjusted = SSSR.alignLargeRingsWithInventory(limited, connectedComponent, componentInventory);
+                if (adjusted) {
+                    limited = adjusted;
+                }
+            }
 
             for (var j = 0; j < limited.length; j++) {
                 const ordered = SSSR.orderRingVertices(limited[j], ccAdjacencyMatrix);
@@ -315,7 +320,7 @@ class SSSR {
                         }
                     }
 
-                    if (cSssr.length >= nsssr) {
+                    if (cSssr.length > nsssr) {
                         return cSssr.slice(0, nsssr);
                     }
                 }
@@ -337,7 +342,7 @@ class SSSR {
                         }
                     }
 
-                    if (cSssr.length >= nsssr) {
+                    if (cSssr.length > nsssr) {
                         return cSssr.slice(0, nsssr);
                     }
                 }
@@ -345,6 +350,106 @@ class SSSR {
         }
 
         return cSssr.slice(0, nsssr);
+    }
+
+    private static readonly INVENTORY_THRESHOLD = 10;
+
+    private static getComponentInventory(component: number[], inventory: number[][]): number[][] {
+        if (!inventory || inventory.length === 0) {
+            return [];
+        }
+
+        const componentSet = new Set(component);
+        return inventory
+            .filter((cycle) => cycle.every((vertexId) => componentSet.has(vertexId)))
+            .map((cycle) => cycle.slice());
+    }
+
+    private static alignLargeRingsWithInventory(rings: Set<number>[], component: number[], inventory: number[][]): Set<number>[] | null {
+        if (!inventory || inventory.length === 0) {
+            return null;
+        }
+
+        const localIndex = new Map<number, number>();
+        component.forEach((vertexId, idx) => localIndex.set(vertexId, idx));
+
+        const inventoryByLength = new Map<number, number[][]>();
+        for (const cycle of inventory) {
+            if (!inventoryByLength.has(cycle.length)) {
+                inventoryByLength.set(cycle.length, []);
+            }
+            inventoryByLength.get(cycle.length)!.push(cycle);
+        }
+
+        let changed = false;
+        const adjusted = rings.map((ring) => new Set(ring));
+
+        for (let idx = 0; idx < adjusted.length; idx++) {
+            const ring = adjusted[idx];
+            if (ring.size < SSSR.INVENTORY_THRESHOLD) {
+                continue;
+            }
+
+            const candidates = inventoryByLength.get(ring.size);
+            if (!candidates || candidates.length === 0) {
+                continue;
+            }
+
+            const currentSorted = Array.from(ring)
+                .map((local) => component[local])
+                .sort((a, b) => a - b);
+
+            let bestCycle: number[] | null = null;
+            let bestSorted = currentSorted.slice();
+
+            for (const cycle of candidates) {
+                const sorted = cycle.slice().sort((a, b) => a - b);
+                if (SSSR.isLexicographicallyGreater(sorted, bestSorted)) {
+                    bestSorted = sorted;
+                    bestCycle = cycle;
+                }
+            }
+
+            if (!bestCycle) {
+                continue;
+            }
+
+            const newSet = new Set<number>();
+            let valid = true;
+            for (const vertexId of bestCycle) {
+                const local = localIndex.get(vertexId);
+                if (local === undefined) {
+                    valid = false;
+                    break;
+                }
+                newSet.add(local);
+            }
+
+            if (!valid || newSet.size !== ring.size) {
+                continue;
+            }
+
+            const newSorted = Array.from(newSet).map((local) => component[local]).sort((a, b) => a - b);
+            if (newSorted.every((value, i) => value === currentSorted[i])) {
+                continue;
+            }
+
+            adjusted[idx] = newSet;
+            changed = true;
+        }
+
+        return changed ? adjusted : null;
+    }
+
+    private static isLexicographicallyGreater(candidate: number[], baseline: number[]): boolean {
+        const len = Math.min(candidate.length, baseline.length);
+        for (let i = 0; i < len; i++) {
+            if (candidate[i] !== baseline[i]) {
+                return candidate[i] > baseline[i];
+            }
+        }
+
+        return candidate.length > baseline.length;
     }
 
     /**
