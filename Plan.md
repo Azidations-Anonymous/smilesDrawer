@@ -44,13 +44,12 @@ This plan captures the design decisions for aligning SmilesDrawer’s SVG labels
 - Include expectations for coordinates (e.g., charge `y` offset equals `mainY - lineHeight`) to guard against future drift.
 
 ## 8. Manual Verification
-- After implementation, generate inspection SVGs via `npm run sample:svg-labels` (writes `temp-svg-label-samples/svg-label-sample-{pikachu,legacy}.svg`) and open them in Chrome, Firefox, and Safari:
+- After implementation, generate inspection SVGs via `npm run sample:svg-labels` (writes `temp-svg-label-samples/svg-label-sample.svg`) and open them in Chrome, Firefox, and Safari:
   - Confirm the halo circle coordinates match the primary glyph and remain aligned when zooming.
   - Compare the Pikachu sample against PIKAChU output from `../pikachu` to ensure multi-line stacks (up/down hydrogens, pseudo-elements) share the same relative offsets.
-  - Spot-check the legacy sample to ensure the opt-out path still emits the original `<g transform>` flow for integrators who need it.
+  - Compare against the PIKAChU output rendered via `npm run parity:svg-labels` to ensure the offsets match what the helper reports.
 - Automate a sanity pass via `npm run parity:svg-labels`, which renders representative single-atom SMILES with both toolkits (shelling out to `../pikachu/pikachu-run`) and reports per-glyph offset deltas. Use this CLI output to triage differences before performing the manual browser review.
 
 ## 9. Documentation + Options
 - Update `doc/layout.md` (or add a new section) describing the new absolute-coordinate label rendering model and how it matches PIKAChU.
-- Gate the change behind `opts.svgTextParity` (values `legacy` | `pikachu`), defaulting to `pikachu`. Legacy mode retains the existing `<g>`+`transform` path for users who rely on old behavior.
-- Mention the new option in `README.md` or release notes so integrators can toggle during rollout.
+- Note in the README/release notes that the Pikachu-style renderer is now the only SVG text path (legacy `<g>` transforms were removed).

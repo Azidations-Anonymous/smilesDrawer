@@ -58,8 +58,3 @@ export type PlanePosition = -1 | 0 | 1;
  * Cis/trans relationship between substituents around a stereobond.
  */
 export type CisTransOrientation = 'cis' | 'trans';
-
-/**
- * Rendering mode for SVG text labels.
- */
-export type SvgTextParity = 'legacy' | 'pikachu';

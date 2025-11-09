@@ -11,15 +11,11 @@ SmilesDrawer’s SVG drawer now mirrors PIKAChU’s `_draw_text` flow so the hal
 
 ## Configuration
 
-* `svgTextParity: 'pikachu'` (default) enables the new behaviour.
-* `svgTextParity: 'legacy'` switches back to the original block renderer (single `<text>`, stacked `<tspan>` lines, `<g transform="translate(x,y)">`).
-
-Only the SVG drawer respects this flag; canvas rendering is unchanged.
+The Pikachu-style renderer is always enabled for SVG output (the legacy `<g transform>` path was removed to avoid drift between masks and text). Canvas rendering remains unchanged.
 
 ## Verification checklist
 
 1. Draw a charged nitrogen with rightward hydrogens and confirm each glyph has its own `<text>` with `x`/`y` attributes (no `transform`) and that the halo circle shares those coordinates.
 2. Draw an up/down hydrogen stack (terminal atom) to verify vertical offsets match PIKAChU (accounting for SVG’s inverted Y-axis).
-3. Toggle `svgTextParity` between `pikachu` and `legacy` to ensure both paths remain functional.
-4. Run `npm run sample:svg-labels` to emit ready-made inspection files (`temp-svg-label-samples/svg-label-sample-{pikachu,legacy}.svg`) and open them in Chrome/Firefox/Safari to confirm halos stay glued to their anchors at different zoom levels.
-5. Use `npm run parity:svg-labels` for a quick numerical diff: it renders representative single-atom SMILES with both SmilesDrawer and PIKAChU (through `../pikachu/pikachu-run`) and prints the delta between each satellite’s offset before you do the manual review.
+3. Use `npm run parity:svg-labels` for a quick numerical diff: it renders representative single-atom SMILES with both SmilesDrawer and PIKAChU (through `../pikachu/pikachu-run`) and prints the delta between each satellite’s offset before you do the manual review.
+4. Run `npm run sample:svg-labels` to emit a ready-made inspection file (`temp-svg-label-samples/svg-label-sample.svg`) and open it in Chrome/Firefox/Safari to confirm halos stay glued to their anchors at different zoom levels.

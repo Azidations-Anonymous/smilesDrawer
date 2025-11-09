@@ -309,7 +309,6 @@ The following options are available:
 | Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'none'] | 'default'     |
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
 | Small Font Size (in pt for numbers)                             | fontSizeSmall               | number                              | 4             |
-| SVG text parity mode (legacy block vs. Pikachu-style absolute labels) | svgTextParity               | string `['legacy','pikachu']`       | 'pikachu'     |
 | Padding                                                         | padding                     | number                              | 20.0          |
 | Show Terminal Carbons (CH3)                                     | terminalCarbons             | boolean                             | false         |
 | Show explicit hydrogens                                         | explicitHydrogens           | boolean                             | false         |
@@ -351,7 +350,6 @@ The default options are defined as follows:
     compactDrawing: true,
     fontSizeLarge: 5,
     fontSizeSmall: 3,
-    svgTextParity: 'pikachu',
     padding: 20.0,
     themes: {
         dark: {
@@ -390,9 +388,7 @@ The default options are defined as follows:
 
 #### SVG text parity
 
-By default SmilesDrawer uses the Pikachu-aligned SVG renderer: every glyph (element, charges, isotopes, hydrogens, attached pseudo-elements) becomes its own `<text>` element with explicit `x/y` coordinates so halos, highlights, and text stay perfectly aligned in every browser. If your integration depends on the legacy behaviour (single `<text>` with stacked `<tspan>` children rendered via a parent `<g transform>`), pass `svgTextParity: 'legacy'` in the constructor options to opt out.
-
-For manual comparisons you can run `npm run sample:svg-labels`, which emits `temp-svg-label-samples/svg-label-sample-{pikachu,legacy}.svg`. Open them in different browsers to inspect halo alignment, stacked hydrogens, and the opt-out path before rolling the change into production. When you just need a quick numerical diff against the reference implementation, run `npm run parity:svg-labels`; it renders a small set of single-atom SMILES with both SmilesDrawer and PIKAChU (through `../pikachu/pikachu-run`) and reports the delta between satellite offsets.
+Every glyph (element, charges, isotopes, hydrogens, attached pseudo-elements) is drawn as its own `<text>` node with explicit `x/y` coordinates so halos, highlights, and text stay perfectly aligned in every browser. For manual comparisons you can run `npm run sample:svg-labels`, which emits `temp-svg-label-samples/svg-label-sample.svg`. Open it in different browsers to inspect halo alignment and stacked hydrogens before rolling the change into production. When you just need a quick numerical diff against the reference implementation, run `npm run parity:svg-labels`; it renders a small set of single-atom SMILES with both SmilesDrawer and PIKAChU (through `../pikachu/pikachu-run`) and reports the delta between satellite offsets.
 
 ### Atom annotations
 

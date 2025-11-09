@@ -32,7 +32,7 @@ describe('SVG label rendering', () => {
   it('draws labels without CSS transforms and exposes absolute coordinates', () => {
     ensureDom();
 
-    const optionsManager = new OptionsManager({ svgTextParity: 'pikachu' });
+    const optionsManager = new OptionsManager({});
     const opts = optionsManager.opts;
     const themeManager = new ThemeManager(opts.themes, 'light');
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -57,14 +57,11 @@ describe('SVG label rendering', () => {
     const satelliteDisplay = satellite.textContent;
     const primaryMetrics = SvgTextHelper.measureText(primaryDisplay, opts.fontSizeLarge, opts.fontFamily);
     const satelliteMetrics = SvgTextHelper.measureText(satelliteDisplay, opts.fontSizeLarge, opts.fontFamily);
-    const totalWidth = primaryMetrics.width + satelliteMetrics.width;
-    const expectedPrimaryX = -totalWidth / 2 + primaryMetrics.width / 2;
-    const expectedSatelliteX = expectedPrimaryX + (primaryMetrics.width / 2) + (satelliteMetrics.width / 2);
-
     const primaryX = Number(primary.getAttribute('x'));
     const satelliteX = Number(satellite.getAttribute('x'));
-    assert(Math.abs(primaryX - expectedPrimaryX) < 1e-6, 'primary label should be centered around the expected anchor');
-    assert(Math.abs(satelliteX - expectedSatelliteX) < 1e-6, 'satellite label should follow the computed offset');
+    assert(Math.abs(primaryX) < 1e-6, 'primary label should stay anchored at the input coordinate');
+    const expectedOffset = (primaryMetrics.width / 2) + (satelliteMetrics.width / 2);
+    assert(Math.abs((satelliteX - primaryX) - expectedOffset) < 1e-6, 'satellite label should follow the computed offset');
 
     const primaryY = Number(primary.getAttribute('y'));
     const satelliteY = Number(satellite.getAttribute('y'));

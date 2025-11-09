@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Generates small SVG scenes that showcase the absolute-positioned label renderer.
- * Outputs one SVG per svgTextParity mode so manual verification can compare halos,
- * satellites, and the legacy block renderer side-by-side.
+ * Generates a small SVG scene that showcases the absolute-positioned label renderer.
+ * The output highlights charges, isotopes, pseudo-elements, and vertical hydrogen stacks
+ * so manual verification can compare SmilesDrawer vs. PIKAChU.
  */
 
 const fs = require('fs');
@@ -33,12 +33,11 @@ function ensureDom() {
   global.XMLSerializer = window.XMLSerializer;
 }
 
-function createWrapper(parityMode) {
+function createWrapper() {
   const optionsManager = new OptionsManager({
     width: 240,
     height: 180,
-    padding: 10,
-    svgTextParity: parityMode
+    padding: 10
   });
 
   const themeManager = new ThemeManager(optionsManager.opts.themes, 'light');
@@ -72,8 +71,8 @@ function drawSampleLabels(wrapper) {
   wrapper.drawText(180, 130, 'S', 2, 'down', false, 0, 0, 3);
 }
 
-function generateScene(parityMode) {
-  const wrapper = createWrapper(parityMode);
+function generateScene() {
+  const wrapper = createWrapper();
   drawSampleLabels(wrapper);
   wrapper.constructSvg();
   return wrapper.svg.outerHTML;
@@ -96,13 +95,10 @@ function main() {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const modes = ['pikachu', 'legacy'];
-  modes.forEach((mode) => {
-    const svgMarkup = generateScene(mode);
-    const filePath = path.join(outputDir, `svg-label-sample-${mode}.svg`);
-    fs.writeFileSync(filePath, svgMarkup, 'utf8');
-    console.log(`Generated ${filePath}`);
-  });
+  const svgMarkup = generateScene();
+  const filePath = path.join(outputDir, 'svg-label-sample.svg');
+  fs.writeFileSync(filePath, svgMarkup, 'utf8');
+  console.log(`Generated ${filePath}`);
 }
 
 if (require.main === module) {

@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 - Kamada-Kawai layout internals were rewritten for determinism (tail-recursed relaxation, guarded Hessian/energy updates, short-circuited empty layouts) and instrumented with property-based tests plus benchmarking hooks.
 - Regression reporting now filters numeric noise, treats deltas below 50 ms as neutral, repositions performance panels, and collapses JSON diffs for easier triage while smoke/regression scripts gained clearer CLI ergonomics.
 - Playground and packaging updates now consume the dist bundle directly, restore the `smiles-drawer.js` symlink, and remove legacy position-data panels in favor of the runtime API.
-- SVG label rendering now defaults to the Pikachu-style absolute layout: every glyph gets its own `<text>` node (no `<g>` transforms), mask halos follow the rendered anchor, and a new `svgTextParity` option allows falling back to the legacy block renderer if needed.
+- SVG label rendering now uses the Pikachu-style absolute layout exclusively: every glyph gets its own `<text>` node (no `<g>` transforms), mask halos follow the rendered anchor, and the old legacy stacking path was removed to prevent drift.
 - Atom annotations now have first-class rendering support via `showAtomAnnotations`, a customizable formatter, and styling knobs for color/offset/font size.
 - SSSR parity is now the default: the experimental flag was removed, the collector guard matches PIKAChU’s “one extra candidate” rule, and aromatic indicators leverage the Johnson cycle inventory so fused/macrocyclic aromatics render correctly.
 
