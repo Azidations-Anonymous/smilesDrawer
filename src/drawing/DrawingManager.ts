@@ -8,7 +8,6 @@ import ThemeManager = require("../config/ThemeManager");
 import CanvasDrawer = require("./CanvasDrawer");
 import Atom = require("../graph/Atom");
 import Ring = require("../graph/Ring");
-import { snapLineToDashPattern } from "../utils/DashPatternHelper";
 
 type ParseTree = any;
 
@@ -62,6 +61,9 @@ class DrawingManager {
           }
         });
 
+        if (!this.drawer.bridgedRing) {
+          this.drawAromaticPolygons();
+        }
     }
 
     drawEdge(edgeId: number, debug: boolean): void {
@@ -114,7 +116,6 @@ class DrawingManager {
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
 
             // The shortened edge
-            this.applyAromaticDashSizing(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
 
             // The normal edge
@@ -126,9 +127,7 @@ class DrawingManager {
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            this.applyAromaticDashSizing(lineA, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(lineA, isAromaticEdge);
-            this.applyAromaticDashSizing(lineB, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(lineB, isAromaticEdge);
           } else if (s.anCount == 0 && s.bnCount > 1 || s.bnCount == 0 && s.anCount > 1) {
             // Both lines are the same length here
@@ -139,9 +138,7 @@ class DrawingManager {
             let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
             let lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-            this.applyAromaticDashSizing(lineA, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(lineA, isAromaticEdge);
-            this.applyAromaticDashSizing(lineB, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(lineB, isAromaticEdge);
           } else if (s.sideCount[0] > s.sideCount[1]) {
             normals[0].multiplyScalar(that.drawer.opts.bondSpacing);
@@ -150,7 +147,6 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.applyAromaticDashSizing(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.sideCount[0] < s.sideCount[1]) {
@@ -160,7 +156,6 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.applyAromaticDashSizing(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] > s.totalSideCount[1]) {
@@ -170,7 +165,6 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.applyAromaticDashSizing(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else if (s.totalSideCount[0] <= s.totalSideCount[1]) {
@@ -180,7 +174,6 @@ class DrawingManager {
             let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
             line.shorten(this.drawer.opts.bondLength - this.drawer.opts.shortBondLength * this.drawer.opts.bondLength);
-            this.applyAromaticDashSizing(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(line, isAromaticEdge);
             this.drawer.canvasWrapper.drawLine(new Line(a, b, elementA, elementB));
           } else {
@@ -353,12 +346,47 @@ class DrawingManager {
         return normals;
     }
 
-    private applyAromaticDashSizing(line: Line, dashed: boolean): void {
-        if (!dashed || !line) {
+    private drawAromaticPolygons(): void {
+        if (!this.drawer.canvasWrapper || typeof this.drawer.canvasWrapper.drawDashedPolygon !== 'function') {
             return;
         }
 
-        snapLineToDashPattern(line);
+        const aromaticRings = this.drawer.getAromaticRings();
+        for (const ring of aromaticRings) {
+            const polygon = this.computeAromaticPolygon(ring);
+            if (polygon.length < 2) {
+                continue;
+            }
+            this.drawer.canvasWrapper.drawDashedPolygon(polygon);
+        }
+    }
+
+    private computeAromaticPolygon(ring: Ring): Vector2[] {
+        const polygon: Vector2[] = [];
+        const center = ring.center;
+        if (!center || !ring.members || ring.members.length === 0) {
+            return polygon;
+        }
+
+        const offset = Math.max(1, this.drawer.opts.bondSpacing * this.drawer.opts.bondLength * 0.5);
+        for (const memberId of ring.members) {
+            const vertex = this.drawer.graph.vertices[memberId];
+            if (!vertex || !vertex.position) {
+                continue;
+            }
+
+            const toVertex = vertex.position.clone().subtract(center);
+            const distance = toVertex.length();
+            if (distance < 1e-3) {
+                continue;
+            }
+
+            const inset = Math.min(offset, distance * 0.5);
+            const insetVector = toVertex.clone().normalize().multiplyScalar(inset);
+            polygon.push(vertex.position.clone().subtract(insetVector));
+        }
+
+        return polygon;
     }
 
 }

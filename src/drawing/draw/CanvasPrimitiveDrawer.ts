@@ -2,7 +2,9 @@ import MathHelper = require('../../utils/MathHelper');
 import CanvasDrawer = require('../CanvasDrawer');
 import Line = require('../../graph/Line');
 import Ring = require('../../graph/Ring');
-import { DASH_PATTERN } from '../../utils/DashPatternHelper';
+import Vector2 = require('../../graph/Vector2');
+
+const DASH_PATTERN: [number, number] = [3, 2];
 
 class CanvasPrimitiveDrawer {
   constructor(private wrapper: CanvasDrawer) {}
@@ -221,6 +223,29 @@ class CanvasPrimitiveDrawer {
         ctx.textBaseline = 'top';
         ctx.fillStyle = '#ff0000';
         ctx.fillText(text, x + this.wrapper.offsetX, y + this.wrapper.offsetY);
+        ctx.restore();
+    }
+
+    drawDashedPolygon(points: Vector2[], color?: string): void {
+        if (!points || points.length < 2) {
+            return;
+        }
+
+        let ctx = this.wrapper.ctx;
+        let offsetX = this.wrapper.offsetX;
+        let offsetY = this.wrapper.offsetY;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(points[0].x + offsetX, points[0].y + offsetY);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x + offsetX, points[i].y + offsetY);
+        }
+        ctx.closePath();
+        ctx.setLineDash(DASH_PATTERN);
+        ctx.lineWidth = this.wrapper.opts.bondThickness / 1.5;
+        ctx.strokeStyle = color || this.wrapper.themeManager.getColor('C');
+        ctx.stroke();
         ctx.restore();
     }
 

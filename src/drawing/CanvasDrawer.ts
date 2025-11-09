@@ -241,6 +241,10 @@ class CanvasDrawer {
         this.primitiveDrawer.drawAromaticityRing(ring);
     }
 
+    drawDashedPolygon(points: Vector2[], color?: string): void {
+        this.primitiveDrawer.drawDashedPolygon(points, color);
+    }
+
     drawDebugText(x: number, y: number, text: string): void {
         this.primitiveDrawer.drawDebugText(x, y, text);
     }

@@ -9,8 +9,6 @@ import { IMoleculeOptions, AttachedPseudoElements } from '../config/IOptions';
 import ThemeManager = require('../config/ThemeManager');
 import { TextDirection } from '../types/CommonTypes';
 import IDrawingSurface = require('./renderers/IDrawingSurface');
-import { DASH_PATTERN_STRING } from '../utils/DashPatternHelper';
-
 function makeid(length: number): string {
   var result = '';
   var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -546,7 +544,7 @@ class SvgWrapper implements IDrawingSurface {
       stylesArr = [
         ['stroke-width', this.opts.bondThickness],
         ['stroke-linecap', linecap],
-        ['stroke-dasharray', dashed ? DASH_PATTERN_STRING : 'none'],
+        ['stroke-dasharray', dashed ? '3,2' : 'none'],
       ],
       l = line.getLeftVector(),
       r = line.getRightVector(),
@@ -612,6 +610,23 @@ class SvgWrapper implements IDrawingSurface {
     point.setAttributeNS(null, 'r', r.toString());
     point.setAttributeNS(null, 'fill', this.themeManager.getColor(elementName));
     this.vertices.push(point);
+  }
+
+  drawDashedPolygon(points: Vector2[], color?: string): void {
+    if (!points || points.length < 2) {
+      return;
+    }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const segments = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x} ${point.y}`);
+    path.setAttributeNS(null, 'd', `${segments.join(' ')} Z`);
+    path.setAttributeNS(null, 'fill', 'none');
+    path.setAttributeNS(null, 'stroke', color || this.themeManager.getColor('C'));
+    path.setAttributeNS(null, 'stroke-width', (this.opts.bondThickness / 1.5).toString());
+    path.setAttributeNS(null, 'stroke-linecap', 'round');
+    path.setAttributeNS(null, 'stroke-linejoin', 'round');
+    path.setAttributeNS(null, 'stroke-dasharray', '3,2');
+    this.paths.push(path);
   }
 
 

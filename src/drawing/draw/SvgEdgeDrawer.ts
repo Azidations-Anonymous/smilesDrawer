@@ -3,7 +3,6 @@ import Vector2 = require('../../graph/Vector2');
 import Ring = require('../../graph/Ring');
 import Line = require('../../graph/Line');
 import SvgDrawer = require('../SvgDrawer');
-import { snapLineToDashPattern } from '../../utils/DashPatternHelper';
 
 class SvgEdgeDrawer {
   constructor(private drawer: SvgDrawer) {}
@@ -45,6 +44,9 @@ class SvgEdgeDrawer {
       }
     });
 
+    if (!preprocessor.bridgedRing) {
+      this.drawAromaticPolygons();
+    }
   }
 
 
@@ -106,7 +108,6 @@ class SvgEdgeDrawer {
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
 
         // The shortened edge
-        this.applyAromaticDashSizing(line, isAromaticEdge);
         renderer.drawLine(line, isAromaticEdge);
 
         renderer.drawLine(new Line(a, b, elementA, elementB));
@@ -117,9 +118,7 @@ class SvgEdgeDrawer {
         let lineA = new Line(Vector2.add(a, normals[0]), Vector2.add(b, normals[0]), elementA, elementB),
           lineB = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
-        this.applyAromaticDashSizing(lineA, isAromaticEdge);
         renderer.drawLine(lineA, isAromaticEdge);
-        this.applyAromaticDashSizing(lineB, isAromaticEdge);
         renderer.drawLine(lineB, isAromaticEdge);
       } else if ((s.sideCount[0] > s.sideCount[1]) ||
         (s.totalSideCount[0] > s.totalSideCount[1])) {
@@ -129,7 +128,6 @@ class SvgEdgeDrawer {
 
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
 
-        this.applyAromaticDashSizing(line, isAromaticEdge);
         renderer.drawLine(line, isAromaticEdge);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       } else if ((s.sideCount[0] < s.sideCount[1]) ||
@@ -139,7 +137,6 @@ class SvgEdgeDrawer {
         let line = new Line(Vector2.add(a, normals[1]), Vector2.add(b, normals[1]), elementA, elementB);
 
         line.shorten(opts.bondLength - opts.shortBondLength * opts.bondLength);
-        this.applyAromaticDashSizing(line, isAromaticEdge);
         renderer.drawLine(line, isAromaticEdge);
         renderer.drawLine(new Line(a, b, elementA, elementB));
       }
@@ -185,11 +182,48 @@ class SvgEdgeDrawer {
     normals[1].multiplyScalar(spacing);
   }
 
-  private applyAromaticDashSizing(line: Line, dashed: boolean): void {
-    if (!dashed || !line) {
+  private drawAromaticPolygons(): void {
+    const renderer = this.drawer.getRenderer();
+    if (!renderer.drawDashedPolygon) {
       return;
     }
-    snapLineToDashPattern(line);
+
+    const aromaticRings = this.drawer.preprocessor.getAromaticRings();
+    for (const ring of aromaticRings) {
+      const polygon = this.computeAromaticPolygon(ring);
+      if (polygon.length < 2) {
+        continue;
+      }
+      renderer.drawDashedPolygon(polygon);
+    }
+  }
+
+  private computeAromaticPolygon(ring: Ring): Vector2[] {
+    const polygon: Vector2[] = [];
+    const center = ring.center;
+    if (!center || !ring.members || ring.members.length === 0) {
+      return polygon;
+    }
+
+    const offset = Math.max(1, this.drawer.preprocessor.opts.bondSpacing * this.drawer.preprocessor.opts.bondLength * 0.5);
+    for (const memberId of ring.members) {
+      const vertex = this.drawer.preprocessor.graph.vertices[memberId];
+      if (!vertex || !vertex.position) {
+        continue;
+      }
+
+      const toVertex = vertex.position.clone().subtract(center);
+      const distance = toVertex.length();
+      if (distance < 1e-3) {
+        continue;
+      }
+
+      const inset = Math.min(offset, distance * 0.5);
+      const insetVector = toVertex.clone().normalize().multiplyScalar(inset);
+      polygon.push(vertex.position.clone().subtract(insetVector));
+    }
+
+    return polygon;
   }
 
 }
