@@ -874,7 +874,6 @@ for (const dataset of datasets) {
 </head>
 <body>
     <div class="container">
-        <h1>Smoke Test #${outputNum}</h1>
 
         <div class="commit-info">
             <div class="commit-text">
@@ -884,12 +883,8 @@ for (const dataset of datasets) {
             <button class="copy-btn" data-copy-target="${commitHashId}">Copy to Clipboard</button>
         </div>
 
-        <div class="benchmark-info">
-            <span class="benchmark-label">Total Render Time:</span>
-            <span class="benchmark-value">${totalRenderTime.toFixed(2)} ms</span>
-            <div class="benchmark-detail">
-                ${benchmarkDetail}
-            </div>
+        <div class="svg-container">
+            ${svg}
         </div>
 
         <div class="smiles-display">
@@ -900,8 +895,12 @@ for (const dataset of datasets) {
             <code id="${smilesFieldId}">${escapeHtml(smiles)}</code>
         </div>
 
-        <div class="svg-container">
-            ${svg}
+        <div class="benchmark-info">
+            <span class="benchmark-label">Total Render Time:</span>
+            <span class="benchmark-value">${totalRenderTime.toFixed(2)} ms</span>
+            <div class="benchmark-detail">
+                ${benchmarkDetail}
+            </div>
         </div>
 
         ${jsonSection}
