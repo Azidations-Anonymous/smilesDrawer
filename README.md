@@ -304,7 +304,7 @@ The following options are available:
 | Drawing height                                                  | height                      | number                              | 500           |
 | Bond thickness                                                  | bondThickness               | number                              | 0.6           |
 | Bond length                                                     | bondLength                  | number                              | 15            |
-| Short bond length (e.g. double bonds) in percent of bond length | shortBondLength             | number                              | 0.85          |
+| Short bond length (e.g. double bonds) in percent of bond length | shortBondLength             | number                              | 0.75          |
 | Bond spacing (e.g. space between double bonds)                  | bondSpacing                 | number                              | 0.18 \* 15    |
 | Atom Visualization                                              | atomVisualization           | string ['default', 'balls', 'none'] | 'default'     |
 | Large Font Size (in pt for elements)                            | fontSizeLarge               | number                              | 6             |
@@ -331,7 +331,7 @@ The default options are defined as follows:
     height: 500,
     bondThickness: 0.6,
     bondLength: 15,
-    shortBondLength: 0.85,
+    shortBondLength: 0.7,
     bondSpacing: 0.18 * 15,
     atomVisualization: 'default',
     isomeric: true,
