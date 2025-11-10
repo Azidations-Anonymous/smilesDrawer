@@ -17,6 +17,7 @@ const SSSR = require('../src/algorithms/SSSR.js');
 
 const TPPP_SMILES = 'C=9C=CC(C7=C1C=CC(=N1)C(C=2C=CC=CC=2)=C3C=CC(N3)=C(C=4C=CC=CC=4)C=5C=CC(N=5)=C(C=6C=CC=CC=6)C8=CC=C7N8)=CC=9';
 const FIGURE_S2_MACROCYCLE = 'C/C/1=C\\CC/C(=C/CC(=C(C)CCC=C(C)C)CC1)/C';
+const JOHNSON_HETEROCYCLE = 'N=c1ncn2c3c1ncn3CC=CC2';
 
 /**
  * Convenience helper – parse SMILES, build the graph, and return the rings.
@@ -176,26 +177,29 @@ describe('SSSR ring detection', () => {
         );
     });
 
-    it.skip('exposes aromatic macrocycles captured via Johnson inventory', () => {
-        // TODO: re-enable once getAromaticRings plumbing is restored.
-        const molecule = prepareMolecule('c1ccc2cccc2c1');
+    it('exposes aromatic cycles via the Johnson inventory when SSSR misses them', () => {
+        const molecule = prepareMolecule(JOHNSON_HETEROCYCLE);
         const aromaticInventory = molecule.getAromaticRings();
-        const sizes = aromaticInventory.map((ring) => ring.members.length);
+        const sssrAromatic = molecule.rings.filter((ring) => molecule.isRingAromatic(ring));
 
-        const sssrAromaticSizes = molecule.rings
-            .filter((ring) => molecule.isRingAromatic(ring))
-            .map((ring) => ring.members.length);
-
-        assert.ok(
-            aromaticInventory.length >= sssrAromaticSizes.length,
-            'Cycle inventory should include at least the SSSR aromatic rings'
+        assert.equal(
+            sssrAromatic.length,
+            0,
+            'SSSR aromatic set should be empty for this fused heterocycle'
         );
 
-        const longestInventory = Math.max(...sizes);
-        const longestSSSR = Math.max(...sssrAromaticSizes);
-        assert.ok(
-            longestInventory > longestSSSR,
-            'Aromatic inventory should expose longer fused cycles than the SSSR basis'
+        const sizes = aromaticInventory.map((ring) => ring.members.length).sort((a, b) => a - b);
+
+        assert.deepEqual(
+            sizes,
+            [5, 9],
+            'Johnson inventory should surface the missing aromatic cycles (5- and 9-membered)'
+        );
+
+        const coveredVertices = new Set(sssrAromatic.flatMap((ring) => ring.members));
+        assert(
+            aromaticInventory.some((ring) => ring.members.some((id) => !coveredVertices.has(id))),
+            'Inventory-provided cycles should cover atoms the SSSR aromatic set missed'
         );
     });
 });
