@@ -955,15 +955,13 @@ class SvgWrapper implements IDrawingSurface {
     }
   }
 
-  private getCategorySpacing(lhs?: LabelCategory, rhs?: LabelCategory): number {
+  private getCategorySpacing(lhs: LabelCategory, rhs: LabelCategory): number {
     const base = this.opts.labelOutlineWidth;
     const fallback = this.opts.fontSizeLarge * 0.1;
     const spacing = Math.max(base ?? 0, fallback);
-    if (![lhs, rhs].some(Boolean)) {
-      return spacing;
-    }
-    if ([lhs, rhs].some((category) => category === 'charge')) {
-      return spacing / 2;
+
+    if ([lhs, rhs].contains('charge')) {
+      return spacing / 4;
     }
     return spacing;
   }
