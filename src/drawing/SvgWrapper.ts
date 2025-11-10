@@ -801,6 +801,8 @@ class SvgWrapper implements IDrawingSurface {
     const isVertical = direction === 'up' || direction === 'down';
     const needsReverse = direction === 'left' || direction === 'up';
     const orderedSegments = needsReverse ? segments.slice().reverse() : segments.slice();
+    const chargeSegments = orderedSegments.filter((segment) => segment.category === 'charge');
+    const layoutSegments = orderedSegments.filter((segment) => segment.category !== 'charge');
     const placements: LabelPlacement[] = [];
 
     const hasSatellites = segments.some((segment) => segment.kind === 'satellite');
@@ -809,7 +811,7 @@ class SvgWrapper implements IDrawingSurface {
       const lineHeight = this.opts.fontSizeLarge + (this.opts.labelOutlineWidth ?? 0);
       let currentY = y;
 
-      orderedSegments.forEach((segment, index) => {
+      layoutSegments.forEach((segment, index) => {
         if (index > 0) {
           currentY += direction === 'up' ? -lineHeight : lineHeight;
         }
@@ -824,18 +826,13 @@ class SvgWrapper implements IDrawingSurface {
         });
       });
     } else {
-      const metricsList = orderedSegments.map((segment) => measure(segment));
+      const metricsList = layoutSegments.map((segment) => measure(segment));
       const totalWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0);
-    const chargeSegments = orderedSegments.filter((segment) => segment.category === 'charge');
-    let cursor = x - totalWidth / 2;
-    if (chargeSegments.length > 0) {
-      const positiveWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0);
-      cursor = x - positiveWidth / 2;
-    }
+      let cursor = x - totalWidth / 2;
 
-    orderedSegments.forEach((segment, index) => {
-      const metrics = metricsList[index];
-      const centerX = cursor + metrics.width / 2;
+      layoutSegments.forEach((segment, index) => {
+        const metrics = metricsList[index];
+        const centerX = cursor + metrics.width / 2;
         placements.push({
           segment,
           x: centerX,
@@ -860,6 +857,28 @@ class SvgWrapper implements IDrawingSurface {
       this.createLabelMask(primaryPlacement.x, primaryPlacement.y, primaryPlacement.segment, hasSatellites);
     } else {
       this.createLabelMask(x, y, segments[0], hasSatellites);
+    }
+
+    if (chargeSegments.length > 0) {
+      const spacing = this.opts.labelOutlineWidth ?? 0;
+      const rightEdge = placements.length
+        ? Math.max(...placements.map((placement) => placement.x + placement.width / 2))
+        : (primaryPlacement ? primaryPlacement.x + primaryPlacement.width / 2 : x);
+      const chargeY = primaryPlacement ? primaryPlacement.y : y;
+      let chargeCursor = rightEdge;
+
+      chargeSegments.forEach((segment) => {
+        const metrics = measure(segment);
+        chargeCursor += spacing + metrics.width / 2;
+        placements.push({
+          segment,
+          x: chargeCursor,
+          y: chargeY,
+          width: metrics.width,
+          height: metrics.height
+        });
+        chargeCursor += metrics.width / 2;
+      });
     }
 
     placements.forEach((placement) => {
