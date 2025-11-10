@@ -794,16 +794,15 @@ class SvgWrapper implements IDrawingSurface {
     const placements: LabelPlacement[] = [];
 
     if (isVertical) {
-      const metricsList = orderedSegments.map((segment) => measure(segment));
+      const lineHeight = this.opts.fontSizeLarge + (this.opts.labelOutlineWidth ?? 0);
       let currentY = y;
 
       orderedSegments.forEach((segment, index) => {
         if (index > 0) {
-          const prevHeight = metricsList[index - 1].height;
-          currentY += direction === 'up' ? -prevHeight : prevHeight;
+          currentY += direction === 'up' ? -lineHeight : lineHeight;
         }
 
-        const metrics = metricsList[index];
+        const metrics = measure(segment);
         placements.push({
           segment,
           x,

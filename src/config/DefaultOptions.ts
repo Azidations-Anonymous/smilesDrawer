@@ -29,7 +29,7 @@ function getDefaultOptions(): IMoleculeOptions {
       fontFamily: 'Arial, Helvetica, sans-serif',
       fontSizeLarge: 11,
       fontSizeSmall: 3,
-      labelOutlineWidth: 3,
+      labelOutlineWidth: 1,
       padding: 10.0,
       kkThreshold: 0.1,
       kkInnerThreshold: 0.1,
