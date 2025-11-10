@@ -793,6 +793,8 @@ class SvgWrapper implements IDrawingSurface {
     const orderedSegments = needsReverse ? segments.slice().reverse() : segments.slice();
     const placements: LabelPlacement[] = [];
 
+    const hasSatellites = segments.some((segment) => segment.kind === 'satellite');
+
     if (isVertical) {
       const lineHeight = this.opts.fontSizeLarge + (this.opts.labelOutlineWidth ?? 0);
       let currentY = y;
@@ -840,9 +842,9 @@ class SvgWrapper implements IDrawingSurface {
           placement.y += offsetY;
         });
       }
-      this.createLabelMask(primaryPlacement.x, primaryPlacement.y, primaryPlacement.segment);
+      this.createLabelMask(primaryPlacement.x, primaryPlacement.y, primaryPlacement.segment, hasSatellites);
     } else {
-      this.createLabelMask(x, y, segments[0]);
+      this.createLabelMask(x, y, segments[0], hasSatellites);
     }
 
     placements.forEach((placement) => {
@@ -858,13 +860,11 @@ class SvgWrapper implements IDrawingSurface {
     this.updateBoundsFromPlacements(placements, singleVertex);
   }
 
-  private createLabelMask(cx: number, cy: number, segment: LabelSegment): void {
+  private createLabelMask(cx: number, cy: number, segment: LabelSegment, hasSatellites: boolean): void {
     const baseScale = this.opts.labelMaskRadiusScale ?? 0.75;
     const wideScale = this.opts.labelMaskRadiusScaleWide ?? 1.1;
-    let maskRadius = this.opts.fontSizeLarge * baseScale;
-    if (segment.element.length > 1) {
-      maskRadius = this.opts.fontSizeLarge * wideScale;
-    }
+    const shouldUseWide = segment.kind === 'primary' && hasSatellites;
+    const maskRadius = this.opts.fontSizeLarge * (shouldUseWide ? wideScale : baseScale);
 
     const mask = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     mask.setAttributeNS(null, 'cx', cx.toString());

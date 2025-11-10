@@ -30,7 +30,7 @@ function getDefaultOptions(): IMoleculeOptions {
       fontSizeLarge: 11,
       fontSizeSmall: 3,
       labelOutlineWidth: 1,
-      labelMaskRadiusScale: 0.75,
+      labelMaskRadiusScale: 0.8,
       labelMaskRadiusScaleWide: 1.1,
       padding: 10.0,
       kkThreshold: 0.1,
