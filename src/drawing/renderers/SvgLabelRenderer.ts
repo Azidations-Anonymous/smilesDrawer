@@ -60,11 +60,40 @@ class SvgLabelRenderer {
     try {
       this.ensureMeasurementHost();
       if (this.measurementHost) {
+        const originalX = textElem.getAttribute('x');
+        const originalY = textElem.getAttribute('y');
+        const originalTspanY = tspan.getAttribute('y');
+
+        textElem.setAttributeNS(null, 'x', '0');
+        textElem.setAttributeNS(null, 'y', '0');
+        tspan.setAttributeNS(null, 'y', '0');
+
         this.measurementHost.appendChild(textElem);
-        const bbox = textElem.getBBox();
-        const shiftY = -(bbox.y + bbox.height / 2);
-        textElem.setAttribute('transform', `translate(0, ${shiftY})`);
-        this.measurementHost.removeChild(textElem);
+        try {
+          const bbox = textElem.getBBox();
+          const shiftY = -(bbox.y + bbox.height / 2);
+          textElem.setAttribute('transform', `translate(0, ${shiftY})`);
+        } finally {
+          this.measurementHost.removeChild(textElem);
+
+          if (originalX !== null) {
+            textElem.setAttributeNS(null, 'x', originalX);
+          } else {
+            textElem.removeAttribute('x');
+          }
+
+          if (originalY !== null) {
+            textElem.setAttributeNS(null, 'y', originalY);
+          } else {
+            textElem.removeAttribute('y');
+          }
+
+          if (originalTspanY !== null) {
+            tspan.setAttributeNS(null, 'y', originalTspanY);
+          } else {
+            tspan.removeAttribute('y');
+          }
+        }
       }
     } catch (err) {
       // Ignore measurement errors (e.g., detached DOM); rely on baseline keywords in that case.
