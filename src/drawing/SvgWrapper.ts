@@ -827,10 +827,21 @@ class SvgWrapper implements IDrawingSurface {
       });
     } else {
       const metricsList = layoutSegments.map((segment) => measure(segment));
-      const totalWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0);
+      const spacingValues = layoutSegments.map((segment, index) => {
+        if (index === 0) {
+          return 0;
+        }
+        return this.getCategorySpacing(layoutSegments[index - 1].category, segment.category);
+      });
+      const totalWidth = metricsList.reduce((sum, metrics) => sum + metrics.width, 0) +
+        spacingValues.reduce((sum, spacing) => sum + spacing, 0);
       let cursor = x - totalWidth / 2;
 
       layoutSegments.forEach((segment, index) => {
+        const spacing = spacingValues[index];
+        if (spacing > 0) {
+          cursor += spacing;
+        }
         const metrics = metricsList[index];
         const centerX = cursor + metrics.width / 2;
         placements.push({
@@ -860,16 +871,20 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     if (chargeSegments.length > 0) {
-      const spacing = this.getCategorySpacing('charge');
       const rightEdge = placements.length
         ? Math.max(...placements.map((placement) => placement.x + placement.width / 2))
         : (primaryPlacement ? primaryPlacement.x + primaryPlacement.width / 2 : x);
       const chargeY = primaryPlacement ? primaryPlacement.y : y;
       let chargeCursor = rightEdge;
+      let previousCategory = placements.length
+        ? placements[placements.length - 1].segment.category
+        : (primaryPlacement ? primaryPlacement.segment.category : undefined);
 
       chargeSegments.forEach((segment) => {
         const metrics = measure(segment);
-        chargeCursor += spacing + metrics.width / 2;
+        const spacing = this.getCategorySpacing(previousCategory, segment.category);
+        chargeCursor += spacing;
+        chargeCursor += metrics.width / 2;
         placements.push({
           segment,
           x: chargeCursor,
@@ -878,6 +893,7 @@ class SvgWrapper implements IDrawingSurface {
           height: metrics.height
         });
         chargeCursor += metrics.width / 2;
+        previousCategory = segment.category;
       });
     }
 
@@ -939,20 +955,17 @@ class SvgWrapper implements IDrawingSurface {
     }
   }
 
-  private getCategorySpacing(category?: LabelCategory): number {
+  private getCategorySpacing(previous?: LabelCategory, next?: LabelCategory): number {
     const base = this.opts.labelOutlineWidth;
     const fallback = this.opts.fontSizeLarge * 0.1;
     const spacing = Math.max(base ?? 0, fallback);
-    switch (category) {
-      case 'charge':
-        return spacing / 4
-      case 'hydrogen':
-        return spacing
-      case 'isotope':
-        return spacing
-      case 'main':
-        return spacing
+    if (!previous && !next) {
+      return spacing;
     }
+    if (previous === 'charge' || next === 'charge') {
+      return spacing / 2;
+    }
+    return spacing;
   }
 
   /**
