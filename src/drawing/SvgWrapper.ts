@@ -860,7 +860,7 @@ class SvgWrapper implements IDrawingSurface {
     }
 
     if (chargeSegments.length > 0) {
-      const spacing = this.opts.labelOutlineWidth ?? 0;
+      const spacing = this.getCategorySpacing('charge');
       const rightEdge = placements.length
         ? Math.max(...placements.map((placement) => placement.x + placement.width / 2))
         : (primaryPlacement ? primaryPlacement.x + primaryPlacement.width / 2 : x);
@@ -937,6 +937,16 @@ class SvgWrapper implements IDrawingSurface {
     if (_singleVertex) {
       return;
     }
+  }
+
+  private getCategorySpacing(category?: LabelCategory): number {
+    const base = this.opts.labelOutlineWidth;
+    const fallback = this.opts.fontSizeLarge * 0.1;
+    const spacing = Math.max(base ?? 0, fallback);
+    if (category === 'charge') {
+      return spacing / 2;
+    }
+    return spacing;
   }
 
   /**
