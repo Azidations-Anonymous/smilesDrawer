@@ -74,4 +74,23 @@ describe('SVG label rendering', () => {
     assert(Math.abs(maskX - primaryX) < 1e-6, 'mask should align with the primary label');
     assert(Math.abs(maskY - primaryY) < 1e-6, 'mask should share the label baseline');
   });
+
+  it('uses tighter spacing for charges than other satellites', () => {
+    ensureDom();
+
+    const optionsManager = new OptionsManager({ labelOutlineWidth: 2 });
+    const opts = optionsManager.opts;
+    const themeManager = new ThemeManager(opts.themes, 'light');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const wrapper = new SvgWrapper(themeManager, svg, opts, true);
+
+    const getSpacing = wrapper['getCategorySpacing'].bind(wrapper);
+    const mainHydrogen = getSpacing('main', 'hydrogen');
+    const mainCharge = getSpacing('main', 'charge');
+    const chargeCharge = getSpacing('charge', 'charge');
+
+    assert.equal(mainHydrogen, 2, 'hydrogen spacing should match labelOutlineWidth when provided');
+    assert.equal(mainCharge, 1, 'charge spacing should be half of the standard spacing');
+    assert.equal(chargeCharge, 1, 'charge pairs should keep using the tighter spacing');
+  });
 });
