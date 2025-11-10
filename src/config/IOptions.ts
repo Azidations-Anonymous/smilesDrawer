@@ -40,6 +40,7 @@ interface IWeightOptions {
  * Molecular drawing options
  */
 interface IMoleculeOptions {
+  version: string;
   // Canvas dimensions
   width: number;
   height: number;

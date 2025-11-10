@@ -1,3 +1,4 @@
+import '../utils/Array';
 import SvgConversionHelper = require('./helpers/SvgConversionHelper');
 import SvgTextHelper = require('./helpers/SvgTextHelper');
 import Line = require('../graph/Line');
@@ -113,13 +114,14 @@ class SvgWrapper implements IDrawingSurface {
     // create the css styles
     this.style.appendChild(document.createTextNode(`
                 .element {
-                    font: ${this.opts.fontSizeLarge}pt ${this.opts.fontFamily};
+                    font-family: ${this.opts.fontFamily};
                 }
                 .sub {
-                    font: ${this.opts.fontSizeSmall}pt ${this.opts.fontFamily};
+                    font-family: ${this.opts.fontFamily};
                 }
                 .annotation {
-                    font: ${this.opts.atomAnnotationFontSize}pt ${this.opts.fontFamily};
+                    font-family: ${this.opts.fontFamily};
+                    font-size: ${this.opts.atomAnnotationFontSize}pt;
                     text-anchor: middle;
                     dominant-baseline: text-after-edge;
                 }
@@ -690,7 +692,7 @@ class SvgWrapper implements IDrawingSurface {
 
     if (isotope !== 0 && isotope !== null) {
       segments.push({
-        display: SvgUnicodeHelper.createUnicodeSuperscript(isotope),
+        display: isotope.toString(),
         element: elementName,
         kind: 'satellite',
         fontSize: this.opts.fontSizeSmall,
@@ -705,7 +707,7 @@ class SvgWrapper implements IDrawingSurface {
         display: SvgUnicodeHelper.createUnicodeCharge(charge),
         element: elementName,
         kind: 'satellite',
-        fontSize: this.opts.fontSizeSmall,
+        fontSize: this.opts.fontSizeLarge,
         category: 'charge'
       });
     }
@@ -802,7 +804,14 @@ class SvgWrapper implements IDrawingSurface {
     const needsReverse = direction === 'left' || direction === 'up';
     const orderedSegments = needsReverse ? segments.slice().reverse() : segments.slice();
     const chargeSegments = orderedSegments.filter((segment) => segment.category === 'charge');
-    const layoutSegments = orderedSegments.filter((segment) => segment.category !== 'charge');
+    const isotopeSegments = orderedSegments.filter((segment) => segment.category === 'isotope');
+    const layoutSegments = orderedSegments.filter((segment) => segment.category !== 'charge' && segment.category !== 'isotope');
+    const baseFontSizeMap = new Map<LabelCategory | undefined, number>();
+    orderedSegments.forEach((segment) => {
+      if (!baseFontSizeMap.has(segment.category)) {
+        baseFontSizeMap.set(segment.category, segment.fontSize ?? this.opts.fontSizeLarge);
+      }
+    });
     const placements: LabelPlacement[] = [];
 
     const hasSatellites = segments.some((segment) => segment.kind === 'satellite');
@@ -870,20 +879,39 @@ class SvgWrapper implements IDrawingSurface {
       this.createLabelMask(x, y, segments[0], hasSatellites);
     }
 
+    const primaryLeftEdge = primaryPlacement ? primaryPlacement.x - primaryPlacement.width / 2 : x;
+    const primaryRightEdge = primaryPlacement ? primaryPlacement.x + primaryPlacement.width / 2 : x;
+    const primaryBaseline = primaryPlacement ? primaryPlacement.y : y;
+
+    if (isotopeSegments.length > 0) {
+      const smallOffset = (isotopeSegments[0].fontSize ?? this.opts.fontSizeSmall) * 0.35;
+      const isotopeY = primaryBaseline - smallOffset;
+      let isotopeCursor = primaryLeftEdge;
+      const isotopeSpacing = this.getCategorySpacing('isotope', 'main');
+
+      isotopeSegments.forEach((segment) => {
+        const metrics = measure(segment);
+        isotopeCursor -= isotopeSpacing;
+        isotopeCursor -= metrics.width / 2;
+        placements.push({
+          segment,
+          x: isotopeCursor,
+          y: isotopeY,
+          width: metrics.width,
+          height: metrics.height
+        });
+        isotopeCursor -= metrics.width / 2;
+      });
+    }
+
     if (chargeSegments.length > 0) {
-      const rightEdge = placements.length
-        ? Math.max(...placements.map((placement) => placement.x + placement.width / 2))
-        : (primaryPlacement ? primaryPlacement.x + primaryPlacement.width / 2 : x);
-      const chargeY = primaryPlacement ? primaryPlacement.y : y;
-      let chargeCursor = rightEdge;
-      let previousCategory = placements.length
-        ? placements[placements.length - 1].segment.category
-        : (primaryPlacement ? primaryPlacement.segment.category : undefined);
+      const chargeY = primaryBaseline;
+      let chargeCursor = primaryRightEdge;
+      const chargeSpacing = this.getCategorySpacing('main', 'charge');
 
       chargeSegments.forEach((segment) => {
         const metrics = measure(segment);
-        const spacing = this.getCategorySpacing(previousCategory, segment.category);
-        chargeCursor += spacing;
+        chargeCursor += chargeSpacing;
         chargeCursor += metrics.width / 2;
         placements.push({
           segment,
@@ -893,7 +921,6 @@ class SvgWrapper implements IDrawingSurface {
           height: metrics.height
         });
         chargeCursor += metrics.width / 2;
-        previousCategory = segment.category;
       });
     }
 
@@ -960,10 +987,16 @@ class SvgWrapper implements IDrawingSurface {
     const fallback = this.opts.fontSizeLarge * 0.1;
     const spacing = Math.max(base ?? 0, fallback);
 
+    console.log(lhs, rhs);
+
     if ([lhs, rhs].contains('charge')) {
       return spacing / 4;
     }
-    return spacing;
+    if ([lhs, rhs].contains('isotope')) {
+      return spacing;
+    } else {
+      return 0;
+    }
   }
 
   /**

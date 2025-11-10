@@ -1,7 +1,9 @@
 import { IMoleculeOptions } from './IOptions';
+import packageJson = require('../../package.json');
 
 function getDefaultOptions(): IMoleculeOptions {
   return {
+      version: packageJson.version,
       width: 500,
       height: 500,
       scale: 0.0,
@@ -28,7 +30,7 @@ function getDefaultOptions(): IMoleculeOptions {
       compactDrawing: true,
       fontFamily: 'Arial, Helvetica, sans-serif',
       fontSizeLarge: 11,
-      fontSizeSmall: 3,
+      fontSizeSmall: 5,
       labelOutlineWidth: 1,
       labelMaskRadiusScale: 0.8,
       labelMaskRadiusScaleWide: 0.8,

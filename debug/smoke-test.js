@@ -389,6 +389,7 @@ let datasetName = null;
 let filterPattern = null;
 let includeImages = false;
 let includeJson = false;
+let autoOpen = false;
 
 for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -423,6 +424,11 @@ for (let i = 0; i < args.length; i++) {
 
     if (arg === '-json') {
         includeJson = true;
+        continue;
+    }
+
+    if (arg === '-open') {
+        autoOpen = true;
         continue;
     }
 
@@ -473,6 +479,7 @@ console.log('Build complete\n');
 const timestamp = getTimestamp();
 
 const hasDatasetFlag = datasetName !== null;
+const isSingleSmilesMode = (!hasDatasetFlag && !allMode && manualSmiles.length === 1);
 
 // Determine dataset
 let datasets;
@@ -532,6 +539,7 @@ console.log('');
 
 let totalOutputs = 0;
 let totalErrors = 0;
+let lastHtmlPath = null;
 
 (async () => {
 for (const dataset of datasets) {
@@ -939,6 +947,7 @@ for (const dataset of datasets) {
             // Save outputs
             const htmlPath = path.join(outputDir, outputNum + '.html');
             fs.writeFileSync(htmlPath, html, 'utf8');
+            lastHtmlPath = htmlPath;
             if (jsonGenerated) {
                 const jsonPath = path.join(outputDir, outputNum + '.json');
                 fs.writeFileSync(jsonPath, json, 'utf8');
@@ -972,9 +981,26 @@ for (const dataset of datasets) {
     console.log('Output directory: ' + outputDir);
     console.log('='.repeat(80));
 
-    if (totalErrors > 0) {
-        process.exit(1);
-    } else {
-        process.exit(0);
+    if (autoOpen) {
+        const target = (isSingleSmilesMode && lastHtmlPath) ? lastHtmlPath : outputDir;
+        if (target && fs.existsSync(target)) {
+            const opener = process.platform === 'darwin'
+                ? 'open'
+                : process.platform === 'win32'
+                    ? 'cmd'
+                    : 'xdg-open';
+            const args = process.platform === 'win32'
+                ? ['/c', 'start', '', target]
+                : [target];
+            try {
+                spawnSync(opener, args, { stdio: 'ignore' });
+            } catch (err) {
+                console.error('WARN: Failed to open output path:', err && err.message ? err.message : err);
+            }
+        } else {
+            console.warn('WARN: Open flag requested but no output path available.');
+        }
     }
+
+    process.exit(totalErrors > 0 ? 1 : 0);
 })();
